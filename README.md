@@ -1,0 +1,72 @@
+# Dungeon Settlers Delvers: Core
+
+**Deutsch** | [English](README.en.md)
+
+Gemeinsamer Kern für Charakter-Mods in Dungeon Settlers. Core bringt die Story-Figuren **Lowell, Liana und Kragas** in die Rekrutierung und stellt Charakterpaketen eine kleine, stabile API bereit.
+
+**Version 0.2.0 für MelonLoader und BepInEx. Core-API 1.1.0.**
+
+## Downloads
+
+Die Mod-Pakete liegen unter [Releases](../../releases). Lade nur das Paket für deinen installierten Loader herunter:
+
+| Loader | Mod-Paket |
+| --- | --- |
+| MelonLoader | `Dungeon-Settlers-Delvers-Core-0.2.0-MelonLoader.zip` |
+| BepInEx | `Dungeon-Settlers-Delvers-Core-0.2.0-BepInEx.zip` |
+
+Die automatisch erzeugten Quellcode-Archive sind keine Installationspakete.
+
+## Funktionen
+
+- **Story-Figuren als Kandidaten:** Lowell, Liana und Kragas können über ihre originalen Spiel-Presets in „Eigene Expedition“ und im Gildenpool erscheinen. Ihre Grafiken und Daten kommen aus deinem installierten Spiel; Core kopiert nichts davon.
+- **Gildenpreis-Deckel:** Diese drei kosten in der Gilde höchstens 500 Gold.
+- **Einzigartige Kandidaten beim Neu-Rekrutieren:** Ist das Neu-Rekrutieren wegen gesperrter Merkmale blockiert, zeigt der Button einheitlich den originalen Hinweis „Die gewählten Optionen stehen mit den aktuellen Sperren in Konflikt.“
+  - Lowell, Liana, Kragas: Nur das Bild zu sperren erlaubt weiterhin, die übrigen Start-Merkmale neu zu würfeln. Sobald die primären Traits gesperrt sind, ist Neu-Rekrutieren sofort blockiert, denn ihr Story-Hintergrund kann nicht zufällig erzeugt werden.
+  - Charaktere aus Charakterpaketen mit einem einzigartigen Trait: Schon das Bild oder die primären Traits allein blockieren das Neu-Rekrutieren. So lässt sich derselbe Charakter nicht mehrfach erzeugen.
+- **API für Charakterpakete:** Pakete melden eigene einzigartige Kandidaten und Kampagnen-Beobachter an (siehe unten).
+
+## Voraussetzungen
+
+- Windows x64 und Dungeon Settlers **DS_B.0.4.23** (Steam-Builds 25269660 und 25284551 mit identischer geprüfter Signatur). Bei einer anderen Spielversion bleibt Core inaktiv und meldet das im Log.
+- Separat installiertes **MelonLoader 0.7.3** oder **BepInEx 6 Unity IL2CPP x64** (getestet mit 6.0.0-be.788). BepInEx 5 und Mono werden nicht unterstützt.
+- MelonLoader und BepInEx nicht in derselben Spielinstallation mischen.
+
+## Installation
+
+**MelonLoader:** `DungeonSettlersDelvers.Core.MelonLoader.dll` nach `Mods/`, `DungeonSettlersDelvers.Core.dll` nach `UserLibs/`.
+
+**BepInEx:** Beide DLLs nach `BepInEx/plugins/DungeonSettlersDelvers/`.
+
+Vor der ersten Nutzung Spielstände sichern. Core läuft allein; Charakterpakete benötigen das Core-Paket desselben Loaders.
+
+## Getestet
+
+Am 26.09.2026 im Spiel geprüft, jeweils mit Core allein in beiden Loadern: Start und Signaturprüfung, Lowell und Liana in „Eigene Expedition“, Liana im Gildenpool mit 500 Gold, Sperr-Verhalten beim Neu-Rekrutieren. Zusätzlich mit MelonLoader zusammen mit einem Charakterpaket. Offline laufen bei jedem Build 86 deterministische Prüfungen je Loader.
+
+Langzeitkampagnen, alle Auflösungen und beliebige Kombinationen mit anderen Mods können nicht pauschal garantiert werden. Bei Fehlerberichten bitte Spielbuild, Loader-Version und das bereinigte Log angeben.
+
+## Für Entwickler von Charakterpaketen
+
+```csharp
+// Nach der Core-Initialisierung registrieren, beim eigenen Shutdown freigeben.
+if (!DelversCoreRuntime.IsReady || !DelversCoreRuntime.SupportsApi("1.1.0")) return;
+
+IDisposable uniqueLease = DelversCoreRuntime.RegisterUniqueCandidatePredicate(
+    "my-pack", candidate => IsMyUniqueCharacter(candidate));
+
+IDisposable integrationLease = DelversCoreRuntime.RegisterRecruitmentIntegration(
+    "my-pack", onCampaignRefreshed: helper => { /* eigene Kampagnenlogik */ },
+    suppressNativeFounderRolls: () => false);
+
+uniqueLease.Dispose();
+integrationLease.Dispose();
+```
+
+Pack-IDs bestehen aus Kleinbuchstaben, Ziffern und Bindestrichen. Wiederholte Registrierung mit demselben Prädikat liefert eine weitere referenzgezählte Lease; ein anderes Prädikat unter einer aktiven ID wird abgelehnt. Fehler in Prädikaten werden einmal mit der Pack-ID protokolliert und blockieren weder die Oberfläche noch andere Pakete.
+
+Bauen und Validieren: siehe [BUILDING.md](BUILDING.md).
+
+## Lizenz
+
+Eigener Code und eigene Anleitungen: MIT, siehe [LICENSE](LICENSE). Spielinhalte, Figuren und Marken sind ausgenommen, siehe [LICENSING.txt](LICENSING.txt) und [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Inoffizielles Community-Projekt, nicht von CanOpener.

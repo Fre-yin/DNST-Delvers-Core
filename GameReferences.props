@@ -1,0 +1,35 @@
+<Project>
+  <PropertyGroup>
+    <GameInteropDir Condition="'$(LoaderProfile)' == 'Melon'">$(GameDir)/MelonLoader/Il2CppAssemblies</GameInteropDir>
+    <GameLoaderDir Condition="'$(LoaderProfile)' == 'Melon'">$(GameDir)/MelonLoader/net6</GameLoaderDir>
+    <GameInteropDir Condition="'$(LoaderProfile)' == 'BepInEx'">$(GameDir)/BepInEx/interop</GameInteropDir>
+    <GameLoaderDir Condition="'$(LoaderProfile)' == 'BepInEx'">$(GameDir)/BepInEx/core</GameLoaderDir>
+    <DefineConstants Condition="'$(LoaderProfile)' == 'BepInEx'">$(DefineConstants);BEPINEX</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="0Harmony"><HintPath>$(GameLoaderDir)/0Harmony.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppInterop.Runtime"><HintPath>$(GameLoaderDir)/Il2CppInterop.Runtime.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(GameInteropDir)/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2Cppmscorlib"><HintPath>$(GameInteropDir)/Il2Cppmscorlib.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppSystem.Core"><HintPath>$(GameInteropDir)/Il2CppSystem.Core.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppNewtonsoft.Json" Condition="'$(LoaderProfile)' == 'Melon'"><HintPath>$(GameInteropDir)/Il2CppNewtonsoft.Json.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Newtonsoft.Json" Condition="'$(LoaderProfile)' == 'BepInEx'"><HintPath>$(GameInteropDir)/Newtonsoft.Json.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine"><HintPath>$(GameInteropDir)/UnityEngine.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(GameInteropDir)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.ImageConversionModule"><HintPath>$(GameInteropDir)/UnityEngine.ImageConversionModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.UI"><HintPath>$(GameInteropDir)/UnityEngine.UI.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.IMGUIModule"><HintPath>$(GameInteropDir)/UnityEngine.IMGUIModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.UIModule" Condition="'$(LoaderProfile)' == 'BepInEx'"><HintPath>$(GameInteropDir)/UnityEngine.UIModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Unity.TextMeshPro"><HintPath>$(GameInteropDir)/Unity.TextMeshPro.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+  <Target Name="ValidateLocalLoaderReferences" BeforeTargets="ResolveReferences">
+    <Error Condition="'$(LoaderProfile)' != 'Melon' and '$(LoaderProfile)' != 'BepInEx'" Text="Set LoaderProfile to Melon or BepInEx." />
+    <Error Condition="'$(GameDir)' == ''" Text="Supply -p:GameDir with a local, initialized game copy for the selected loader." />
+    <Error Condition="'$(GameDir)' != '' and !Exists('$(GameDir)/GameAssembly.dll')" Text="The selected GameDir does not contain GameAssembly.dll." />
+    <Error Condition="!Exists('$(GameInteropDir)/Assembly-CSharp.dll')" Text="The selected loader's Assembly-CSharp.dll is missing from $(GameInteropDir)." />
+    <Error Condition="!Exists('$(GameInteropDir)/Il2Cppmscorlib.dll')" Text="The selected loader's IL2CPP core reference is missing from $(GameInteropDir)." />
+    <Error Condition="!Exists('$(GameLoaderDir)/0Harmony.dll')" Text="Harmony is missing from the selected loader's local runtime directory." />
+    <Error Condition="'$(LoaderProfile)' == 'Melon' and !Exists('$(GameLoaderDir)/MelonLoader.dll')" Text="MelonLoader.dll is missing from the selected Melon game copy." />
+    <Error Condition="'$(LoaderProfile)' == 'BepInEx' and !Exists('$(GameLoaderDir)/BepInEx.Core.dll')" Text="BepInEx.Core.dll is missing from the selected BepInEx game copy." />
+  </Target>
+</Project>

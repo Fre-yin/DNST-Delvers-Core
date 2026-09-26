@@ -1,0 +1,22 @@
+DUNGEON SETTLERS DELVERS: CORE — LICENSE SCOPE
+
+The independently authored mod code, tests, build scripts and original
+instructions are covered by the MIT License in LICENSE. Preserve its copyright
+and license notice. This does not license Dungeon Settlers, game code, game
+data, artwork, fonts, trademarks or other third-party content.
+
+Core contains no copied game artwork, sounds or libraries. It makes the game's
+own Lowell, Liana and Kragas story presets available by referring to the
+game's installed data and keys at runtime; those characters, their names and
+their designs remain with CanOpener or the respective rights holders.
+
+This is an unofficial community mod for a separately obtained game and a
+separately installed MelonLoader or BepInEx loader. The packages do not
+contain game binaries, loader binaries, generated interop assemblies or saved
+campaigns. Third-party components retain their own licenses and conditions;
+see THIRD_PARTY_NOTICES.md and the separate loader distribution's notices.
+
+Deutsch: Eigener Code, Tests, Buildskripte und eigene Anleitungen stehen unter
+MIT. Spielinhalte, Spieldaten, Figuren und Marken sind davon ausgenommen.
+Dieses Projekt erteilt keine eigenstaendigen Rechte an fremden Inhalten.
+Spiel und Loader werden separat installiert, nicht mit diesem Paket verteilt.

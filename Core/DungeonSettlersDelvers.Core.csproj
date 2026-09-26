@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>DungeonSettlersDelvers.Core</AssemblyName>
+    <RootNamespace>DungeonSettlersDelvers.Core</RootNamespace>
+  </PropertyGroup>
+  <Import Project="../GameReferences.props" />
+  <ItemGroup>
+  </ItemGroup>
+</Project>

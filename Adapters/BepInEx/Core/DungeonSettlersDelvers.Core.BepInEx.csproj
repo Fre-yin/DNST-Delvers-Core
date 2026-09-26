@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>DungeonSettlersDelvers.Core.BepInEx</AssemblyName>
+    <RootNamespace>DungeonSettlersDelvers.Core.BepInEx</RootNamespace>
+  </PropertyGroup>
+  <Import Project="../../../GameReferences.props" />
+  <ItemGroup>
+    <ProjectReference Include="../../../Core/DungeonSettlersDelvers.Core.csproj" />
+    <Reference Include="BepInEx.Core"><HintPath>$(GameLoaderDir)/BepInEx.Core.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="BepInEx.Unity.IL2CPP"><HintPath>$(GameLoaderDir)/BepInEx.Unity.IL2CPP.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>
