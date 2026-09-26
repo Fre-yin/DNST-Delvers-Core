@@ -1,0 +1,35 @@
+# Build and package output
+**/bin/
+**/obj/
+/dist/
+/TestResults/
+*.zip
+
+# IDE state and local diagnostics
+.vs/
+.idea/
+*.user
+*.suo
+*.log
+*.dmp
+*.crash
+
+# Local game installations and player data
+**/Steam/
+**/steamapps/
+**/userdata/
+**/UserData/
+**/Saves/
+**/SaveGames/
+**/DungeonSettlers_Data/
+*.sav
+*.save
+*.savegame
+steam_appid.txt
+
+# Game, loader and generated binaries are local build inputs only
+*.dll
+*.pdb
+*.exe
+GameAssembly.dll
+global-metadata.dat
