@@ -2,13 +2,13 @@
 
 **Deutsch** | [English](README.en.md)
 
-Gemeinsamer Kern für Charakter-Mods in Dungeon Settlers. Core bringt die Story-Figuren **Lowell, Liana und Kragas** in die Rekrutierung und stellt Charakterpaketen eine kleine, stabile API bereit.
+Gemeinsamer Kern für Charakter Mods in Dungeon Settlers. Core bringt die Story-Figuren **Lowell, Liana und Kragas** in die Rekrutierung und stellt Charakterpaketen eine kleine, stabile API bereit.
 
 **Version 0.2.0 für MelonLoader und BepInEx. Core-API 1.1.0.**
 
 ## Downloads
 
-Die Mod-Pakete liegen unter [Releases](../../releases). Lade nur das Paket für deinen installierten Loader herunter:
+Die Mod Pakete liegen unter [Releases](../../releases). Lade nur das Paket für deinen installierten Loader herunter:
 
 | Loader | Mod-Paket |
 | --- | --- |
@@ -21,7 +21,7 @@ Die automatisch erzeugten Quellcode-Archive sind keine Installationspakete.
 
 - **Story-Figuren als Kandidaten:** Lowell, Liana und Kragas können über ihre originalen Spiel-Presets in „Eigene Expedition“ und im Gildenpool erscheinen. Ihre Grafiken und Daten kommen aus deinem installierten Spiel; Core kopiert nichts davon.
 - **Gildenpreis-Deckel:** Diese drei kosten in der Gilde höchstens 500 Gold.
-- **Einzigartige Kandidaten beim Neu-Rekrutieren:** Ist das Neu-Rekrutieren wegen gesperrter Merkmale blockiert, zeigt der Button einheitlich den originalen Hinweis „Die gewählten Optionen stehen mit den aktuellen Sperren in Konflikt.“
+- **Einzigartige Kandidaten beim Neu Rekrutieren:** Ist das Neu Rekrutieren wegen gesperrter Merkmale blockiert, zeigt der Button einheitlich den originalen Hinweis „Die gewählten Optionen stehen mit den aktuellen Sperren in Konflikt.“
   - Lowell, Liana, Kragas: Nur das Bild zu sperren erlaubt weiterhin, die übrigen Start-Merkmale neu zu würfeln. Sobald die primären Traits gesperrt sind, ist Neu-Rekrutieren sofort blockiert, denn ihr Story-Hintergrund kann nicht zufällig erzeugt werden.
   - Charaktere aus Charakterpaketen mit einem einzigartigen Trait: Schon das Bild oder die primären Traits allein blockieren das Neu-Rekrutieren. So lässt sich derselbe Charakter nicht mehrfach erzeugen.
 - **API für Charakterpakete:** Pakete melden eigene einzigartige Kandidaten und Kampagnen-Beobachter an (siehe unten).
@@ -42,7 +42,7 @@ Vor der ersten Nutzung Spielstände sichern. Core läuft allein; Charakterpakete
 
 ## Getestet
 
-Am 26.09.2026 im Spiel geprüft, jeweils mit Core allein in beiden Loadern: Start und Signaturprüfung, Lowell und Liana in „Eigene Expedition“, Liana im Gildenpool mit 500 Gold, Sperr-Verhalten beim Neu-Rekrutieren. Zusätzlich mit MelonLoader zusammen mit einem Charakterpaket. Offline laufen bei jedem Build 86 deterministische Prüfungen je Loader.
+Am 26.09.2026 im Spiel geprüft, jeweils mit Core allein in beiden Loadern: Start und Signaturprüfung, Lowell und Liana in „Eigene Expedition“, Liana im Gildenpool mit 500 Gold, Sperr Verhalten beim Neu Rekrutieren. Zusätzlich mit MelonLoader zusammen mit einem Charakterpaket. Offline laufen bei jedem Build 86 deterministische Prüfungen je Loader.
 
 Langzeitkampagnen, alle Auflösungen und beliebige Kombinationen mit anderen Mods können nicht pauschal garantiert werden. Bei Fehlerberichten bitte Spielbuild, Loader-Version und das bereinigte Log angeben.
 
