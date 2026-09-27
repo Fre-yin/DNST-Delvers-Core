@@ -1,13 +1,13 @@
 # Changelog
 
-## 0.2.0 — 26.09.2026
+## 0.3.0: 28.09.2026
 
-Erste öffentliche Ausgabe von Dungeon Settlers Delvers: Core.
+- Core-API 1.3.0 ergänzt Lade-Callbacks für Charakterpakete. Core besitzt die gemeinsamen Harmony-Lade-Hooks; Packs können Migrationen über registrierte Callbacks einbinden.
+- Der Lade-Wächter sperrt Speicherversuche während eines aktiven Loads und nach bestimmten erkannten Ladefehlern. Ein Hinweis erscheint im Spiel.
+- Feste Traits lassen sich je Charakterprofil registrieren und bei fehlenden Einträgen wiederherstellen.
+- Das Lade-Patch-Audit erfasst neun kritische Methoden. Zwei exakt bekannte Patches von Extended Hotbar 1.0.1 werden als kompatibel klassifiziert; die Überwachung bleibt aktiv.
+- Die Funktionen für Lowell, Liana und Kragas bleiben erhalten. Die Offline-Matrix bestand 156 Core-Prüfungen je Loader und beide Core-Paketlisten. Normale Loads mit Extended Hotbar 1.0.1 bestanden unter MelonLoader und BepInEx.
 
-- Lowell, Liana und Kragas erscheinen über ihre originalen Story-Presets in „Eigene Expedition“ und im Gildenpool; der Gildenpreis ist auf 500 Gold gedeckelt.
-- Founder-Würfe verwenden einen eigenen Zufallsgenerator und verändern den Zufallszustand des Spiels nicht.
-- Einheitliche Anzeige, wenn das Neu-Rekrutieren eines einzigartigen Kandidaten durch Sperren blockiert ist: originaler Konflikt-Hinweis, deaktivierter Button.
-- Sperr-Regeln: Bei Lowell, Liana und Kragas blockieren gesperrte primäre Traits sofort, ein gesperrtes Bild allein nicht; bei Charakterpaketen mit einzigartigem Trait blockiert schon eines von beiden.
-- Öffentliche Core-API 1.1.0: `RegisterUniqueCandidatePredicate` und `RegisterRecruitmentIntegration` mit referenzgezählten Leases und Fehlerisolation.
-- Adapter für MelonLoader 0.7.3 und BepInEx 6 Unity IL2CPP (6.0.0-be.788) aus denselben Quellen.
-- Geprüfte Spielsignatur: DS_B.0.4.23 (Steam-Builds 25269660 und 25284551).
+## 0.2.0: 26.09.2026
+
+Erste öffentliche Ausgabe. Lowell, Liana und Kragas über ihre nativen Story-Presets; Gildenpreis höchstens 500 Gold; Regeln für einzigartige Kandidaten; Core-API 1.1.0; MelonLoader- und BepInEx-Adapter.

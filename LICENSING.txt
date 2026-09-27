@@ -1,4 +1,4 @@
-DUNGEON SETTLERS DELVERS: CORE — LICENSE SCOPE
+DUNGEON SETTLERS DELVERS: CORE: LICENSE SCOPE
 
 The independently authored mod code, tests, build scripts and original
 instructions are covered by the MIT License in LICENSE. Preserve its copyright

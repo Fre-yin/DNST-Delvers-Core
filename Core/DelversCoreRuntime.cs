@@ -32,8 +32,10 @@ namespace DungeonSettlersDelvers.Core;
 
 public static class DelversCoreRuntime
 {
-    public const string ApiVersion = "1.1.0";
+    public const string ApiVersion = "1.3.0";
     public const string MinimumApiVersionForUniqueCandidatePredicates = "1.1.0";
+    public const string MinimumApiVersionForFixedTraits = "1.2.0";
+    public const string MinimumApiVersionForLoadIntegrations = "1.3.0";
     public const string MelonAssemblyName = "DungeonSettlersDelvers.Core.MelonLoader";
     public const string BepInExPluginId = "fre-yin.dungeonsettlers.delvers.core";
     public const string SupportedBuilds = "DS_B.0.4.23 / Steam builds 25269660 and 25284551 (same verified binary signature)";
@@ -41,12 +43,17 @@ public static class DelversCoreRuntime
     private const string MetadataSha256 = "8D462701B21307252B6A0A5B0E77EECDFE7E10BC54F9D66EA59A1127E371DF47";
     private static readonly object Gate = new();
     private static string loaderProfile;
+    private static string harmonyOwner;
     private static bool initialized;
     private static readonly PackIntegrationRegistry<RecruitHelper> Integrations = new();
     private static readonly UniqueCandidatePredicateRegistry<RecruitCandidateData> UniqueCandidatePredicates = new();
+    internal static readonly FixedTraitRegistry FixedTraits = new();
+    private static readonly PackLoadIntegrationRegistry LoadIntegrations = new();
 
     public static bool IsReady { get { lock (Gate) return initialized; } }
     public static string LoaderProfile { get { lock (Gate) return loaderProfile; } }
+    public static bool IsSaveAllowed => LoadIntegrityGuard.IsSaveAllowed;
+    public static string SaveBlockReason => LoadIntegrityGuard.SaveBlockReason;
 
     public static bool SupportsApi(string minimumVersion)
     {
@@ -72,7 +79,9 @@ public static class DelversCoreRuntime
             try
             {
                 VerifyGameBuild();
+                LoadIntegrityGuard.ResetLifecycle();
                 harmony.PatchAll(typeof(DelversCoreRuntime).Assembly);
+                harmonyOwner = harmony.Id;
                 try { UniqueCandidateLocalization.EnsureCurrent(); }
                 catch (Exception ex) { DelversHost.Warning("CORE_LOCALIZATION_REGISTRATION_FAILED: " + ex.Message); }
                 initialized = true;
@@ -81,6 +90,8 @@ public static class DelversCoreRuntime
             catch
             {
                 harmony.UnpatchSelf();
+                LoadIntegrityGuard.ResetLifecycle();
+                harmonyOwner = null;
                 loaderProfile = null;
                 throw;
             }
@@ -105,6 +116,42 @@ public static class DelversCoreRuntime
             if (!initialized) throw new InvalidOperationException("Dungeon Settlers Delvers Core is not initialized.");
             return UniqueCandidatePredicates.Register(packId, predicate);
         }
+    }
+
+    // Traits a pack character always has, in the order a fresh unit stores them.
+    // If a save was written while the pack was inactive, Core restores missing
+    // ones from the surviving profile ID when the save is loaded again.
+    public static IDisposable RegisterFixedTraits(string packId, string profileKey,
+        IEnumerable<string> orderedTraitKeys)
+    {
+        lock (Gate)
+        {
+            if (!initialized) throw new InvalidOperationException("Dungeon Settlers Delvers Core is not initialized.");
+            return FixedTraits.Register(packId, profileKey, orderedTraitKeys);
+        }
+    }
+
+    public static IReadOnlyList<string> GetFixedTraits(string profileKey)
+        => FixedTraits.TryGet(profileKey, out _, out var traits) ? traits : null;
+
+    public static IDisposable RegisterLoadIntegration(string packId,
+        BeforeComponentsDeserializeHandler beforeComponentsDeserialize = null,
+        BeforeUnitProfileDeserializeHandler beforeUnitProfileDeserialize = null,
+        AfterUnitProfileDeserializeHandler afterUnitProfileDeserialize = null,
+        AfterCampaignLoadedHandler afterCampaignLoaded = null)
+    {
+        lock (Gate)
+        {
+            if (!initialized) throw new InvalidOperationException("Dungeon Settlers Delvers Core is not initialized.");
+            return LoadIntegrations.Register(packId, beforeComponentsDeserialize,
+                beforeUnitProfileDeserialize, afterUnitProfileDeserialize, afterCampaignLoaded);
+        }
+    }
+
+    public static void AuditFixedTraitRestore()
+    {
+        if (!IsReady) throw new InvalidOperationException("Core fixed-trait restore is not active.");
+        FixedTraitRestore.RunAudit();
     }
 
     public static void AuditNativeFounders()
@@ -140,6 +187,34 @@ public static class DelversCoreRuntime
             DelversHost.Warning("CORE_PACK_CAMPAIGN_REFRESH_FAILED pack=" + packId + ": " + ex.Message));
     }
 
+    internal static void NotifyBeforeComponentsDeserialize(
+#if BEPINEX
+        Il2CppSystem.Collections.Generic.List<global::Refactor.ComponentSaveData> saved,
+#else
+        Il2CppSystem.Collections.Generic.List<Il2CppRefactor.ComponentSaveData> saved,
+#endif
+        IEntity entity)
+        => LoadIntegrations.NotifyBeforeComponents(saved, entity, ReportLoadIntegrationFailure);
+
+    internal static void NotifyBeforeUnitProfileDeserialize(ComponentSaveBaseData saved, IEntity entity)
+        => LoadIntegrations.NotifyBeforeProfile(saved, entity, ReportLoadIntegrationFailure);
+
+    internal static void NotifyAfterUnitProfileDeserialize(UnitProfileComponent profile)
+        => LoadIntegrations.NotifyAfterProfile(profile, ReportLoadIntegrationFailure);
+
+    internal static void NotifyAfterCampaignLoaded(CampaignDataContainer campaign)
+        => LoadIntegrations.NotifyAfterCampaign(campaign, ReportLoadIntegrationFailure);
+
+    internal static void AuditLoadPatches()
+        => LoadPatchAudit.Run(harmonyOwner);
+
+    private static void ReportLoadIntegrationFailure(string packId, string stage, Exception exception)
+    {
+        DelversHost.Error("CORE_PACK_LOAD_CALLBACK_FAILED pack=" + packId
+            + " stage=" + stage + " error=" + exception);
+        LoadIntegrityGuard.ReportFailure("pack=" + packId + ":" + stage, exception);
+    }
+
     public static void Shutdown(string loader)
     {
         lock (Gate)
@@ -147,8 +222,13 @@ public static class DelversCoreRuntime
             if (!initialized || !string.Equals(loaderProfile, loader, StringComparison.Ordinal)) return;
             initialized = false;
             loaderProfile = null;
+            harmonyOwner = null;
             Integrations.Clear();
             UniqueCandidatePredicates.Clear();
+            FixedTraits.Clear();
+            LoadIntegrations.Clear();
+            LoadIntegrityGuard.ResetLifecycle();
+            LoadPatchAudit.ResetLifecycle();
             UniqueCandidateRerollUI.ResetLifecycle();
             UniqueCandidateLocalization.ResetLifecycle();
         }

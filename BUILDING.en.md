@@ -1,18 +1,10 @@
-# Build and validation
+# Building Dungeon Settlers Delvers: Core
 
 [Deutsch](BUILDING.md)
 
-## Requirements
+Package version 0.3.0 and Core API 1.3.0 are separate version numbers. This repository contains Core only. The optional Frieren pack has its own source distribution.
 
-- .NET SDK with the .NET 6 targeting pack (checked with SDK 10.0.302).
-- PowerShell 7.
-- A local MelonLoader game copy with references under `MelonLoader/net6` and `MelonLoader/Il2CppAssemblies`.
-- A local BepInEx 6 game copy (Unity IL2CPP x64) with references under `BepInEx/core` and `BepInEx/interop`.
-- Both copies must have been started once so the loader has generated its interop assemblies.
-
-The repository contains no game or loader files and no local path. `GameReferences.props` reads game, Unity, Harmony, IL2CPP and loader assemblies from the copy you pass in; every reference has `Private=false` and never ends up in a package.
-
-## Build and check both loaders
+You need PowerShell 7, a .NET SDK with the .NET 6 targeting pack, and initialized local Dungeon Settlers copies with MelonLoader 0.7.3 and BepInEx 6 Unity IL2CPP x64. Both loaders must have generated their interop assemblies. The game, loaders, and local paths are not part of this repository.
 
 ```powershell
 $MelonGameDir = Read-Host 'Path to the MelonLoader game copy'
@@ -22,14 +14,10 @@ pwsh -File .\Build-Release.ps1 -ValidateOnly `
   -BepInExGameDir $BepInExGameDir
 ```
 
-The script reads the version from `Directory.Build.props`, restores offline through the empty-source `NuGet.Config`, and builds Core and its adapter for each loader. It then runs the deterministic offline checks in `Tests/Core`. Finally it stages the exact package file list for each loader in a temporary folder and checks it: exact paths, no game or loader files, no local paths inside the DLLs. The script creates no ZIP, installs nothing and publishes nothing.
+The script restores offline using `NuGet.Config`, builds Core and both adapters, runs the Core rule tests, and validates the exact file list for each loader package. In the last full 0.3.0 run, 156 of 156 Core checks passed per loader; the builds had zero warnings and errors. `-ValidateOnly` creates no ZIP, installs nothing, and publishes nothing. A build alone does not establish in-game compatibility.
 
-Outputs: `bin/Melon/Release/net6.0/` and `bin/BepInEx/Release/net6.0/`. Builds are deterministic.
+Outputs go to `bin/<Loader>/Release/net6.0/` and intermediates to `obj/<Loader>/`. Neither directory belongs in Git. Game and loader references have `Private=false` and are not packaged.
 
-## Package layout
+The MelonLoader package contains its adapter DLL under `Mods/` and `DungeonSettlersDelvers.Core.dll` under `UserLibs/`. The BepInEx package contains both DLLs under `BepInEx/plugins/DungeonSettlersDelvers/`. Both include the installation note. Core contains no Frieren files.
 
-| Package | MelonLoader | BepInEx |
-| --- | --- | --- |
-| Core | adapter `DungeonSettlersDelvers.Core.MelonLoader.dll` in `Mods/`, `DungeonSettlersDelvers.Core.dll` in `UserLibs/` | both DLLs in `BepInEx/plugins/DungeonSettlersDelvers/` |
-
-The package version is `0.2.0`; the loader-neutral Core API is `1.1.0`. The MelonLoader adapter assembly is `DungeonSettlersDelvers.Core.MelonLoader`; character packs declare it through `MelonAdditionalDependencies`. The BepInEx plugin ID is `fre-yin.dungeonsettlers.delvers.core`.
+See [CORE-ADDON-LEITFADEN.md](CORE-ADDON-LEITFADEN.md) for the public addon API.

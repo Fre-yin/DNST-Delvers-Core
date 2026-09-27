@@ -1,5 +1,16 @@
 using System.Collections;
 using DungeonSettlersDelvers.Core;
+#if BEPINEX
+using Refactor;
+using Refactor.Component;
+using Refactor.Main;
+using ComponentSaveList = Il2CppSystem.Collections.Generic.List<Refactor.ComponentSaveData>;
+#else
+using Il2CppRefactor;
+using Il2CppRefactor.Component;
+using Il2CppRefactor.Main;
+using ComponentSaveList = Il2CppSystem.Collections.Generic.List<Il2CppRefactor.ComponentSaveData>;
+#endif
 
 var checks = 0;
 void Check(bool condition, string name)
@@ -355,6 +366,67 @@ Check(uniquePredicates.Count == 0 && !uniquePredicates.IsUnique(exampleCandidate
 cleanupLease.Dispose();
 Check(uniquePredicates.Count == 0, "a lease disposed after Core cleanup is harmless");
 
+// Fixed traits: a save written while a pack was inactive keeps only the profile.
+var fixedOrder = new[] { "AFFECTER_Elf", "AFFECTER_ExampleBackground", "AFFECTER_ExampleIndividual" };
+Check(FixedTraitRules.WithMissing(new[] { "AFFECTER_BlessOfWorldTree", "AFFECTER_FireplaceWarmth" }, fixedOrder)
+        .SequenceEqual(fixedOrder.Concat(new[] { "AFFECTER_BlessOfWorldTree", "AFFECTER_FireplaceWarmth" })),
+    "a wiped unit regains every fixed trait first, in registered order");
+Check(FixedTraitRules.WithMissing(Array.Empty<string>(), fixedOrder).SequenceEqual(fixedOrder),
+    "an empty affecter list regains every fixed trait");
+Check(FixedTraitRules.WithMissing(new[] { "AFFECTER_NewRecruit", "AFFECTER_Elf", "AFFECTER_Hungry" }, fixedOrder)
+        .SequenceEqual(new[] { "AFFECTER_NewRecruit", "AFFECTER_Elf", "AFFECTER_ExampleBackground",
+            "AFFECTER_ExampleIndividual", "AFFECTER_Hungry" }),
+    "missing fixed traits follow their present predecessor; other keys keep their order");
+Check(FixedTraitRules.WithMissing(new[] { "AFFECTER_Elf", "AFFECTER_ExampleIndividual" }, fixedOrder)
+        .SequenceEqual(fixedOrder),
+    "a missing middle trait is inserted between its neighbours");
+Check(FixedTraitRules.WithMissing(new[] { "AFFECTER_ExampleIndividual" }, fixedOrder)
+        .SequenceEqual(fixedOrder),
+    "leading fixed traits are inserted before the first present one without duplicates");
+Check(FixedTraitRules.WithMissing(new[] { "AFFECTER_Hungry", "AFFECTER_ExampleIndividual", "AFFECTER_Elf",
+        "AFFECTER_ExampleBackground" }, fixedOrder) == null,
+    "an intact unit needs no change, whatever the saved order");
+Check(FixedTraitRules.WithMissing(new[] { null, "AFFECTER_Elf", "AFFECTER_Elf" }, fixedOrder)
+        .SequenceEqual(new[] { null, "AFFECTER_Elf", "AFFECTER_ExampleBackground", "AFFECTER_ExampleIndividual",
+            "AFFECTER_Elf" }),
+    "unreadable and duplicate entries keep their position and anchor only once");
+
+var fixedTraits = new FixedTraitRegistry();
+var exampleFixedLease = fixedTraits.Register("example-pack", "UNITVISUAL_Example", fixedOrder);
+var duplicateFixedLease = fixedTraits.Register("example-pack", "UNITVISUAL_Example", fixedOrder.ToList());
+Check(fixedTraits.TryGet("UNITVISUAL_Example", out var fixedPack, out var registeredTraits)
+        && fixedPack == "example-pack" && registeredTraits.SequenceEqual(fixedOrder) && fixedTraits.Count == 1,
+    "a pack registers ordered fixed traits for its profile; a repeated identical registration is leased");
+static bool RegisterFails(FixedTraitRegistry registry, string packId, string profileKey, string[] traits)
+{
+    try { registry.Register(packId, profileKey, traits).Dispose(); return false; }
+    catch (ArgumentException) { return true; }
+    catch (InvalidOperationException) { return true; }
+}
+Check(RegisterFails(fixedTraits, "other-pack", "UNITVISUAL_Example", fixedOrder)
+        && RegisterFails(fixedTraits, "example-pack", "UNITVISUAL_Example", new[] { "AFFECTER_Elf" }),
+    "another pack or different traits cannot take over a registered profile");
+Check(RegisterFails(fixedTraits, "Bad Pack", "UNITVISUAL_Other", fixedOrder)
+        && RegisterFails(fixedTraits, "example-pack", "", fixedOrder)
+        && RegisterFails(fixedTraits, "example-pack", "UNITVISUAL_Other", Array.Empty<string>())
+        && RegisterFails(fixedTraits, "example-pack", "UNITVISUAL_Other", new[] { "AFFECTER_Elf", "AFFECTER_Elf" })
+        && RegisterFails(fixedTraits, "example-pack", "UNITVISUAL_Other", new[] { "AFFECTER_Elf", " " }),
+    "invalid pack IDs, profiles and trait lists are rejected");
+Check(fixedTraits.Count == 1 && fixedTraits.ShouldReportFailure("UNITVISUAL_Example")
+        && !fixedTraits.ShouldReportFailure("UNITVISUAL_Example")
+        && !fixedTraits.ShouldReportFailure("UNITVISUAL_Unregistered"),
+    "a failing restore is reported once per registered profile");
+duplicateFixedLease.Dispose();
+Check(fixedTraits.TryGet("UNITVISUAL_Example", out _, out _), "one released lease keeps a duplicate registration");
+exampleFixedLease.Dispose();
+exampleFixedLease.Dispose();
+Check(fixedTraits.Count == 0 && !fixedTraits.TryGet("UNITVISUAL_Example", out _, out _),
+    "the last released lease removes the registration; double dispose is harmless");
+var fixedCleanupLease = fixedTraits.Register("example-pack", "UNITVISUAL_Example", fixedOrder);
+fixedTraits.Clear();
+fixedCleanupLease.Dispose();
+Check(fixedTraits.Count == 0, "Core shutdown cleanup clears fixed traits; a later lease release is harmless");
+
 var integrations = new PackIntegrationRegistry<string>();
 var observed = new List<string>();
 var alphaObserver = new Action<string>(value => observed.Add("alpha:" + value));
@@ -394,6 +466,276 @@ integrations.AnyPolicy((_, _) => failingPolicyLogCount++);
 integrations.AnyPolicy((_, _) => failingPolicyLogCount++);
 Check(failingPolicyLogCount == 1, "a failing pack policy is isolated and reported only once");
 failingPolicyLease.Dispose();
+
+var loadIntegrations = new PackLoadIntegrationRegistry();
+var loadCallbackTrace = new List<string>();
+var componentSaveList = new ComponentSaveList();
+var profileSaveData = new ComponentSaveBaseData();
+var loadEntity = new TestEntity();
+var loadedProfile = new UnitProfileComponent();
+var loadedCampaign = new CampaignDataContainer();
+var beforeComponents = new BeforeComponentsDeserializeHandler((saved, entity) =>
+{
+    Check(ReferenceEquals(saved, componentSaveList) && ReferenceEquals(entity, loadEntity),
+        "before-components load callback receives the original deserialize context");
+    loadCallbackTrace.Add("before-components");
+});
+var beforeProfile = new BeforeUnitProfileDeserializeHandler((saved, entity) =>
+{
+    Check(ReferenceEquals(saved, profileSaveData) && ReferenceEquals(entity, loadEntity),
+        "before-profile load callback receives the original deserialize context");
+    loadCallbackTrace.Add("before-profile");
+});
+var afterProfile = new AfterUnitProfileDeserializeHandler(profile =>
+{
+    Check(ReferenceEquals(profile, loadedProfile),
+        "after-profile load callback receives the loaded profile");
+    loadCallbackTrace.Add("after-profile");
+});
+var afterCampaign = new AfterCampaignLoadedHandler(campaign =>
+{
+    Check(ReferenceEquals(campaign, loadedCampaign),
+        "after-campaign load callback receives the loaded campaign");
+    loadCallbackTrace.Add("after-campaign");
+});
+var loadLease = loadIntegrations.Register("example-pack", beforeComponents, beforeProfile,
+    afterProfile, afterCampaign);
+var duplicateLoadLease = loadIntegrations.Register("example-pack", beforeComponents, beforeProfile,
+    afterProfile, afterCampaign);
+Check(loadIntegrations.Count == 1,
+    "an identical load integration reuses one registration with independent leases");
+var conflictingLoadIntegrationRejected = false;
+try
+{
+    loadIntegrations.Register("example-pack", (_, _) => { }, beforeProfile, afterProfile,
+        afterCampaign).Dispose();
+}
+catch (InvalidOperationException)
+{
+    conflictingLoadIntegrationRejected = true;
+}
+Check(conflictingLoadIntegrationRejected && loadIntegrations.Count == 1,
+    "a pack cannot replace an existing load integration with different callbacks");
+
+var unexpectedLoadFailureCount = 0;
+void UnexpectedLoadFailure(string _, string __, Exception ___) => unexpectedLoadFailureCount++;
+loadIntegrations.NotifyBeforeComponents(componentSaveList, loadEntity, UnexpectedLoadFailure);
+loadIntegrations.NotifyBeforeProfile(profileSaveData, loadEntity, UnexpectedLoadFailure);
+loadIntegrations.NotifyAfterProfile(loadedProfile, UnexpectedLoadFailure);
+loadIntegrations.NotifyAfterCampaign(loadedCampaign, UnexpectedLoadFailure);
+Check(unexpectedLoadFailureCount == 0
+        && loadCallbackTrace.SequenceEqual(new[]
+        {
+            "before-components", "before-profile", "after-profile", "after-campaign"
+        }),
+    "load integration dispatches every callback stage once despite duplicate leases");
+
+var expectedLoadException = new InvalidOperationException("expected load callback failure");
+var failureReports = new List<(string PackId, string Stage, Exception Error)>();
+var callbacksAfterFailure = 0;
+var failingLoadLease = loadIntegrations.Register("broken-pack",
+    (_, _) => throw expectedLoadException, null, null, null);
+var healthyLoadLease = loadIntegrations.Register("healthy-pack",
+    (_, _) => callbacksAfterFailure++, null, null, null);
+loadIntegrations.NotifyBeforeComponents(componentSaveList, loadEntity,
+    (packId, stage, error) => failureReports.Add((packId, stage, error)));
+Check(failureReports.Count == 1
+        && failureReports[0].PackId == "broken-pack"
+        && failureReports[0].Stage == "before-components"
+        && ReferenceEquals(failureReports[0].Error, expectedLoadException),
+    "a failing load callback reports its pack, stage and original exception");
+Check(callbacksAfterFailure == 1,
+    "one failing load callback does not prevent another pack from receiving the stage");
+failingLoadLease.Dispose();
+healthyLoadLease.Dispose();
+
+loadLease.Dispose();
+loadLease.Dispose();
+Check(loadIntegrations.Count == 1,
+    "disposing one reused load-integration lease keeps the registration active");
+duplicateLoadLease.Dispose();
+Check(loadIntegrations.Count == 0,
+    "disposing the last load-integration lease removes the registration");
+
+var callbacksAfterClear = 0;
+var clearedLoadLease = loadIntegrations.Register("cleanup-pack",
+    (_, _) => callbacksAfterClear++, null, null, null);
+loadIntegrations.Clear();
+loadIntegrations.NotifyBeforeComponents(componentSaveList, loadEntity, UnexpectedLoadFailure);
+clearedLoadLease.Dispose();
+Check(loadIntegrations.Count == 0 && callbacksAfterClear == 0,
+    "Core cleanup clears load integrations and later lease disposal remains harmless");
+
+Check(LoadIntegritySignalRules.IsDeserializationFailure(
+        "[ComponentList] Failed to deserialize component. Type=Affecter", true),
+    "component deserialization failures are recognized as destructive load signals");
+Check(LoadIntegritySignalRules.IsDeserializationFailure(
+        "CampaignDataContainer: Failed to deserialize section EntityContainerSaveData", true),
+    "section deserialization failures are recognized as destructive load signals");
+Check(LoadIntegritySignalRules.IsDeserializationFailure(
+        "FAILED TO DESERIALIZE COMPONENT", true),
+    "destructive load signal matching is case insensitive");
+Check(!LoadIntegritySignalRules.IsDeserializationFailure(
+        "A pack callback failed after the campaign loaded", true),
+    "unrelated errors do not trigger the native deserialization signal");
+Check(!LoadIntegritySignalRules.IsDeserializationFailure(null, true),
+    "empty native log messages do not trigger the load guard");
+Check(!LoadIntegritySignalRules.IsDeserializationFailure(
+        "[OtherMod] Failed to deserialize component config, using defaults", false),
+    "informational log lines with the same words do not trigger the load guard");
+
+Check(LoadIntegrityNoticeText.All.All(entry => entry.Text.AllLanguages.Count == 10
+        && entry.Text.AllLanguages.All(text =>
+            !string.IsNullOrWhiteSpace(text) && text.StartsWith("Delvers Core", StringComparison.Ordinal))),
+    "the in-game save-block dialog and banner have a Delvers Core text for every game language");
+Check(LoadIntegrityNoticeText.All.All(entry =>
+            entry.Key.StartsWith("TEXTKEY_DelversCore_", StringComparison.Ordinal))
+        && LoadIntegrityNoticeText.All.Select(entry => entry.Key).Distinct().Count() == 2,
+    "the save-block notices use distinct Core-owned text keys");
+Check(LoadIntegrityNoticeText.SaveBlockedShort.AllLanguages.All(text => text.Length <= 90),
+    "the save-block banner stays short enough for the one-line help notice");
+Check(LoadIntegrityNoticeText.All.SelectMany(entry => entry.Text.AllLanguages)
+        .All(text => !text.Contains('\u2013') && !text.Contains('\u2014')),
+    "the save-block notices use natural sentences without en or em dashes");
+
+var healthyLoad = new LoadIntegrityState();
+Check(healthyLoad.IsSaveAllowed && healthyLoad.SaveBlockReason == null,
+    "a fresh session allows saving");
+healthyLoad.Begin("campaign-a");
+var duringLoad = healthyLoad.DecideSave();
+Check(duringLoad.Blocked && !duringLoad.ShouldNotify
+        && duringLoad.Reason == LoadIntegrityState.LoadInProgressReason,
+    "a save during a running load is held back without a player notice");
+Check(!healthyLoad.ObserveCompletionSignal(LoadCompletionSignal.CampaignEventCompleted)
+        && healthyLoad.HasObservedCompletionSignal,
+    "the first completion signal is recorded but does not complete the load");
+Check(healthyLoad.ObserveCompletionSignal(LoadCompletionSignal.NativeFinalizeCompleted)
+        && !healthyLoad.ObserveCompletionSignal(LoadCompletionSignal.NativeFinalizeCompleted),
+    "both completion signals start completion exactly once");
+Check(healthyLoad.Complete(contextReady: true) == LoadCompletionResult.Trusted
+        && healthyLoad.IsSaveAllowed && !healthyLoad.DecideSave().Blocked,
+    "a load with both signals and no failure is trusted and allows saving");
+Check(healthyLoad.Complete(contextReady: true) == LoadCompletionResult.NotInProgress,
+    "completing twice is harmless");
+Check(!healthyLoad.ReportFailure("late-error") && healthyLoad.IsSaveAllowed,
+    "a failure reported outside a load does not block saving");
+
+var failedLoad = new LoadIntegrityState();
+failedLoad.Begin("campaign-b");
+Check(failedLoad.ReportFailure("native-deserialization-log")
+        && !failedLoad.ReportFailure("second-source"),
+    "only the first failure of a load is reported");
+failedLoad.ObserveCompletionSignal(LoadCompletionSignal.NativeFinalizeCompleted);
+failedLoad.ObserveCompletionSignal(LoadCompletionSignal.CampaignEventCompleted);
+Check(failedLoad.Complete(contextReady: true) == LoadCompletionResult.Untrusted,
+    "a load with a detected failure completes untrusted");
+var firstBlockedSave = failedLoad.DecideSave();
+var secondBlockedSave = failedLoad.DecideSave();
+Check(firstBlockedSave.Blocked && firstBlockedSave.ShouldLog && firstBlockedSave.ShouldNotify
+        && secondBlockedSave.Blocked && !secondBlockedSave.ShouldLog && secondBlockedSave.ShouldNotify,
+    "every blocked save notifies the player while the log entry is written once per load");
+Check(firstBlockedSave.Reason == LoadIntegrityDiagnostics.BuildSaveBlockedMessage("native-deserialization-log"),
+    "the save-block reason names the first detection source");
+failedLoad.Begin("campaign-c");
+failedLoad.ObserveCompletionSignal(LoadCompletionSignal.NativeFinalizeCompleted);
+failedLoad.ObserveCompletionSignal(LoadCompletionSignal.CampaignEventCompleted);
+Check(failedLoad.Complete(contextReady: true) == LoadCompletionResult.Untrusted
+        && failedLoad.DecideSave().Blocked && failedLoad.FailureSource == "native-deserialization-log",
+    "a clean later load in the same session stays blocked until restart");
+
+var missingContext = new LoadIntegrityState();
+missingContext.Begin("campaign-d");
+missingContext.ObserveCompletionSignal(LoadCompletionSignal.NativeFinalizeCompleted);
+missingContext.ObserveCompletionSignal(LoadCompletionSignal.CampaignEventCompleted);
+Check(missingContext.Complete(contextReady: false) == LoadCompletionResult.Untrusted,
+    "a completed load without its campaign context is not trusted");
+
+var abortedLoad = new LoadIntegrityState();
+Check(!abortedLoad.Abort("CampaignLoadingEventHandler.ShowCampaignLoadFailedNotice")
+        && abortedLoad.IsSaveAllowed,
+    "the native load-failed notice outside a load changes nothing");
+abortedLoad.Begin("campaign-e");
+var abortSequence = abortedLoad.LoadSequence;
+Check(abortedLoad.Abort("load-completion-timeout") && !abortedLoad.IsLoadInProgress
+        && abortedLoad.IsSaveBlocked && abortedLoad.FailureSource == "load-completion-timeout",
+    "an abandoned or timed-out load ends the transaction and blocks saving");
+abortedLoad.Begin("campaign-f");
+Check(abortedLoad.LoadSequence == abortSequence + 1,
+    "every load gets its own sequence so a stale watchdog cannot abort a newer load");
+abortedLoad.Reset();
+Check(abortedLoad.IsSaveAllowed && abortedLoad.FailureSource == null && !abortedLoad.IsLoadInProgress,
+    "a lifecycle reset clears the block");
+
+Check(LoadIntegrityDiagnostics.FailureNotice ==
+        "Delvers Core detected mod data or an incompatible mod version during this load. "
+        + "Saving is blocked to protect this save. "
+        + "This is not an error in the native Dungeon Settlers patch. "
+        + "Report the involved mod to its author, not to the game developers.",
+    "load failure notice attributes the diagnosis and protection to Core and directs reports to mod authors");
+Check(LoadIntegrityDiagnostics.BuildSaveBlockedMessage("native-deserialization-log") ==
+        LoadIntegrityDiagnostics.FailureNotice
+        + " Restart the game before saving again. Detection source: native-deserialization-log.",
+    "save-block message explains protection, restart recovery and detection source");
+Check(LoadIntegrityDiagnostics.BuildSaveBlockedMessage("native\r\n deserialization-log")
+        .EndsWith("Detection source: native deserialization-log.", StringComparison.Ordinal),
+    "line breaks in a detection source are normalized in the save-block message");
+
+var eventFirstCompletion = default(LoadCompletionState)
+    .Observe(LoadCompletionSignal.CampaignEventCompleted);
+Check(!eventFirstCompletion.IsComplete,
+    "campaign completion event alone keeps the load transaction incomplete");
+eventFirstCompletion = eventFirstCompletion.Observe(LoadCompletionSignal.NativeFinalizeCompleted);
+Check(eventFirstCompletion.IsComplete,
+    "campaign completion event followed by native finalize completes the load transaction");
+
+var finalizeFirstCompletion = default(LoadCompletionState)
+    .Observe(LoadCompletionSignal.NativeFinalizeCompleted);
+Check(!finalizeFirstCompletion.IsComplete,
+    "native finalize alone keeps the load transaction incomplete");
+finalizeFirstCompletion = finalizeFirstCompletion.Observe(LoadCompletionSignal.CampaignEventCompleted);
+Check(finalizeFirstCompletion.IsComplete,
+    "native finalize followed by campaign completion event completes the load transaction");
+
+var duplicateEventCompletion = default(LoadCompletionState)
+    .Observe(LoadCompletionSignal.CampaignEventCompleted)
+    .Observe(LoadCompletionSignal.CampaignEventCompleted);
+Check(!duplicateEventCompletion.IsComplete,
+    "duplicate campaign completion events cannot replace the missing native finalize signal");
+
+var duplicateFinalizeCompletion = default(LoadCompletionState)
+    .Observe(LoadCompletionSignal.NativeFinalizeCompleted)
+    .Observe(LoadCompletionSignal.NativeFinalizeCompleted);
+Check(!duplicateFinalizeCompletion.IsComplete,
+    "duplicate native finalize callbacks cannot replace the missing campaign completion event");
+
+Check(LoadPatchCompatibilityRules.IsKnownExtendedHotbar(
+        "UnitQuickSlotContainer.Deserialize", "postfix", "DungeonSettlers10Slots", "1.0.1.0",
+        "DungeonSettlers10Slots.ContainerSlotsLoaded", "Postfix"),
+    "Extended Hotbar container restore is recognized as an exact compatible load patch");
+Check(LoadPatchCompatibilityRules.IsKnownExtendedHotbar(
+        "QuickSlotData.Deserialize", "prefix", "DungeonSettlers10Slots", "1.0.1.0",
+        "DungeonSettlers10Slots.LoadSlots", "Prefix"),
+    "Extended Hotbar quick-slot restore is recognized as an exact compatible load patch");
+Check(LoadPatchCompatibilityRules.IsKnownExtendedHotbar(
+        "UnitQuickSlotContainer.Deserialize", "postfix", "DungeonSettlersHotbar.BepInEx", "1.0.1.0",
+        "DungeonSettlers10Slots.ContainerSlotsLoaded", "Postfix"),
+    "BepInEx Extended Hotbar container restore is recognized as an exact compatible load patch");
+Check(LoadPatchCompatibilityRules.IsKnownExtendedHotbar(
+        "QuickSlotData.Deserialize", "prefix", "DungeonSettlersHotbar.BepInEx", "1.0.1.0",
+        "DungeonSettlers10Slots.LoadSlots", "Prefix"),
+    "BepInEx Extended Hotbar quick-slot restore is recognized as an exact compatible load patch");
+Check(!LoadPatchCompatibilityRules.IsKnownExtendedHotbar(
+        "QuickSlotData.Deserialize", "prefix", "DungeonSettlers10Slots", "1.1.0.0",
+        "DungeonSettlers10Slots.LoadSlots", "Prefix"),
+    "an unreviewed Extended Hotbar version remains a foreign patch");
+Check(!LoadPatchCompatibilityRules.IsKnownExtendedHotbar(
+        "QuickSlotData.Deserialize", "postfix", "DungeonSettlers10Slots", "1.0.1.0",
+        "DungeonSettlers10Slots.LoadSlots", "Prefix"),
+    "a changed Extended Hotbar patch phase remains a foreign patch");
+Check(!LoadPatchCompatibilityRules.IsKnownExtendedHotbar(
+        "QuickSlotData.Deserialize", "prefix", "OtherHotbar", "1.0.1.0",
+        "DungeonSettlers10Slots.LoadSlots", "Prefix"),
+    "an unrelated assembly cannot impersonate the known Hotbar integration");
 
 var tempRoot = Path.Combine(Path.GetTempPath(), "DelversPresenceTests-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(tempRoot);
@@ -466,4 +808,8 @@ sealed class TestDelversHost : IDelversHostServices
     public void Error(string message) { }
     public object StartCoroutine(IEnumerator routine) => throw new NotSupportedException();
     public void StopCoroutine(object handle) { }
+}
+
+sealed class TestEntity : IEntity
+{
 }

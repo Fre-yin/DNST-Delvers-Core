@@ -12,9 +12,17 @@
     <Compile Include="../../Core/CampaignPresenceStore.cs" Link="CampaignPresenceStore.cs" />
     <Compile Include="../../Core/DelversHostServices.cs" Link="DelversHostServices.cs" />
     <Compile Include="../../Core/PackIntegrationRegistry.cs" Link="PackIntegrationRegistry.cs" />
+    <Compile Include="../../Core/PackLoadIntegrationRegistry.cs" Link="PackLoadIntegrationRegistry.cs" />
     <Compile Include="../../Core/UniqueCandidateRules.cs" Link="UniqueCandidateRules.cs" />
     <Compile Include="../../Core/UniqueCandidateRerollDecision.cs" Link="UniqueCandidateRerollDecision.cs" />
     <Compile Include="../../Core/UniqueCandidatePredicateRegistry.cs" Link="UniqueCandidatePredicateRegistry.cs" />
     <Compile Include="../../Core/UniqueCandidateLocalizationText.cs" Link="UniqueCandidateLocalizationText.cs" />
+    <Compile Include="../../Core/FixedTraitRules.cs" Link="FixedTraitRules.cs" />
+    <Compile Include="../../Core/FixedTraitRegistry.cs" Link="FixedTraitRegistry.cs" />
+    <Compile Include="../../Core/LoadIntegritySignalRules.cs" Link="LoadIntegritySignalRules.cs" />
+    <Compile Include="../../Core/LoadIntegrityDiagnostics.cs" Link="LoadIntegrityDiagnostics.cs" />
+    <Compile Include="../../Core/LoadIntegrityState.cs" Link="LoadIntegrityState.cs" />
+    <Compile Include="../../Core/LoadIntegrityNoticeText.cs" Link="LoadIntegrityNoticeText.cs" />
+    <Compile Include="../../Core/LoadPatchCompatibilityRules.cs" Link="LoadPatchCompatibilityRules.cs" />
   </ItemGroup>
 </Project>

@@ -1,43 +1,15 @@
-DUNGEON SETTLERS DELVERS: CORE 0.2.0
+DUNGEON SETTLERS DELVERS: CORE 0.3.0
 
-VORAUSSETZUNGEN
-- Dungeon Settlers DS_B.0.4.23 (Steam-Builds 25269660 / 25284551).
-- MelonLoader 0.7.3 ODER BepInEx 6 Unity IL2CPP x64 (getestet: 6.0.0-be.788).
-  Beide Loader nicht in derselben Installation mischen.
+Installiere nur das Paket für deinen Loader. Sichere deine Spielstände vor der ersten Nutzung. MelonLoader und BepInEx gehören nicht gemeinsam in dieselbe Spielinstallation.
 
-INSTALLATION
-MelonLoader:
+MelonLoader 0.7.3:
 - Mods/DungeonSettlersDelvers.Core.MelonLoader.dll
 - UserLibs/DungeonSettlersDelvers.Core.dll
-BepInEx:
-- BepInEx/plugins/DungeonSettlersDelvers/ (beide DLLs)
 
-Vor der ersten Nutzung Spielstaende sichern. Core laeuft allein.
-Charakterpakete benoetigen das Core-Paket desselben Loaders.
-Bei einer anderen Spielversion bleibt Core inaktiv und meldet das im Log.
+BepInEx 6 Unity IL2CPP x64:
+- BepInEx/plugins/DungeonSettlersDelvers/DungeonSettlersDelvers.Core.BepInEx.dll
+- BepInEx/plugins/DungeonSettlersDelvers/DungeonSettlersDelvers.Core.dll
 
-Inoffizielle Community-Mod. Eigener Code: MIT (siehe LICENSE).
-Spielinhalte, Figuren und Marken sind ausgenommen (siehe LICENSING.txt).
+Core ist eigenständig. Optionale Charakterpakete benötigen Core für denselben Loader und eine passende Core-API. Bei einem erkannten Ladefehler sperrt Core das Speichern für die laufende Spielsitzung. Starte das Spiel dann neu und prüfe den betroffenen Mod und das Log, bevor du erneut speicherst.
 
-------------------------------------------------------------------------
-
-DUNGEON SETTLERS DELVERS: CORE 0.2.0
-
-REQUIREMENTS
-- Dungeon Settlers DS_B.0.4.23 (Steam builds 25269660 / 25284551).
-- MelonLoader 0.7.3 OR BepInEx 6 Unity IL2CPP x64 (tested: 6.0.0-be.788).
-  Do not mix both loaders in one installation.
-
-INSTALLATION
-MelonLoader:
-- Mods/DungeonSettlersDelvers.Core.MelonLoader.dll
-- UserLibs/DungeonSettlersDelvers.Core.dll
-BepInEx:
-- BepInEx/plugins/DungeonSettlersDelvers/ (both DLLs)
-
-Back up your saves before first use. Core runs on its own.
-Character packs need the Core package of the same loader.
-On another game version Core stays inactive and says so in the log.
-
-Unofficial community mod. Original code: MIT (see LICENSE).
-Game content, characters and trademarks are excluded (see LICENSING.txt).
+Geprüfte Spielsignatur: Dungeon Settlers DS_B.0.4.23, Steam-Builds 25269660 und 25284551. Andere Spielversionen bleiben inaktiv.

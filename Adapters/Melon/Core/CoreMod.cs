@@ -2,7 +2,7 @@ using HarmonyLib;
 using MelonLoader;
 
 [assembly: MelonInfo(typeof(DungeonSettlersDelvers.Core.MelonLoader.CoreMod),
-    "Dungeon Settlers Delvers: Core", "0.2.0", "Danny/Codex")]
+    "Dungeon Settlers Delvers: Core", "0.3.0", "Danny")]
 [assembly: MelonGame(null, "DungeonSettlers")]
 [assembly: HarmonyDontPatchAll]
 

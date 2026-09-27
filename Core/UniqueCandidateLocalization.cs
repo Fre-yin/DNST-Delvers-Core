@@ -22,7 +22,9 @@ internal static class UniqueCandidateLocalization
     private static readonly TextKeyTableData[] Rows =
     {
         Row(UniqueCandidateLocalizationText.NativeLockConflictKey,
-            UniqueCandidateLocalizationText.LockConflictFallback)
+            UniqueCandidateLocalizationText.LockConflictFallback),
+        Row(LoadIntegrityNoticeText.SaveBlockedKey, LoadIntegrityNoticeText.SaveBlocked),
+        Row(LoadIntegrityNoticeText.SaveBlockedShortKey, LoadIntegrityNoticeText.SaveBlockedShort)
     };
 
     private static IntPtr registeredSheet;
@@ -40,7 +42,7 @@ internal static class UniqueCandidateLocalization
         if (sheet?._tableData == null || sheet._textTable == null) return;
         var language = LanguageSetting.GetCurrentLanguage();
         if (registeredSheet == sheet.Pointer && registeredLanguage == language
-            && sheet._textTable.ContainsKey(UniqueCandidateLocalizationText.NativeLockConflictKey)) return;
+            && Rows.All(row => sheet._textTable.ContainsKey(row.Key))) return;
         Register(sheet, language);
     }
 
@@ -93,9 +95,25 @@ internal static class UniqueCandidateLocalization
     internal static void ValidateAllLanguages()
     {
         foreach (var translation in UniqueCandidateLocalizationText.LockConflictFallback.AllLanguages)
+        {
             if (string.IsNullOrWhiteSpace(translation))
                 throw new InvalidOperationException("Leere Core-Fallback-Übersetzung: "
                     + UniqueCandidateLocalizationText.NativeLockConflictKey);
+            RejectLongDash(UniqueCandidateLocalizationText.NativeLockConflictKey, translation);
+        }
+        foreach (var (key, text) in LoadIntegrityNoticeText.All)
+            foreach (var translation in text.AllLanguages)
+            {
+                if (string.IsNullOrWhiteSpace(translation))
+                    throw new InvalidOperationException("Leere Core-Übersetzung: " + key);
+                RejectLongDash(key, translation);
+            }
+    }
+
+    private static void RejectLongDash(string key, string text)
+    {
+        if (text.IndexOf('\u2013') >= 0 || text.IndexOf('\u2014') >= 0)
+            throw new InvalidOperationException("Core-Übersetzung enthält einen Langstrich: " + key);
     }
 
     private static bool SameTranslations(TextKeyTableData left, TextKeyTableData right)

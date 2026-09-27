@@ -7,7 +7,7 @@
     <Deterministic>true</Deterministic>
     <DebugSymbols Condition="'$(Configuration)' == 'Release'">false</DebugSymbols>
     <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <LoaderProfile Condition="'$(LoaderProfile)' == ''">Offline</LoaderProfile>
     <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj/$(LoaderProfile)/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
     <BaseOutputPath>$(MSBuildThisFileDirectory)bin/$(LoaderProfile)/</BaseOutputPath>
