@@ -12,8 +12,8 @@ Die Mod-Pakete liegen unter [Releases](../../releases). Lade nur das Paket für 
 
 | Loader | Mod-Paket |
 | --- | --- |
-| MelonLoader | `Dungeon-Settlers-Delvers-Core-0.3.0-MelonLoader.zip` |
-| BepInEx | `Dungeon-Settlers-Delvers-Core-0.3.0-BepInEx.zip` |
+| MelonLoader | `DelversCore-0.3.0-MelonLoader.zip` |
+| BepInEx | `DelversCore-0.3.0-BepInEx.zip` |
 
 Die automatisch erzeugten Quellcode-Archive sind keine Installationspakete.
 
