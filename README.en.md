@@ -12,8 +12,8 @@ The mod packages are on the [Releases](../../releases) page. Download only the p
 
 | Loader | Mod package |
 | --- | --- |
-| MelonLoader | `Dungeon-Settlers-Delvers-Core-0.3.0-MelonLoader.zip` |
-| BepInEx | `Dungeon-Settlers-Delvers-Core-0.3.0-BepInEx.zip` |
+| MelonLoader | `DelversCore-0.3.0-MelonLoader.zip` |
+| BepInEx | `DelversCore-0.3.0-BepInEx.zip` |
 
 The automatically generated source-code archives are not installation packages.
 
