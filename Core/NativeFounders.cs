@@ -1,18 +1,3 @@
-#if BEPINEX
-using global::Refactor;
-#else
-using Il2CppRefactor;
-#endif
-#if BEPINEX
-using global::Refactor.Util;
-#else
-using Il2CppRefactor.Util;
-#endif
-#if BEPINEX
-using global::Util.Sheet;
-#else
-using Il2CppUtil.Sheet;
-#endif
 
 namespace DungeonSettlersDelvers.Core;
 

@@ -1,15 +1,4 @@
 using HarmonyLib;
-#if BEPINEX
-using global::Refactor;
-using global::Refactor.Main;
-using global::Refactor.Map;
-using GameFileLogger = global::FileLogger;
-#else
-using Il2CppRefactor;
-using Il2CppRefactor.Main;
-using Il2CppRefactor.Map;
-using GameFileLogger = global::Il2Cpp.FileLogger;
-#endif
 using UnityEngine;
 
 namespace DungeonSettlersDelvers.Core;

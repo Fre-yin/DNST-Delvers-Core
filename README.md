@@ -4,7 +4,7 @@
 
 Gemeinsamer Kern für Charakter-Mods in Dungeon Settlers. Core bringt die Story-Figuren **Lowell, Liana und Kragas** in die Rekrutierung und stellt Charakterpaketen eine kleine, stabile API bereit.
 
-**Version 0.3.0 für MelonLoader und BepInEx. Core-API 1.3.0.**
+**Version 0.4.0 für MelonLoader und BepInEx. Core-API 1.4.0.**
 
 ## Downloads
 
@@ -12,8 +12,8 @@ Die Mod-Pakete liegen unter [Releases](../../releases). Lade nur das Paket für 
 
 | Loader | Mod-Paket |
 | --- | --- |
-| MelonLoader | `DelversCore-0.3.0-MelonLoader.zip` |
-| BepInEx | `DelversCore-0.3.0-BepInEx.zip` |
+| MelonLoader | `DelversCore-0.4.0-MelonLoader.zip` |
+| BepInEx | `DelversCore-0.4.0-BepInEx.zip` |
 
 Die automatisch erzeugten Quellcode-Archive sind keine Installationspakete.
 
@@ -26,7 +26,7 @@ Die automatisch erzeugten Quellcode-Archive sind keine Installationspakete.
   - Charaktere aus Charakterpaketen mit einem einzigartigen Trait: Schon das Bild oder die primären Traits allein blockieren das Neu-Rekrutieren. So lässt sich derselbe Charakter nicht mehrfach erzeugen.
 - **Schutz beim Laden:** Core erkennt bestimmte Fehler beim Laden modifizierter Kampagnen. Bei einem erkannten Fehler sperrt es weitere Speicherversuche für diese Spielsitzung und zeigt einen Hinweis im Spiel. Ein Neustart ist nötig, bevor wieder gespeichert werden kann. Der Schutz repariert keine beschädigten Spielstände und erfasst nicht jeden Fehler.
 - **Feste Traits:** Charakterpakete können die Traits einer Figur registrieren, die Core beim Laden anhand ihres erhaltenen Profils ergänzt, wenn sie fehlen. Andere gespeicherte Traits bleiben erhalten.
-- **API für Charakterpakete:** Pakete melden eigene einzigartige Kandidaten, Rekrutierungsintegrationen, feste Traits und Lade-Callbacks an. Weitere Einzelheiten stehen im [Addon-Leitfaden](CORE-ADDON-LEITFADEN.md).
+- **API für Charakterpakete:** Pakete melden eigene einzigartige Kandidaten, Rekrutierungsintegrationen, feste Traits, Lade-Callbacks und umbenannte Keys an. Weitere Einzelheiten stehen im [Addon-Leitfaden](CORE-ADDON-LEITFADEN.md).
 
 ## Voraussetzungen
 
@@ -43,6 +43,8 @@ Die automatisch erzeugten Quellcode-Archive sind keine Installationspakete.
 Vor der ersten Nutzung Spielstände sichern. Core läuft allein; Charakterpakete benötigen das Core-Paket desselben Loaders.
 
 ## Getestet
+
+Für 0.4.0 wurden unter MelonLoader und BepInEx ein Spielstand mit umzubenennenden Keys und einer mit fehlenden festen Traits im Spiel geladen und gespeichert. Die gespeicherten Dateien enthielten danach nur noch die neuen Keys und alle festen Traits. Die Offline-Matrix bestand mit 168 Core-Prüfungen je Loader, ohne Buildwarnungen oder Fehler.
 
 Die Funktionen von 0.2.0 wurden am 26.09.2026 mit Core allein unter beiden Loadern im Spiel geprüft. Für 0.3.0 bestanden normale Kampagnen-Loads mit einem Charakterpaket und Extended Hotbar 1.0.1 unter MelonLoader und BepInEx. Unter MelonLoader bestanden außerdem ein erkannter Komponentenfehler mit Speichersperre und der Spielerhinweis. Die Offline-Matrix bestand mit 156 Core-Prüfungen je Loader, ohne Buildwarnungen oder Fehler. Quickload und weitere Fehlerpfade von 0.3.0 sind noch nicht vollständig im Spiel abgenommen.
 

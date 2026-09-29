@@ -24,5 +24,6 @@
     <Compile Include="../../Core/LoadIntegrityState.cs" Link="LoadIntegrityState.cs" />
     <Compile Include="../../Core/LoadIntegrityNoticeText.cs" Link="LoadIntegrityNoticeText.cs" />
     <Compile Include="../../Core/LoadPatchCompatibilityRules.cs" Link="LoadPatchCompatibilityRules.cs" />
+    <Compile Include="../../Core/SaveKeyRenames.cs" Link="SaveKeyRenames.cs" />
   </ItemGroup>
 </Project>

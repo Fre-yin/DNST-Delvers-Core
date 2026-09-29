@@ -1,4 +1,4 @@
-DUNGEON SETTLERS DELVERS: CORE 0.3.0
+DUNGEON SETTLERS DELVERS: CORE 0.4.0
 
 Installiere nur das Paket für deinen Loader. Sichere deine Spielstände vor der ersten Nutzung. MelonLoader und BepInEx gehören nicht gemeinsam in dieselbe Spielinstallation.
 

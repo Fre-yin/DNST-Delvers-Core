@@ -1,20 +1,5 @@
 using System.Reflection;
 using HarmonyLib;
-#if BEPINEX
-using global::Refactor;
-#else
-using Il2CppRefactor;
-#endif
-#if BEPINEX
-using global::Refactor.UI;
-#else
-using Il2CppRefactor.UI;
-#endif
-#if BEPINEX
-using TMPro;
-#else
-using Il2CppTMPro;
-#endif
 using UnityEngine;
 using UnityEngine.UI;
 

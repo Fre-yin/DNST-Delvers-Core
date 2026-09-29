@@ -4,7 +4,7 @@
 
 Shared core for Dungeon Settlers character mods. Core brings the story characters **Lowell, Liana and Kragas** into recruitment and gives character packs a small, stable API.
 
-**Version 0.3.0 for MelonLoader and BepInEx. Core API 1.3.0.**
+**Version 0.4.0 for MelonLoader and BepInEx. Core API 1.4.0.**
 
 ## Downloads
 
@@ -12,8 +12,8 @@ The mod packages are on the [Releases](../../releases) page. Download only the p
 
 | Loader | Mod package |
 | --- | --- |
-| MelonLoader | `DelversCore-0.3.0-MelonLoader.zip` |
-| BepInEx | `DelversCore-0.3.0-BepInEx.zip` |
+| MelonLoader | `DelversCore-0.4.0-MelonLoader.zip` |
+| BepInEx | `DelversCore-0.4.0-BepInEx.zip` |
 
 The automatically generated source-code archives are not installation packages.
 
@@ -26,7 +26,7 @@ The automatically generated source-code archives are not installation packages.
   - Characters from character packs with a unique trait: the portrait or the primary traits alone already block the reroll, so the same character cannot be generated several times.
 - **Load protection:** Core detects certain failures while loading modded campaigns. After a detected failure it blocks further saves for the game session and shows an in-game notice. Restart before saving again. This protection cannot repair an already damaged save or detect every possible failure.
 - **Fixed traits:** Character packs can register traits that Core restores from a surviving character profile when those traits are missing. Other saved traits remain intact.
-- **API for character packs:** Packs register unique candidates, recruitment integrations, fixed traits, and load callbacks. See the [addon guide](CORE-ADDON-LEITFADEN.md) for details.
+- **API for character packs:** Packs register unique candidates, recruitment integrations, fixed traits, load callbacks, and renamed keys. See the [addon guide](CORE-ADDON-LEITFADEN.md) for details.
 
 ## Requirements
 
@@ -43,6 +43,8 @@ The automatically generated source-code archives are not installation packages.
 Back up your saves before first use. Core runs on its own; character packs need the Core package of the same loader.
 
 ## Tested
+
+For 0.4.0, a save with keys to rename and a save with missing fixed traits were loaded and saved in game under MelonLoader and BepInEx. Afterwards the saved files contained only the new keys and all fixed traits. The offline matrix passed 168 Core checks per loader with no build warnings or errors.
 
 The 0.2.0 features were checked in game with Core alone on both loaders on 26 September 2026. For 0.3.0, normal campaign loads with a character pack and Extended Hotbar 1.0.1 passed under MelonLoader and BepInEx. A detected component failure with save blocking and the player notice also passed under MelonLoader. The offline matrix passed 156 Core checks per loader with no build warnings or errors. Quickload and further 0.3.0 failure paths have not yet received full in-game acceptance.
 

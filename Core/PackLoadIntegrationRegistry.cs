@@ -1,17 +1,3 @@
-#if BEPINEX
-using global::Refactor;
-using global::Refactor.Component;
-using global::Refactor.Main;
-#else
-using Il2CppRefactor;
-using Il2CppRefactor.Component;
-using Il2CppRefactor.Main;
-#endif
-#if BEPINEX
-using ComponentSaveList = Il2CppSystem.Collections.Generic.List<global::Refactor.ComponentSaveData>;
-#else
-using ComponentSaveList = Il2CppSystem.Collections.Generic.List<Il2CppRefactor.ComponentSaveData>;
-#endif
 
 namespace DungeonSettlersDelvers.Core;
 

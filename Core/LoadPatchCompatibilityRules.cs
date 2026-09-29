@@ -6,13 +6,15 @@ internal static class LoadPatchCompatibilityRules
 {
     private const string ExtendedHotbarMelonAssembly = "DungeonSettlers10Slots";
     private const string ExtendedHotbarBepInExAssembly = "DungeonSettlersHotbar.BepInEx";
-    private const string ExtendedHotbarVersion = "1.0.1.0";
+    // 1.0.2 changed only the author name, license texts and an audit-only Harmony id;
+    // both load patches are identical to 1.0.1.
+    private static readonly string[] ReviewedExtendedHotbarVersions = { "1.0.1.0", "1.0.2.0" };
 
     internal static bool IsKnownExtendedHotbar(string target, string stage,
         string assemblyName, string assemblyVersion, string declaringType, string methodName)
     {
         if (!IsReviewedExtendedHotbarAssembly(assemblyName)
-            || !string.Equals(assemblyVersion, ExtendedHotbarVersion, StringComparison.Ordinal))
+            || Array.IndexOf(ReviewedExtendedHotbarVersions, assemblyVersion) < 0)
             return false;
 
         return target == "UnitQuickSlotContainer.Deserialize"

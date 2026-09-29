@@ -1,18 +1,5 @@
 using System.Reflection;
 using HarmonyLib;
-#if BEPINEX
-using global::Refactor;
-using global::Refactor.Component;
-using global::Refactor.Main;
-using global::Refactor.Main.Event;
-using global::Refactor.Map;
-#else
-using Il2CppRefactor;
-using Il2CppRefactor.Component;
-using Il2CppRefactor.Main;
-using Il2CppRefactor.Main.Event;
-using Il2CppRefactor.Map;
-#endif
 using UnityEngine;
 
 namespace DungeonSettlersDelvers.Core;
@@ -137,7 +124,7 @@ internal static class LoadPatchAudit
         lock (Gate) return Reported.Add(identity);
     }
 
-    private static IEnumerable<Target> Targets()
+    internal static IEnumerable<Target> Targets()
     {
         yield return new("ComponentList.Deserialize",
             AccessTools.Method(typeof(ComponentList), nameof(ComponentList.Deserialize)));
@@ -169,5 +156,5 @@ internal static class LoadPatchAudit
     private static string Safe(string value)
         => string.IsNullOrWhiteSpace(value) ? "unknown" : value.Replace(' ', '_');
 
-    private readonly record struct Target(string Name, MethodBase Method);
+    internal readonly record struct Target(string Name, MethodBase Method);
 }

@@ -1,0 +1,5 @@
+# Every text file uses LF, like most files in the public repositories.
+root = true
+
+[*]
+end_of_line = lf

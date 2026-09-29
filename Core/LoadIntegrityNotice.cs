@@ -1,16 +1,5 @@
 using System.Collections;
 using Il2CppInterop.Runtime;
-#if BEPINEX
-using global::Refactor;
-using global::Refactor.Main;
-using global::Refactor.Main.Event;
-using global::Refactor.View;
-#else
-using Il2CppRefactor;
-using Il2CppRefactor.Main;
-using Il2CppRefactor.Main.Event;
-using Il2CppRefactor.View;
-#endif
 using UnityEngine;
 
 namespace DungeonSettlersDelvers.Core;
@@ -113,11 +102,7 @@ internal static class LoadIntegrityNotice
         if (dispatcher == null) return Deferred("dialog");
         try
         {
-            UniqueCandidateLocalization.EnsureCurrent();
-            closeDialog ??= DelegateSupport.ConvertDelegate<Il2CppSystem.Action>(new Action(() => { }));
-            var notice = new ViewCallbackData(UpdateType.CommonNotice_ShowConfirm,
-                LoadIntegrityNoticeText.SaveBlockedKey, closeDialog, closeDialog);
-            dispatcher.DispatchViewUpdateImmediate(notice.Cast<IViewUpdateData>());
+            dispatcher.DispatchViewUpdateImmediate(CreateDialog().Cast<IViewUpdateData>());
             DelversHost.Info("CORE_SAVE_BLOCKED_DIALOG_SHOWN");
             return true;
         }
@@ -137,12 +122,26 @@ internal static class LoadIntegrityNotice
             ? handlers[map]?.TryCast<TickFlowHandler>() : null;
         if (handler == null) return Deferred("banner");
 
+        handler.EnqueueEvent(CreateBanner().Cast<IEventData>(), true);
+        DelversHost.Info("CORE_SAVE_BLOCKED_NOTICE_SHOWN map=" + map);
+        return true;
+    }
+
+    // The in-game self-test builds both notices without showing them.
+    internal static ViewCallbackData CreateDialog()
+    {
+        UniqueCandidateLocalization.EnsureCurrent();
+        closeDialog ??= DelegateSupport.ConvertDelegate<Il2CppSystem.Action>(new Action(() => { }));
+        return new ViewCallbackData(UpdateType.CommonNotice_ShowConfirm,
+            LoadIntegrityNoticeText.SaveBlockedKey, closeDialog, closeDialog);
+    }
+
+    internal static DataApplyRequested CreateBanner()
+    {
         UniqueCandidateLocalization.EnsureCurrent();
         var notice = new HelpNoticeApplyData(LoadIntegrityNoticeText.SaveBlockedShortKey,
             new Il2CppSystem.Collections.Generic.List<Il2CppSystem.Object>());
-        handler.EnqueueEvent(new DataApplyRequested(notice.Cast<IApplyData>()).Cast<IEventData>(), true);
-        DelversHost.Info("CORE_SAVE_BLOCKED_NOTICE_SHOWN map=" + map);
-        return true;
+        return new DataApplyRequested(notice.Cast<IApplyData>());
     }
 
     // Title screen or map transition: the next blocked save or load asks again.

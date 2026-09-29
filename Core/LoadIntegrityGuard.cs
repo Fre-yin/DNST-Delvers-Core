@@ -1,16 +1,5 @@
 using System.Collections;
 using HarmonyLib;
-#if BEPINEX
-using global::Refactor;
-using global::Refactor.Main;
-using global::Refactor.Main.Event;
-using global::Refactor.Map;
-#else
-using Il2CppRefactor;
-using Il2CppRefactor.Main;
-using Il2CppRefactor.Main.Event;
-using Il2CppRefactor.Map;
-#endif
 using UnityEngine;
 
 namespace DungeonSettlersDelvers.Core;

@@ -1,16 +1,5 @@
 using System.Collections;
 using DungeonSettlersDelvers.Core;
-#if BEPINEX
-using Refactor;
-using Refactor.Component;
-using Refactor.Main;
-using ComponentSaveList = Il2CppSystem.Collections.Generic.List<Refactor.ComponentSaveData>;
-#else
-using Il2CppRefactor;
-using Il2CppRefactor.Component;
-using Il2CppRefactor.Main;
-using ComponentSaveList = Il2CppSystem.Collections.Generic.List<Il2CppRefactor.ComponentSaveData>;
-#endif
 
 var checks = 0;
 void Check(bool condition, string name)
@@ -724,6 +713,18 @@ Check(LoadPatchCompatibilityRules.IsKnownExtendedHotbar(
         "QuickSlotData.Deserialize", "prefix", "DungeonSettlersHotbar.BepInEx", "1.0.1.0",
         "DungeonSettlers10Slots.LoadSlots", "Prefix"),
     "BepInEx Extended Hotbar quick-slot restore is recognized as an exact compatible load patch");
+Check(LoadPatchCompatibilityRules.IsKnownExtendedHotbar(
+        "UnitQuickSlotContainer.Deserialize", "postfix", "DungeonSettlers10Slots", "1.0.2.0",
+        "DungeonSettlers10Slots.ContainerSlotsLoaded", "Postfix"),
+    "Extended Hotbar 1.0.2 keeps the reviewed container restore");
+Check(LoadPatchCompatibilityRules.IsKnownExtendedHotbar(
+        "QuickSlotData.Deserialize", "prefix", "DungeonSettlersHotbar.BepInEx", "1.0.2.0",
+        "DungeonSettlers10Slots.LoadSlots", "Prefix"),
+    "BepInEx Extended Hotbar 1.0.2 keeps the reviewed quick-slot restore");
+Check(!LoadPatchCompatibilityRules.IsKnownExtendedHotbar(
+        "QuickSlotData.Deserialize", "prefix", "DungeonSettlers10Slots", "1.0.3.0",
+        "DungeonSettlers10Slots.LoadSlots", "Prefix"),
+    "an unreviewed Extended Hotbar patch release remains a foreign patch");
 Check(!LoadPatchCompatibilityRules.IsKnownExtendedHotbar(
         "QuickSlotData.Deserialize", "prefix", "DungeonSettlers10Slots", "1.1.0.0",
         "DungeonSettlers10Slots.LoadSlots", "Prefix"),
@@ -794,6 +795,49 @@ finally
 {
     if (Directory.Exists(tempRoot)) Directory.Delete(tempRoot, true);
 }
+
+var saveKeyRenames = new SaveKeyRenameRegistry();
+var renameLease = saveKeyRenames.Register("example-pack", new Dictionary<string, string>
+{
+    ["AFFECTER_OldTrait"] = "AFFECTER_NewTrait",
+    ["UNITVISUAL_Example_OldProfile"] = "UNITVISUAL_Example_NewProfile"
+});
+var renamedSave = saveKeyRenames.Apply(
+    "{\"Key\":\"AFFECTER_OldTrait\",\"Traits\":[\"AFFECTER_OldTrait\",\"AFFECTER_OldTraitMood\"],"
+    + "\"ProfileKey\":\"UNITVISUAL_Example_OldProfile\",\"AFFECTER_OldTrait\":1}",
+    out var renamedTokens, out var renamedPacks);
+Check(renamedSave == "{\"Key\":\"AFFECTER_NewTrait\",\"Traits\":[\"AFFECTER_NewTrait\",\"AFFECTER_OldTraitMood\"],"
+        + "\"ProfileKey\":\"UNITVISUAL_Example_NewProfile\",\"AFFECTER_NewTrait\":1}"
+        && renamedTokens == 4 && renamedPacks.SequenceEqual(new[] { "example-pack" }),
+    "save key renames replace complete JSON strings and property names, never part of a longer key");
+const string UntouchedSave = "{\"Key\":\"AFFECTER_OtherTrait\"}";
+Check(ReferenceEquals(saveKeyRenames.Apply(UntouchedSave, out var noTokens, out var noPacks), UntouchedSave)
+        && noTokens == 0 && noPacks.Count == 0,
+    "a save without renamed keys is returned unchanged without copying");
+string RenameFailure(IReadOnlyDictionary<string, string> renames)
+{
+    try { saveKeyRenames.Register("other-pack", renames).Dispose(); return null; }
+    catch (ArgumentException ex) { return ex.Message; }
+    catch (InvalidOperationException ex) { return ex.Message; }
+}
+Check(RenameFailure(new Dictionary<string, string> { ["AFFECTER Old"] = "AFFECTER_New" }) != null,
+    "a save key rename with characters outside letters, digits and underscores is rejected");
+Check(RenameFailure(new Dictionary<string, string> { ["AFFECTER_Same"] = "AFFECTER_Same" }) != null,
+    "a save key rename to the same key is rejected");
+var duplicateRename = RenameFailure(new Dictionary<string, string> { ["AFFECTER_OldTrait"] = "AFFECTER_Other" });
+Check(duplicateRename != null && !duplicateRename.Contains("OldTrait"),
+    "another pack cannot rename an already renamed key, and the message names no key");
+Check(RenameFailure(new Dictionary<string, string> { ["AFFECTER_NewTrait"] = "AFFECTER_Third" }) != null,
+    "a rename chain from an existing target is rejected");
+Check(RenameFailure(new Dictionary<string, string> { ["AFFECTER_Third"] = "AFFECTER_OldTrait" }) != null,
+    "a rename chain into an existing old key is rejected");
+Check(RenameFailure(new Dictionary<string, string> { ["AFFECTER_A"] = "AFFECTER_B", ["AFFECTER_B"] = "AFFECTER_C" }) != null,
+    "a rename chain within one registration is rejected");
+renameLease.Dispose();
+renameLease.Dispose();
+var afterRelease = saveKeyRenames.Apply("{\"Key\":\"AFFECTER_OldTrait\"}", out var afterTokens, out _);
+Check(saveKeyRenames.Count == 0 && afterTokens == 0 && afterRelease == "{\"Key\":\"AFFECTER_OldTrait\"}",
+    "releasing the lease removes the renames, and a second release changes nothing");
 
 Console.WriteLine($"PASS: {checks} deterministic checks");
 

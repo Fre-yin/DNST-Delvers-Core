@@ -3,26 +3,6 @@ using System.Text;
 using System.Reflection;
 using HarmonyLib;
 using Il2CppInterop.Runtime;
-#if BEPINEX
-using global::Refactor;
-#else
-using Il2CppRefactor;
-#endif
-#if BEPINEX
-using global::Refactor.UI;
-#else
-using Il2CppRefactor.UI;
-#endif
-#if BEPINEX
-using global::Refactor.Util;
-#else
-using Il2CppRefactor.Util;
-#endif
-#if BEPINEX
-using global::Util.Sheet;
-#else
-using Il2CppUtil.Sheet;
-#endif
 using ReadOnlyStrings = Il2CppSystem.Collections.Generic.IReadOnlyCollection<string>;
 
 namespace DungeonSettlersDelvers.Core;

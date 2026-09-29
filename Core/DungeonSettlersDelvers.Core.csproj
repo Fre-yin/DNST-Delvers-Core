@@ -2,8 +2,11 @@
   <PropertyGroup>
     <AssemblyName>DungeonSettlersDelvers.Core</AssemblyName>
     <RootNamespace>DungeonSettlersDelvers.Core</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <Import Project="../GameReferences.props" />
   <ItemGroup>
+    <!-- Lets the private in-game self-test reach internal members; no runtime cost. -->
+    <InternalsVisibleTo Include="DungeonSettlersDelvers.SelfTest" />
   </ItemGroup>
 </Project>

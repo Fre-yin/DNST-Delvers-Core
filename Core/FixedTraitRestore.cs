@@ -1,21 +1,5 @@
 using HarmonyLib;
 using Il2CppInterop.Runtime;
-#if BEPINEX
-using global::Refactor;
-using global::Refactor.Component;
-using global::Refactor.Main;
-#else
-using Il2CppRefactor;
-using Il2CppRefactor.Component;
-using Il2CppRefactor.Main;
-#endif
-#if BEPINEX
-using ComponentSaveList = Il2CppSystem.Collections.Generic.List<global::Refactor.ComponentSaveData>;
-using HolderList = Il2CppSystem.Collections.Generic.List<global::Refactor.Component.AffecterHolder>;
-#else
-using ComponentSaveList = Il2CppSystem.Collections.Generic.List<Il2CppRefactor.ComponentSaveData>;
-using HolderList = Il2CppSystem.Collections.Generic.List<Il2CppRefactor.Component.AffecterHolder>;
-#endif
 
 namespace DungeonSettlersDelvers.Core;
 
@@ -86,10 +70,10 @@ internal static class FixedTraitRestore
         {
             if (next < holders.Count && holders[next]?.Key == key)
             {
-                migrated.Add(holders[next++]);
+                DelversNativeList.AddValue(migrated, holders[next++]);
                 continue;
             }
-            migrated.Add(new AffecterHolder { Key = key, Stack = 1 });
+            DelversNativeList.AddValue(migrated, new AffecterHolder { Key = key, Stack = 1 });
             restored.Add(key);
         }
         if (next != holders.Count)
@@ -146,7 +130,7 @@ internal static class FixedTraitRestore
     private static ComponentSaveList CreateProbe(string profileKey, params string[] keys)
     {
         var holders = new HolderList();
-        foreach (var key in keys) holders.Add(new AffecterHolder { Key = key, Stack = 1 });
+        foreach (var key in keys) DelversNativeList.AddValue(holders, new AffecterHolder { Key = key, Stack = 1 });
         var result = new ComponentSaveList();
         result.Add(new ComponentSaveData { Type = ComponentType.Affecter,
             Data = new AffecterComponentSaveData { AffecterHolders = holders, InactiveMoodCauseHolders = new() } });

@@ -1,41 +1,16 @@
 using HarmonyLib;
-#if BEPINEX
-using global::Refactor;
-using global::Refactor.Component;
-#else
-using Il2CppRefactor;
-using Il2CppRefactor.Component;
-#endif
-#if BEPINEX
-using global::Refactor.Main;
-#else
-using Il2CppRefactor.Main;
-#endif
-#if BEPINEX
-using global::Refactor.Main.Event;
-#else
-using Il2CppRefactor.Main.Event;
-#endif
-#if BEPINEX
-using global::Refactor.Map;
-#else
-using Il2CppRefactor.Map;
-#endif
-#if BEPINEX
-using global::Refactor.Util;
-#else
-using Il2CppRefactor.Util;
-#endif
 using UnityEngine;
 
 namespace DungeonSettlersDelvers.Core;
 
 public static class DelversCoreRuntime
 {
-    public const string ApiVersion = "1.3.0";
+    public const string ApiVersion = "1.4.0";
     public const string MinimumApiVersionForUniqueCandidatePredicates = "1.1.0";
     public const string MinimumApiVersionForFixedTraits = "1.2.0";
     public const string MinimumApiVersionForLoadIntegrations = "1.3.0";
+    public const string MinimumApiVersionForNativeValueLists = "1.4.0";
+    public const string MinimumApiVersionForSaveKeyRenames = "1.4.0";
     public const string MelonAssemblyName = "DungeonSettlersDelvers.Core.MelonLoader";
     public const string BepInExPluginId = "fre-yin.dungeonsettlers.delvers.core";
     public const string SupportedBuilds = "DS_B.0.4.23 / Steam builds 25269660 and 25284551 (same verified binary signature)";
@@ -49,6 +24,7 @@ public static class DelversCoreRuntime
     private static readonly UniqueCandidatePredicateRegistry<RecruitCandidateData> UniqueCandidatePredicates = new();
     internal static readonly FixedTraitRegistry FixedTraits = new();
     private static readonly PackLoadIntegrationRegistry LoadIntegrations = new();
+    internal static readonly SaveKeyRenameRegistry SaveKeyRenames = new();
 
     public static bool IsReady { get { lock (Gate) return initialized; } }
     public static string LoaderProfile { get { lock (Gate) return loaderProfile; } }
@@ -131,6 +107,19 @@ public static class DelversCoreRuntime
         }
     }
 
+    // IDs a pack renamed although players' saves still contain the old ones (old key to new
+    // key). Core rewrites them in the save text before the game parses it. Keys may use
+    // letters, digits and underscores; an old key belongs to one pack; chains are rejected.
+    public static IDisposable RegisterSaveKeyRenames(string packId,
+        IReadOnlyDictionary<string, string> renames)
+    {
+        lock (Gate)
+        {
+            if (!initialized) throw new InvalidOperationException("Dungeon Settlers Delvers Core is not initialized.");
+            return SaveKeyRenames.Register(packId, renames);
+        }
+    }
+
     public static IReadOnlyList<string> GetFixedTraits(string profileKey)
         => FixedTraits.TryGet(profileKey, out _, out var traits) ? traits : null;
 
@@ -188,11 +177,7 @@ public static class DelversCoreRuntime
     }
 
     internal static void NotifyBeforeComponentsDeserialize(
-#if BEPINEX
-        Il2CppSystem.Collections.Generic.List<global::Refactor.ComponentSaveData> saved,
-#else
-        Il2CppSystem.Collections.Generic.List<Il2CppRefactor.ComponentSaveData> saved,
-#endif
+        ComponentSaveList saved,
         IEntity entity)
         => LoadIntegrations.NotifyBeforeComponents(saved, entity, ReportLoadIntegrationFailure);
 
@@ -227,6 +212,7 @@ public static class DelversCoreRuntime
             UniqueCandidatePredicates.Clear();
             FixedTraits.Clear();
             LoadIntegrations.Clear();
+            SaveKeyRenames.Clear();
             LoadIntegrityGuard.ResetLifecycle();
             LoadPatchAudit.ResetLifecycle();
             UniqueCandidateRerollUI.ResetLifecycle();

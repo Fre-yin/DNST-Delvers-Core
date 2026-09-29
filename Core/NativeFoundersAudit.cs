@@ -1,24 +1,4 @@
 using HarmonyLib;
-#if BEPINEX
-using global::Refactor;
-#else
-using Il2CppRefactor;
-#endif
-#if BEPINEX
-using global::Refactor.Main.Event;
-#else
-using Il2CppRefactor.Main.Event;
-#endif
-#if BEPINEX
-using global::Refactor.UI;
-#else
-using Il2CppRefactor.UI;
-#endif
-#if BEPINEX
-using global::Refactor.Util;
-#else
-using Il2CppRefactor.Util;
-#endif
 
 namespace DungeonSettlersDelvers.Core;
 

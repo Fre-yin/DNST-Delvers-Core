@@ -1,41 +1,6 @@
 using HarmonyLib;
 using Il2CppInterop.Runtime;
-#if BEPINEX
-using global::Refactor;
-#else
-using Il2CppRefactor;
-#endif
-#if BEPINEX
-using global::Refactor.Component;
-#else
-using Il2CppRefactor.Component;
-#endif
-#if BEPINEX
-using global::Refactor.Main;
-#else
-using Il2CppRefactor.Main;
-#endif
-#if BEPINEX
-using global::Refactor.Main.Event;
-#else
-using Il2CppRefactor.Main.Event;
-#endif
-#if BEPINEX
-using global::Refactor.Map;
-#else
-using Il2CppRefactor.Map;
-#endif
-#if BEPINEX
-using global::Refactor.Util;
-#else
-using Il2CppRefactor.Util;
-#endif
 using UnityEngine;
-#if BEPINEX
-using Il2CppCandidates = Il2CppSystem.Collections.Generic.List<global::Refactor.RecruitCandidateData>;
-#else
-using Il2CppCandidates = Il2CppSystem.Collections.Generic.List<Il2CppRefactor.RecruitCandidateData>;
-#endif
 
 namespace DungeonSettlersDelvers.Core;
 
