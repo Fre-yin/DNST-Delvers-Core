@@ -4,7 +4,7 @@
 
 Gemeinsamer Kern für Charakter-Mods in Dungeon Settlers. Core bringt die Story-Figuren **Lowell, Liana und Kragas** in die Rekrutierung und stellt Charakterpaketen eine kleine, stabile API bereit.
 
-**Version 0.4.0 für MelonLoader und BepInEx. Core-API 1.4.0.**
+**Version 0.4.1 für MelonLoader und BepInEx. Core-API 1.4.0.**
 
 ## Downloads
 
@@ -12,8 +12,8 @@ Die Mod-Pakete liegen unter [Releases](../../releases). Lade nur das Paket für 
 
 | Loader | Mod-Paket |
 | --- | --- |
-| MelonLoader | `DelversCore-0.4.0-MelonLoader.zip` |
-| BepInEx | `DelversCore-0.4.0-BepInEx.zip` |
+| MelonLoader | `DelversCore-0.4.1-MelonLoader.zip` |
+| BepInEx | `DelversCore-0.4.1-BepInEx.zip` |
 
 Die automatisch erzeugten Quellcode-Archive sind keine Installationspakete.
 
@@ -30,7 +30,7 @@ Die automatisch erzeugten Quellcode-Archive sind keine Installationspakete.
 
 ## Voraussetzungen
 
-- Windows x64 und Dungeon Settlers **DS_B.0.4.23** (Steam-Builds 25269660 und 25284551 mit identischer geprüfter Signatur). Bei einer anderen Spielversion bleibt Core inaktiv und meldet das im Log.
+- Windows x64 und Dungeon Settlers **DS_B.0.4.29** (Steam-Build 25846389). Bei einer anderen Spielversion bleibt Core inaktiv und meldet das im Log.
 - Separat installiertes **MelonLoader 0.7.3** oder **BepInEx 6 Unity IL2CPP x64** (getestet mit 6.0.0-be.788). BepInEx 5 und Mono werden nicht unterstützt.
 - MelonLoader und BepInEx nicht in derselben Spielinstallation mischen.
 
@@ -43,6 +43,8 @@ Die automatisch erzeugten Quellcode-Archive sind keine Installationspakete.
 Vor der ersten Nutzung Spielstände sichern. Core läuft allein; Charakterpakete benötigen das Core-Paket desselben Loaders.
 
 ## Getestet
+
+Für 0.4.1 lief am 10.10.2026 auf DS_B.0.4.29 unter MelonLoader und BepInEx ein Selbsttest im Spiel, zusammen mit Frieren 0.4.1 und Extended Hotbar 1.0.2. Zwei Testkampagnen, eine mit umzubenennenden Keys und eine mit fehlenden festen Traits, wurden geladen, gespeichert und erneut geladen. Alle neun überwachten Lade-Methoden trugen den Schutz von Core, und jeder dieser Ladevorgänge galt als vertrauenswürdig. Ein Spielstand mit einem unbekannten Effekt wurde erkannt: Core sperrte das Speichern, zeigte den Hinweis und lehnte ein manuelles Speichern ab. Die Offline-Matrix bestand mit 168 Core-Prüfungen je Loader, ohne Buildwarnungen oder Fehler.
 
 Für 0.4.0 wurden unter MelonLoader und BepInEx ein Spielstand mit umzubenennenden Keys und einer mit fehlenden festen Traits im Spiel geladen und gespeichert. Die gespeicherten Dateien enthielten danach nur noch die neuen Keys und alle festen Traits. Die Offline-Matrix bestand mit 168 Core-Prüfungen je Loader, ohne Buildwarnungen oder Fehler.
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.1: 10.10.2026
+
+- Angepasst an das Spielupdate DS_B.0.4.29 (Steam-Build 25846389). Core erkennt die neue Spielsignatur und startet wieder. Auf älteren Spielversionen bleibt 0.4.1 inaktiv. Sonst ändert sich nichts, die Core-API bleibt 1.4.0.
+- Frieren: Zusammen mit Core 0.4.1 bitte Frieren 0.4.1 installieren. Unter BepInEx lädt Frieren 0.4.0 nur mit genau Core 0.4.0.
+- Für Paketautoren: `SupportedBuilds` ist keine Konstante mehr. Pakete lesen den Text zur Laufzeit und nennen im Log so immer die Spielversion des installierten Core. Unter BepInEx 6 verlangt eine feste Version in `BepInDependency` genau diese Version, besser ist eine Mindestversion wie `">=0.4.1"` (siehe Leitfaden).
+- Geprüft: 168 Core-Prüfungen je Loader ohne Buildwarnungen. Im Spiel auf DS_B.0.4.29 unter MelonLoader und BepInEx, mit Frieren 0.4.1 und Extended Hotbar 1.0.2: Testkampagnen mit umzubenennenden Keys und mit fehlenden festen Traits wurden geladen, gespeichert und erneut geladen. Ein Spielstand mit unbekanntem Effekt wurde erkannt, das Speichern gesperrt und der Hinweis gezeigt.
+
 ## 0.4.0: 29.09.2026
 
 - Core-API 1.4.0: Charakterpakete können mit `RegisterSaveKeyRenames` umbenannte Keys anmelden. Core ersetzt die alten Keys im Spielstand, bevor das Spiel ihn liest. Ersetzt werden nur vollständige Keys, und das Log nennt nur das Paket und die Anzahl.

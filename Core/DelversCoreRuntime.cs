@@ -13,9 +13,10 @@ public static class DelversCoreRuntime
     public const string MinimumApiVersionForSaveKeyRenames = "1.4.0";
     public const string MelonAssemblyName = "DungeonSettlersDelvers.Core.MelonLoader";
     public const string BepInExPluginId = "fre-yin.dungeonsettlers.delvers.core";
-    public const string SupportedBuilds = "DS_B.0.4.23 / Steam builds 25269660 and 25284551 (same verified binary signature)";
-    private const string GameAssemblySha256 = "8049A17906060F10A5A35ACB530740C6D61C2F07E6AE814A5902B5CF76A63017";
-    private const string MetadataSha256 = "8D462701B21307252B6A0A5B0E77EECDFE7E10BC54F9D66EA59A1127E371DF47";
+    // Read at runtime so packs always report the installed Core's builds.
+    public static readonly string SupportedBuilds = "DS_B.0.4.29 / Steam build 25846389 (verified binary signature)";
+    private const string GameAssemblySha256 = "4D7D851991C0DB7D16E68CA6FA2F4E33945A6289405C012100D9B5E6A570C04D";
+    private const string MetadataSha256 = "C11FAC80BFC461E286BDB593E7D6CA06AD1717F3DE5D3086E4708EEB6DA357DB";
     private static readonly object Gate = new();
     private static string loaderProfile;
     private static string harmonyOwner;

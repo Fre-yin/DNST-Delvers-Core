@@ -1,8 +1,10 @@
 # Delvers Core: öffentliche API für Charakterpakete
 
-Stand: Core 0.4.0, API 1.4.0. Dieser Leitfaden beschreibt die vorhandenen Schnittstellen. Addons für eigene Items, Gebäude oder neue Skill-Definitionen brauchen zusätzliche Forschung und besitzen derzeit keine allgemeine Core-API.
+Stand: Core 0.4.1, API 1.4.0. Dieser Leitfaden beschreibt die vorhandenen Schnittstellen. Addons für eigene Items, Gebäude oder neue Skill-Definitionen brauchen zusätzliche Forschung und besitzen derzeit keine allgemeine Core-API.
 
 Ein Charakterpaket benötigt das Core-Paket für denselben Loader. Registriere es erst, wenn `DelversCoreRuntime.IsReady` wahr ist und `SupportsApi` für die kleinste API-Version erfolgreich war, die dein Paket braucht: `"1.3.0"` für Lade-Callbacks, `"1.4.0"` für umbenannte Keys und `DelversNativeList`. Gib jede erhaltene `IDisposable`-Registrierung beim Shutdown frei. Pack-IDs bestehen aus Kleinbuchstaben, Ziffern und Bindestrichen.
+
+Unter BepInEx 6 ist die Versionsangabe in `BepInDependency` ein Bereich. `"0.4.0"` verlangt genau Core 0.4.0, und schon Core 0.4.1 verhindert dann das Laden deines Pakets. Gib deshalb eine Mindestversion an, etwa `[BepInDependency(DelversCoreRuntime.BepInExPluginId, ">=0.4.1")]`. Die eigentliche Prüfung bleibt `SupportsApi`.
 
 | Schnittstelle | Zweck |
 | --- | --- |

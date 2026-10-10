@@ -4,7 +4,7 @@
 
 Shared core for Dungeon Settlers character mods. Core brings the story characters **Lowell, Liana and Kragas** into recruitment and gives character packs a small, stable API.
 
-**Version 0.4.0 for MelonLoader and BepInEx. Core API 1.4.0.**
+**Version 0.4.1 for MelonLoader and BepInEx. Core API 1.4.0.**
 
 ## Downloads
 
@@ -12,8 +12,8 @@ The mod packages are on the [Releases](../../releases) page. Download only the p
 
 | Loader | Mod package |
 | --- | --- |
-| MelonLoader | `DelversCore-0.4.0-MelonLoader.zip` |
-| BepInEx | `DelversCore-0.4.0-BepInEx.zip` |
+| MelonLoader | `DelversCore-0.4.1-MelonLoader.zip` |
+| BepInEx | `DelversCore-0.4.1-BepInEx.zip` |
 
 The automatically generated source-code archives are not installation packages.
 
@@ -30,7 +30,7 @@ The automatically generated source-code archives are not installation packages.
 
 ## Requirements
 
-- Windows x64 and Dungeon Settlers **DS_B.0.4.23** (Steam builds 25269660 and 25284551 share the same verified signature). On another game version Core stays inactive and says so in the log.
+- Windows x64 and Dungeon Settlers **DS_B.0.4.29** (Steam build 25846389). On another game version Core stays inactive and says so in the log.
 - A separately installed **MelonLoader 0.7.3** or **BepInEx 6 Unity IL2CPP x64** (tested with 6.0.0-be.788). BepInEx 5 and Mono are not supported.
 - Do not mix MelonLoader and BepInEx in the same game installation.
 
@@ -43,6 +43,8 @@ The automatically generated source-code archives are not installation packages.
 Back up your saves before first use. Core runs on its own; character packs need the Core package of the same loader.
 
 ## Tested
+
+For 0.4.1, an in-game self-test ran on DS_B.0.4.29 under MelonLoader and BepInEx on 10 October 2026, together with Frieren 0.4.1 and Extended Hotbar 1.0.2. Two test campaigns, one with keys to rename and one with missing fixed traits, were loaded, saved and loaded again. All nine monitored load methods carried Core's protection, and each of these loads was trusted. A save with an unknown effect was detected: Core blocked saving, showed its notice and refused a manual save. The offline matrix passed 168 Core checks per loader with no build warnings or errors.
 
 For 0.4.0, a save with keys to rename and a save with missing fixed traits were loaded and saved in game under MelonLoader and BepInEx. Afterwards the saved files contained only the new keys and all fixed traits. The offline matrix passed 168 Core checks per loader with no build warnings or errors.
 
