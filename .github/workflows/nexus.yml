@@ -1,0 +1,113 @@
+name: Nexus Mods
+
+# Uploads the ZIPs of a published GitHub release as new versions of the two existing
+# main files on the Nexus Mods page (BepInEx and MelonLoader). Needs the repository
+# secret NEXUSMODS_API_KEY.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag, for example v0.4.1
+        required: true
+      files:
+        description: Files to upload
+        type: choice
+        options: [both, bepinex, melon]
+        default: both
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nexus-mods
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      FILES: ${{ inputs.files || 'both' }}
+      # Public IDs from https://www.nexusmods.com/dungeonsettlers/mods/12?tab=files:
+      # the mod page and the 0.4.0 versions of its two main files. The upload API
+      # needs its own IDs, which are looked up from these on every run.
+      NEXUS_GAME: dungeonsettlers
+      NEXUS_MOD: '12'
+      NEXUS_VERSION_BEPINEX: '26'
+      NEXUS_VERSION_MELON: '27'
+    steps:
+      - name: Check settings
+        env:
+          API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
+        run: |
+          if [ -z "$API_KEY" ]; then echo "::error::Missing repository secret NEXUSMODS_API_KEY"; exit 1; fi
+          if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then echo "::error::Unexpected tag: $TAG"; exit 1; fi
+          echo "VERSION=${TAG#v}" >> "$GITHUB_ENV"
+
+      - name: Look up Nexus Mods IDs
+        env:
+          API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
+        run: |
+          api() { curl --silent --show-error --fail-with-body -H "apikey: $API_KEY" -H "Accept: application/json" "https://api.nexusmods.com/v3/games/$NEXUS_GAME/$1"; }
+          mod=$(api "mods/$NEXUS_MOD" | jq -r '.data.id // empty')
+          bepinex=$(api "mod-file-versions/$NEXUS_VERSION_BEPINEX" | jq -r '.data.file.id // empty')
+          melon=$(api "mod-file-versions/$NEXUS_VERSION_MELON" | jq -r '.data.file.id // empty')
+          if [ -z "$mod" ] || [ -z "$bepinex" ] || [ -z "$melon" ]; then echo "::error::Could not look up the Nexus Mods IDs"; exit 1; fi
+          echo "Mod $mod, BepInEx file $bepinex, MelonLoader file $melon"
+          { echo "MOD_ID=$mod"; echo "FILE_ID_BEPINEX=$bepinex"; echo "FILE_ID_MELON=$melon"; } >> "$GITHUB_ENV"
+
+      - name: Check out changelog
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          sparse-checkout: .github/nexus-changelog
+          persist-credentials: false
+
+      - name: Download release files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir release \
+            --pattern "DelversCore-$VERSION-BepInEx.zip" --pattern "DelversCore-$VERSION-MelonLoader.zip" --pattern SHA256SUMS.txt
+          cd release
+          sha256sum --check SHA256SUMS.txt
+
+      - name: Read changelog
+        run: |
+          file=".github/nexus-changelog/$VERSION.txt"
+          if [ ! -s "$file" ]; then echo "::error::Missing changelog $file"; exit 1; fi
+          {
+            echo 'CHANGELOG<<NEXUS_CHANGELOG_END'
+            cat "$file"
+            echo 'NEXUS_CHANGELOG_END'
+          } >> "$GITHUB_ENV"
+
+      - name: Upload BepInEx
+        if: env.FILES != 'melon'
+        uses: Nexus-Mods/upload-action@c96019556046053aa26044b44396cd38929daf23 # v1.0.0-beta.10
+        with:
+          api_key: ${{ secrets.NEXUSMODS_API_KEY }}
+          file_id: ${{ env.FILE_ID_BEPINEX }}
+          filename: release/DelversCore-${{ env.VERSION }}-BepInEx.zip
+          display_name: Delvers Core ${{ env.VERSION }} for BepInEx
+          description: For BepInEx 6 Unity IL2CPP x64. Extract into the game folder. Download only the file for your loader.
+          version: ${{ env.VERSION }}
+          category: main
+          archive_existing_version: true
+          update_mod_version: true
+          mod_id: ${{ env.MOD_ID }}
+          changelog: ${{ env.CHANGELOG }}
+
+      - name: Upload MelonLoader
+        if: env.FILES != 'bepinex'
+        uses: Nexus-Mods/upload-action@c96019556046053aa26044b44396cd38929daf23 # v1.0.0-beta.10
+        with:
+          api_key: ${{ secrets.NEXUSMODS_API_KEY }}
+          file_id: ${{ env.FILE_ID_MELON }}
+          filename: release/DelversCore-${{ env.VERSION }}-MelonLoader.zip
+          display_name: Delvers Core ${{ env.VERSION }} for MelonLoader
+          description: For MelonLoader 0.7.3. Extract into the game folder. Download only the file for your loader.
+          version: ${{ env.VERSION }}
+          category: main
+          archive_existing_version: true

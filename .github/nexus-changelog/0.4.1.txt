@@ -1,0 +1,4 @@
+Updated for the Dungeon Settlers game update DS_B.0.4.29 (Steam build 25846389). Core 0.4.0 stays inactive on this build, and character packs such as Frieren do not start with it.
+Install Frieren 0.4.1 together with Core 0.4.1. Under BepInEx, Frieren 0.4.0 only loads with exactly Core 0.4.0.
+Nothing else changes. The Core API stays at 1.4.0.
+Tested in game under BepInEx and MelonLoader together with Frieren 0.4.1 and Extended Hotbar 1.0.2: loading, saving and loading again, and the save protection for a save with an unknown effect.
