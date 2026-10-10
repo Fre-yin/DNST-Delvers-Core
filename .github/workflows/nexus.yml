@@ -1,8 +1,9 @@
 name: Nexus Mods
 
 # Uploads the ZIPs of a published GitHub release as new versions of the two existing
-# main files on the Nexus Mods page (BepInEx and MelonLoader). Needs the repository
-# secret NEXUSMODS_API_KEY.
+# main files on the Nexus Mods page (BepInEx and MelonLoader), then sets the mod page
+# summary and description from .github/nexus/. Needs the repository secret
+# NEXUSMODS_API_KEY. "page" updates only the mod page, without uploading files.
 on:
   release:
     types: [published]
@@ -12,9 +13,9 @@ on:
         description: Release tag, for example v0.4.1
         required: true
       files:
-        description: Files to upload
+        description: Files to upload ("page" updates only the mod page text)
         type: choice
-        options: [both, bepinex, melon]
+        options: [both, bepinex, melon, page]
         default: both
 
 permissions:
@@ -61,10 +62,13 @@ jobs:
       - name: Check out changelog
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          sparse-checkout: .github/nexus-changelog
+          sparse-checkout: |
+            .github/nexus-changelog
+            .github/nexus
           persist-credentials: false
 
       - name: Download release files
+        if: env.FILES != 'page'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -74,6 +78,7 @@ jobs:
           sha256sum --check SHA256SUMS.txt
 
       - name: Read changelog
+        if: env.FILES != 'page'
         run: |
           file=".github/nexus-changelog/$VERSION.txt"
           if [ ! -s "$file" ]; then echo "::error::Missing changelog $file"; exit 1; fi
@@ -84,7 +89,7 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Upload BepInEx
-        if: env.FILES != 'melon'
+        if: env.FILES == 'both' || env.FILES == 'bepinex'
         uses: Nexus-Mods/upload-action@c96019556046053aa26044b44396cd38929daf23 # v1.0.0-beta.10
         with:
           api_key: ${{ secrets.NEXUSMODS_API_KEY }}
@@ -100,7 +105,7 @@ jobs:
           changelog: ${{ env.CHANGELOG }}
 
       - name: Upload MelonLoader
-        if: env.FILES != 'bepinex'
+        if: env.FILES == 'both' || env.FILES == 'melon'
         uses: Nexus-Mods/upload-action@c96019556046053aa26044b44396cd38929daf23 # v1.0.0-beta.10
         with:
           api_key: ${{ secrets.NEXUSMODS_API_KEY }}
@@ -111,3 +116,23 @@ jobs:
           version: ${{ env.VERSION }}
           category: main
           archive_existing_version: true
+
+      # Nexus Mods API v3, PATCH /mods/{id} (marked experimental): replaces the summary and
+      # the BBCode description, the same as saving them in the mod page editor. Only the sent
+      # fields change; the summary may have at most 350 characters.
+      - name: Update mod page
+        if: env.FILES == 'both' || env.FILES == 'page'
+        env:
+          API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
+        run: |
+          summary=.github/nexus/summary.txt
+          description=.github/nexus/description.bbcode
+          if [ ! -s "$summary" ] || [ ! -s "$description" ]; then echo "::error::Missing $summary or $description"; exit 1; fi
+          jq -n --rawfile summary "$summary" --rawfile description "$description" \
+            '{summary: ($summary | rtrimstr("\n")), description: ($description | rtrimstr("\n"))}' > page.json
+          length=$(jq -r '.summary | length' page.json)
+          if [ "$length" -gt 350 ]; then echo "::error::Summary has $length characters, Nexus allows 350"; exit 1; fi
+          curl --silent --show-error --fail-with-body -X PATCH \
+            -H "apikey: $API_KEY" -H "Content-Type: application/json" -H "Accept: application/json" \
+            --data @page.json "https://api.nexusmods.com/v3/mods/$MOD_ID"
+          echo "Mod page summary and description updated"

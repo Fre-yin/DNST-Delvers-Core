@@ -1,0 +1,33 @@
+Delvers Core adds Lowell, Liana and Kragas as additional recruits in your own Dungeon Settlers campaign. They can appear in Custom Expedition and in the guild. Their art and character data come from your installed game; the download does not include them. Core also provides a shared API for character packs such as [url=https://www.nexusmods.com/dungeonsettlers/mods/13]Delvers Frieren[/url].
+
+The three story characters cost no more than 500 gold each in the guild. Core also helps character packs keep unique recruits from appearing more than once, restore missing fixed traits and integrate with campaign loading. If Core detects certain errors while loading a modded campaign, it blocks further saves for that game session and displays a notice. Restart the game before saving again. This does not repair damaged saves or catch every possible error.
+
+Version 0.4.1 updates Core for the Dungeon Settlers game update DS_B.0.4.29 (Steam build 25846389). Core 0.4.0 stays inactive on this build. Nothing else changes, and the Core API stays at 1.4.0. This is an early release, so back up your saves before using it.
+
+[size=4][b]Requirements[/b][/size]
+
+Windows x64, Dungeon Settlers DS_B.0.4.29 with the verified signature of Steam build 25846389, and either MelonLoader 0.7.3 or BepInEx 6 for Unity IL2CPP x64. BepInEx was tested with 6.0.0-be.788. Use only one loader in a game installation and download only the matching ZIP. Core remains inactive on an unsupported game version and reports this in the log.
+
+If you use [url=https://www.nexusmods.com/dungeonsettlers/mods/13]Delvers Frieren[/url], update it to 0.4.1 together with Core. Under BepInEx, Frieren 0.4.0 only loads with exactly Core 0.4.0, so it stays off after the Core update.
+
+[url=https://www.nexusmods.com/dungeonsettlers/mods/5]Extended Hotbar 1.0.2[/url] is optional. It was tested together with Core 0.4.1 and Frieren 0.4.1.
+
+[size=4][b]Installation[/b][/size]
+
+Extract the matching ZIP into the Dungeon Settlers game folder. The ZIP already contains the required folders.
+
+With MelonLoader, DungeonSettlersDelvers.Core.MelonLoader.dll belongs in Mods/ and DungeonSettlersDelvers.Core.dll in UserLibs/.
+
+With BepInEx, both DLLs belong in BepInEx/plugins/DungeonSettlersDelvers/.
+
+[size=4][b]Testing[/b][/size]
+
+For 0.4.1, an in-game self-test ran on DS_B.0.4.29 under both loaders, together with Frieren 0.4.1 and Extended Hotbar 1.0.2. Test campaigns with renamed keys and with missing fixed traits were loaded, saved and loaded again. A save with an unknown effect was detected: Core blocked saving, showed its notice and refused a manual save. The offline checks passed 168 Core tests per loader without build warnings or errors.
+
+Quickload, long campaigns and every combination with other mods have not been fully checked in game. Please include your game build, loader version and a cleaned log when reporting a problem.
+
+[size=4][b]Source and rights[/b][/size]
+
+Source code and further documentation: [url=https://github.com/Fre-yin/DNST-Delvers-Core]github.com/Fre-yin/DNST-Delvers-Core[/url]
+
+The original mod code and instructions are MIT licensed. Game content, characters and trademarks are not covered by that license. This is an unofficial community project and is not made by CanOpener.

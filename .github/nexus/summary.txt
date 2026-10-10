@@ -1,0 +1,1 @@
+Adds Lowell, Liana and Kragas as recruits and provides a shared foundation for Dungeon Settlers character packs.
