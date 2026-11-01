@@ -1,4 +1,4 @@
-DUNGEON SETTLERS DELVERS: CORE 0.5.0
+DUNGEON SETTLERS DELVERS: CORE 0.5.1
 
 Ab 0.5.0 gibt es Delvers nur noch für BepInEx, MelonLoader wird nicht mehr unterstützt. Sichere deine Spielstände vor der ersten Nutzung. Verwendest du bisher MelonLoader, entferne die alten Core-Dateien aus Mods und UserLibs und installiere BepInEx 6. Die MelonLoader-Fassungen bis 0.4.1 werden archiviert.
 

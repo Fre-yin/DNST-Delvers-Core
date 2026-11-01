@@ -8,16 +8,17 @@ using static TestKit;
 internal static class SaveKeysSection
 {
     // Every JSON name of CoreSaveData, top-level and nested, pv, pr and px since the presence of unique units;
-    // camp, seed, wagon, flip, box and a room part's s since the bandit camp; formations since the tactical formation (its places
-    // reuse unit, x and y); casts since its priority casts (per unit three skill keys, "" for an empty place);
+    // camp, seed, wagon, flip, box and a room part's s since the bandit camp; formations since the tactical formation (its places reuse
+    // unit, x and y); casts since its priority casts (per unit three skill keys, "" for an empty place);
     // sets, leader and places since the formation book (eight sets and the active one, which reuses active);
     // formationOff since the formation's switch (the members switched off); wake since the camp's wake on entering
     // became a property of the camp file (true only for a camp that wakes); formationSleep since Prioritize Sleep
-    // switches the formation (the members sleep took out).
+    // switches the formation (the members sleep took out); hotbarSlots since Extended Hotbar's extra item slots keep Core's
+    // items (per unit its two slots).
     static readonly string[] Frozen =
     {
         "active", "apocalypse", "at", "autoUse", "body", "box", "camp", "campaign", "casts", "combat", "cooldown", "count", "duration", "extra", "flip",
-        "formationOff", "formationSleep", "formations", "index",
+        "formationOff", "formationSleep", "formations", "hotbarSlots", "index",
         "itemSlots", "items", "k", "key", "leader", "lifebloom", "list", "m", "management", "next", "on", "ownSkills", "ownUnits", "places", "queue",
         "pr", "pv", "px", "remaining", "research", "revives", "roomFeatures", "s", "seed", "sets", "sickness", "slot", "snapshot", "storageItems", "tasks", "text",
         "total", "undressed", "unit", "units", "version", "wagon", "wake", "wound", "woundfatal", "x", "y"

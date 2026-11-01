@@ -222,7 +222,7 @@ internal static class CoreSaveStore
         var owned = new Dictionary<Guid, string>();
         var places = new CoreSaveItems.Places();
         stripped = CoreSaveItems.ToNative(stripped, owned, places);
-        if (places.Any) DelversHost.Info($"CORE_SAVE_ITEMS_KEPT_OUT slots={places.QuickSlots.Count} storage={places.Storage.Count}");
+        if (places.Any) DelversHost.Info($"CORE_SAVE_ITEMS_KEPT_OUT slots={places.QuickSlots.Count} storage={places.Storage.Count} hotbar={places.HotbarSlots.Count}");
         if (places.Missed > 0)
             DelversHost.Warning($"CORE_SAVE_ITEMS_SHAPE_UNKNOWN missed={places.Missed} (written as stand-ins, not restored on load)");
         var units = new Dictionary<Guid, string>();

@@ -3,8 +3,8 @@ using System.Text.Json;
 using DungeonSettlersDelvers.Core;
 using static TestKit;
 
-// An own item key outside the item records (CoreSaveItems.Places): a unit's item quick slot and the entries of a storage
-// rule's item list. Writing cuts them out of the game's part (no stand-in, so no second entry of a native key), Core's block
+// An own item key outside the item records (CoreSaveItems.Places): a unit's item quick slot, the entries of a storage
+// rule's item list and Extended Hotbar's two extra item slots. Writing cuts them out of the game's part (no stand-in, so no second entry of a native key), Core's block
 // notes them, reading puts them back where they stood. A real native item in the same places stays what it is.
 internal static class ItemPlacesSection
 {
@@ -33,6 +33,7 @@ internal static class ItemPlacesSection
             CutAndRestoreKeepEverythingElse();
             GuardsOnRestore();
             BlockFields();
+            HotbarSlots();
             UnknownShape();
             var fixture = ReadFixture();
             Check(fixture != null, "item places: the fixture stands in Tests/Core/Fixtures next to Core's sources");
@@ -62,7 +63,7 @@ internal static class ItemPlacesSection
             + "      \"" + SmallUnitB + "\": {\n        \"QuickSlots\": [],\n        \"ItemQuickSlotKey\": " + slotB + "\n      }\n    }\n  },\n"
             + "  \"StoragePolicySaveData\": {\n    \"StoragePolicies\": {\n      \"" + SmallRule + "\": {\n        \"MinDurability\": 0,\n"
             + "        \"AvailableItems\": {" + items + "}\n      }\n    }\n  },\n"
-            + "  \"" + Hotbar + "\": {\"Units\": {\"" + SmallUnitA + "\": [\"\", \"" + hotbar + "\"]}}\n}";
+            + "  \"" + Hotbar + "\": {\"Version\": 1, \"Units\": {\"" + SmallUnitA + "\": [\"\", \"" + hotbar + "\"]}}\n}";
 
     static string List(params string[] entries)
         => "\n          " + string.Join(",\n          ", entries) + "\n        ";
@@ -105,12 +106,13 @@ internal static class ItemPlacesSection
         Check(storage != null && storage.Count == 1 && storage[0].Key == OwnKey && !storage[0].On && storage[0].Index == 1
                 && native.Contains("\"ITEM_WildHerb\": true,\n          \"" + StandIn + "\": true,\n          \"ITEM_Ointment\": true\n        }"),
             "item places: an own entry is cut out of the item list with its switch and its place; the native entries stay");
-        Check(!native.Contains(OwnKey) && native.Contains("\"" + Hotbar + "\": {\"Units\": {\"" + SmallUnitA + "\": [\"\", \"" + StandIn + "\"]}}"),
-            "item places: an own key in any other place (the hotbar mod's block) is still written as its stand-in");
+        Check(!native.Contains(OwnKey) && native.Contains("\"" + Hotbar + "\": {\"Version\": 1, \"Units\": {\"" + SmallUnitA + "\": [\"\", \"\"]}}")
+                && places.HotbarSlots.TryGetValue(slotUnit, out var hotbar) && hotbar[0] == null && hotbar[1] == OwnKey && places.Missed == 0,
+            "item places: an own key on the hotbar's second extra slot is written empty and noted at its slot");
 
         var back = CoreSaveItems.FromNative(native, new Dictionary<Guid, string>(), places, out var restored);
-        Check(restored == 2 && back == Small(Q(OwnKey), Q(StandIn), items),
-            "item places: reading puts the quick slot and the list entry back exactly where they stood; the hotbar mod's block stays native");
+        Check(restored == 3 && back == text,
+            "item places: reading puts the quick slot, the list entry and the hotbar slot back exactly where they stood");
     }
 
     static void CutAndRestoreKeepEverythingElse()
@@ -208,10 +210,64 @@ internal static class ItemPlacesSection
                 && damaged.Storage[Guid.Parse(SmallRule)][0].Index == 2,
             "item places: a damaged field is skipped entry by entry; a key that is not Core's never reaches the game");
 
+        var hotbarPlaces = new CoreSaveItems.Places();
+        hotbarPlaces.HotbarSlots[Guid.Parse(SmallUnitA)] = new[] { null, OwnKey };
+        var hotbarData = CoreSaveData.Create(campaign);
+        hotbarData.SetItemPlaces(hotbarPlaces);
+        Check(hotbarData.Serialize() == "{\"version\":1,\"campaign\":\"" + campaign + "\",\"hotbarSlots\":{\"" + SmallUnitA + "\":[\"\",\"" + OwnKey + "\"]}}",
+            "item places: Core's block holds hotbarSlots (unit to its two extra slots, \"\" where none stood)");
+        var hotbarRead = CoreSaveData.ParseAny(hotbarData.Serialize()).ItemPlaces();
+        Check(hotbarRead.HotbarSlots.Count == 1 && hotbarRead.HotbarSlots[Guid.Parse(SmallUnitA)][0] == null
+                && hotbarRead.HotbarSlots[Guid.Parse(SmallUnitA)][1] == OwnKey,
+            "item places: hotbarSlots are read back into the same unit and slot");
+        var hotbarDamaged = CoreSaveData.ParseAny("{\"hotbarSlots\":{\"no-guid\":[\"\",\"" + OwnKey + "\"],\"" + SmallUnitA + "\":[\"" + OwnKey + "\"],"
+            + "\"" + SmallUnitB + "\":[\"ITEM_Textile\",5]}}").ItemPlaces();
+        Check(!hotbarDamaged.Any, "item places: a damaged hotbarSlots entry, a list of the wrong length or a key not Core's is skipped");
+
         var kept = CoreSaveData.ParseAny("{\"version\":1,\"future\":{\"x\":1},\"itemSlots\":{\"" + SmallUnitA + "\":\"" + OwnKey + "\"}}");
         kept.SetItemPlaces(new CoreSaveItems.Places());
         Check(kept.Serialize() == "{\"version\":1,\"future\":{\"x\":1}}" && !kept.ItemPlaces().Any,
             "item places: no places remove the fields, and a field of a newer Core stays");
+    }
+
+    // Extended Hotbar's extension in the form its codec writes (compact, Version 1): both slots of one unit own, another unit's
+    // native items untouched; reading fills only a slot that is empty again, and a form of a newer hotbar falls back as before.
+    static void HotbarSlots()
+    {
+        var light = "ITEM_DelversCoreLightBandage";
+        CoreSaveItems.Register(light, "ITEM_Ointment");
+        try
+        {
+            string Text(string a, string b, string c, string d)
+                => "{\"x\":1,\"" + Hotbar + "\":{\"Version\":1,\"Units\":{\"" + SmallUnitA + "\":[\"" + a + "\",\"" + b + "\"],\""
+                    + SmallUnitB + "\":[\"" + c + "\",\"" + d + "\"]}}}";
+            var text = Text(OwnKey, light, StandIn, "");
+            var places = new CoreSaveItems.Places();
+            var native = CoreSaveItems.ToNative(text, new Dictionary<Guid, string>(), places);
+            Check(native == Text("", "", StandIn, "") && places.HotbarSlots.Count == 1 && places.Missed == 0
+                    && places.HotbarSlots[Guid.Parse(SmallUnitA)][0] == OwnKey && places.HotbarSlots[Guid.Parse(SmallUnitA)][1] == light,
+                "item places: both own hotbar slots are written empty and noted, a native item on the other unit's slot stays");
+            Check(JsonDocument.Parse(native) != null, "item places: the hotbar extension stays valid JSON after the cut");
+            var back = CoreSaveItems.FromNative(native, new Dictionary<Guid, string>(), places, out var restored);
+            Check(restored == 2 && back == text, "item places: reading gives both hotbar slots their own keys back");
+
+            var filled = CoreSaveItems.FromNative(Text("ITEM_Wood", "", StandIn, ""), new Dictionary<Guid, string>(), places, out var filledBack);
+            Check(filledBack == 1 && filled == Text("ITEM_Wood", light, StandIn, ""),
+                "item places: a hotbar slot the game filled with a native item meanwhile keeps it; only the empty one is filled");
+            var withNull = CoreSaveItems.FromNative(native.Replace("[\"\",\"\"]", "[null,null]"), new Dictionary<Guid, string>(), places, out var nullBack);
+            Check(nullBack == 2 && withNull == text,
+                "item places: a hotbar slot written as null counts as empty too");
+
+            var newer = "{\"" + Hotbar + "\":{\"Version\":2,\"Units\":{\"" + SmallUnitA + "\":[\"" + OwnKey + "\",\"\"]}}}";
+            var newerPlaces = new CoreSaveItems.Places();
+            var newerNative = CoreSaveItems.ToNative(newer, new Dictionary<Guid, string>(), newerPlaces);
+            Check(!newerNative.Contains(OwnKey) && newerPlaces.HotbarSlots.Count == 0 && newerPlaces.Missed == 1,
+                "item places: a hotbar extension of another form falls back to the stand-in and is counted as missed");
+        }
+        finally
+        {
+            Register();
+        }
     }
 
     // The fixture with plain line breaks; null when the file is not found.

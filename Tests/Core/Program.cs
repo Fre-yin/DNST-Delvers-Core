@@ -25,6 +25,7 @@ var sections = new (string Name, Action Run)[]
     ("ItemPlaces", ItemPlacesSection.Run),
     ("ReviveRules", ReviveRulesSection.Run),
     ("CoreSettings", CoreSettingsSection.Run),
+    ("SettingsKeys", SettingsKeysSection.Run),
     ("CoreProbeRules", CoreProbeRulesSection.Run),
     ("SourceRules", SourceRulesSection.Run),
     ("KeyConstants", KeyConstantsSection.Run),

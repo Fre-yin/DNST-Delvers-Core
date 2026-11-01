@@ -7,8 +7,9 @@ internal static class LoadPatchCompatibilityRules
     private const string ExtendedHotbarMelonAssembly = "DungeonSettlers10Slots";
     private const string ExtendedHotbarBepInExAssembly = "DungeonSettlersHotbar.BepInEx";
     // 1.0.2 changed only the author name, license texts and an audit-only Harmony id;
-    // both load patches are identical to 1.0.1.
-    private static readonly string[] ReviewedExtendedHotbarVersions = { "1.0.1.0", "1.0.2.0" };
+    // both load patches are identical to 1.0.1. 1.0.3 binds the patch arguments by name and adds a read-only API; both load
+    // patches keep their classes, methods, phases and logic.
+    private static readonly string[] ReviewedExtendedHotbarVersions = { "1.0.1.0", "1.0.2.0", "1.0.3.0" };
 
     internal static bool IsKnownExtendedHotbar(string target, string stage,
         string assemblyName, string assemblyVersion, string declaringType, string methodName)

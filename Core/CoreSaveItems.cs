@@ -15,6 +15,10 @@ namespace DungeonSettlersDelvers.Core;
 // (AvailableItems). A stand-in there would turn the slot into cloth and add a second entry of the same key to the
 // list, so these two places are not renamed: the slot is written empty (null) and the list entry is cut out. Core
 // notes both in its own data (Places) and puts them back where they stood.
+// The same holds for the two extra item slots of Extended Hotbar: it appends them to the save as
+// "DungeonSettlers10Slots_Items": { "Version": 1, "Units": { "<unit>": [ "<key>", "<key>" ] } } (its ItemSlotSaveCodec,
+// 1.0.1 to 1.0.3), and a stand-in there came back as cloth or salve on the slot. An own key there is written empty ("",
+// the codec's empty slot) and put back on reading, before the game and the hotbar read the text.
 internal static class CoreSaveItems
 {
     // One underscore only, like every game key (see CoreSaveEffects.Prefix).
@@ -22,6 +26,7 @@ internal static class CoreSaveItems
 
     private const string QuickSlotName = "ItemQuickSlotKey";
     private const string AvailableItemsName = "AvailableItems";
+    private const string HotbarItemsName = "DungeonSettlers10Slots_Items";
     private const string GuidText = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
 
     // Where own item keys stood outside the item records: the item quick slot per unit, and the cut entries per storage rule.
@@ -29,8 +34,10 @@ internal static class CoreSaveItems
     {
         internal readonly Dictionary<Guid, string> QuickSlots = new();
         internal readonly Dictionary<Guid, List<StorageEntry>> Storage = new();
+        // Extended Hotbar's extra item slots per unit: the own key at its slot, null where the slot held none.
+        internal readonly Dictionary<Guid, string[]> HotbarSlots = new();
 
-        internal bool Any => QuickSlots.Count > 0 || Storage.Count > 0;
+        internal bool Any => QuickSlots.Count > 0 || Storage.Count > 0 || HotbarSlots.Count > 0;
 
         // Own keys in a quick slot or a storage rule's list that the shape rules above did not catch (a form of the save they
         // do not know); they fall back to their stand-in like any other mention. CoreSaveStore warns when this is not 0.
@@ -100,6 +107,19 @@ internal static class CoreSaveItems
     private static readonly Regex LeftStorage = new(
         "\"" + AvailableItemsName + "\"\\s*:\\s*\\{[^{}]*\"" + Regex.Escape(Prefix), RegexOptions.CultureInvariant);
 
+    // Extended Hotbar's extension: its unit lists, and in them one unit's two slots (a text each, or null).
+    private static readonly Regex HotbarUnits = new(
+        "\"" + HotbarItemsName + "\"\\s*:\\s*\\{\\s*\"Version\"\\s*:\\s*1\\s*,\\s*\"Units\"\\s*:\\s*\\{(?<units>[^{}]*)\\}\\s*\\}",
+        RegexOptions.CultureInvariant);
+
+    private static readonly Regex HotbarUnit = new(
+        "\"(?<unit>" + GuidText + ")\"\\s*:\\s*\\[\\s*(?<first>\"(?:[^\"\\\\]|\\\\.)*\"|null)\\s*,\\s*(?<second>\"(?:[^\"\\\\]|\\\\.)*\"|null)\\s*\\]",
+        RegexOptions.CultureInvariant);
+
+    // An own key still standing in the hotbar's extension after the cut (a form of it the rules above do not know).
+    private static readonly Regex LeftHotbar = new(
+        "\"" + HotbarItemsName + "\"\\s*:\\s*\\{[^}]*\"" + Regex.Escape(Prefix), RegexOptions.CultureInvariant);
+
     private static readonly Regex Pair = new(
         "\"((?:[^\"\\\\]|\\\\.)*)\"\\s*:\\s*(\"(?:[^\"\\\\]|\\\\.)*\"|null|true|false|-?[0-9][0-9.eE+-]*)",
         RegexOptions.CultureInvariant);
@@ -140,7 +160,7 @@ internal static class CoreSaveItems
     internal static string ToNative(string json, Dictionary<Guid, string> owned, Places places)
     {
         if (string.IsNullOrEmpty(json) || json.IndexOf(Prefix, StringComparison.Ordinal) < 0) return json;
-        var result = CutQuickSlots(CutStorage(CutRecords(json, owned), places), places);
+        var result = CutHotbarSlots(CutQuickSlots(CutStorage(CutRecords(json, owned), places), places), places);
         places.Missed = Missed(result);
         foreach (var pair in StandIns)
             if (result.IndexOf(pair.Key, StringComparison.Ordinal) >= 0)
@@ -148,12 +168,13 @@ internal static class CoreSaveItems
         return result;
     }
 
-    // How many quick slots and storage lists still hold an own key after the cuts.
+    // How many quick slots, storage lists and hotbar extensions still hold an own key after the cuts.
     internal static int Missed(string json)
     {
         var count = 0;
         for (var match = LeftQuickSlot.Match(json); match.Success; match = match.NextMatch()) count++;
         for (var match = LeftStorage.Match(json); match.Success; match = match.NextMatch()) count++;
+        for (var match = LeftHotbar.Match(json); match.Success; match = match.NextMatch()) count++;
         return count;
     }
 
@@ -187,6 +208,37 @@ internal static class CoreSaveItems
             places.QuickSlots[unit] = key;
             text.Append(json, copied, value.Index - copied).Append("null");
             copied = value.Index + value.Length;
+        }
+        if (copied == 0) return json;
+        text.Append(json, copied, json.Length - copied);
+        return text.ToString();
+    }
+
+    // An own key on one of Extended Hotbar's extra item slots becomes an empty slot ("").
+    private static string CutHotbarSlots(string json, Places places)
+    {
+        if (json.IndexOf(HotbarItemsName, StringComparison.Ordinal) < 0) return json;
+        var text = new StringBuilder(json.Length);
+        var copied = 0;
+        for (var block = HotbarUnits.Match(json); block.Success; block = block.NextMatch())
+        {
+            var units = block.Groups["units"];
+            for (var match = HotbarUnit.Match(units.Value); match.Success; match = match.NextMatch())
+            {
+                if (!Guid.TryParse(match.Groups["unit"].Value, out var unit)) continue;
+                string[] cut = null;
+                for (var slot = 0; slot < 2; slot++)
+                {
+                    var value = match.Groups[slot == 0 ? "first" : "second"];
+                    if (!StandIns.ContainsKey(value.Value.Trim('"'))) continue;
+                    cut ??= new string[2];
+                    cut[slot] = value.Value.Trim('"');
+                    var at = units.Index + value.Index;
+                    text.Append(json, copied, at - copied).Append("\"\"");
+                    copied = at + value.Length;
+                }
+                if (cut != null) places.HotbarSlots[unit] = cut;
+            }
         }
         if (copied == 0) return json;
         text.Append(json, copied, json.Length - copied);
@@ -234,7 +286,8 @@ internal static class CoreSaveItems
         if (places == null || !places.Any) return text;
         text = RestoreQuickSlots(text, places.QuickSlots, out var slots);
         text = RestoreStorage(text, places.Storage, out var entries);
-        restored += slots + entries;
+        text = RestoreHotbarSlots(text, places.HotbarSlots, out var hotbar);
+        restored += slots + entries + hotbar;
         return text;
     }
 
@@ -277,6 +330,36 @@ internal static class CoreSaveItems
             text.Append(json, copied, value.Index - copied).Append('"').Append(key).Append('"');
             copied = value.Index + value.Length;
             restored++;
+        }
+        if (restored == 0) return json;
+        text.Append(json, copied, json.Length - copied);
+        return text.ToString();
+    }
+
+    // An extra item slot of Extended Hotbar that is empty now ("" or null) gets its own key back; one holding a native item stays.
+    private static string RestoreHotbarSlots(string json, IReadOnlyDictionary<Guid, string[]> slots, out int restored)
+    {
+        restored = 0;
+        if (slots.Count == 0 || json.IndexOf(HotbarItemsName, StringComparison.Ordinal) < 0) return json;
+        var text = new StringBuilder(json.Length + 64);
+        var copied = 0;
+        for (var block = HotbarUnits.Match(json); block.Success; block = block.NextMatch())
+        {
+            var units = block.Groups["units"];
+            for (var match = HotbarUnit.Match(units.Value); match.Success; match = match.NextMatch())
+            {
+                if (!Guid.TryParse(match.Groups["unit"].Value, out var unit) || !slots.TryGetValue(unit, out var keys)) continue;
+                for (var slot = 0; slot < 2; slot++)
+                {
+                    var value = match.Groups[slot == 0 ? "first" : "second"];
+                    var key = keys != null && slot < keys.Length ? keys[slot] : null;
+                    if (key == null || !StandIns.ContainsKey(key) || (value.Value != "\"\"" && value.Value != "null")) continue;
+                    var at = units.Index + value.Index;
+                    text.Append(json, copied, at - copied).Append('"').Append(key).Append('"');
+                    copied = at + value.Length;
+                    restored++;
+                }
+            }
         }
         if (restored == 0) return json;
         text.Append(json, copied, json.Length - copied);

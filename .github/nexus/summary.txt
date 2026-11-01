@@ -1,1 +1,1 @@
-Adds Lowell, Liana and Kragas as recruits, the Apocalypse difficulty above Downfall and a revive scroll, and provides a shared foundation for Dungeon Settlers character packs.
+Adds Lowell, Liana and Kragas as recruits and Apocalypse, a difficulty above Downfall with forest bandits, bleeding and first aid. Also a revive scroll, an experimental group AI and formation, and the base for character packs like Delvers Frieren.

@@ -1,53 +1,51 @@
-Delvers Core adds Lowell, Liana and Kragas as additional recruits in your own Dungeon Settlers campaign. They can appear in Custom Expedition and in the guild. Their art and character data come from your installed game; the download does not include them. Core also provides a shared API for character packs such as [url=https://www.nexusmods.com/dungeonsettlers/mods/13]Delvers Frieren[/url].
+Delvers Core adds Lowell, Liana and Kragas as recruits in Custom Expedition and in the guild, for no more than 500 gold each, and Apocalypse, a new difficulty above Downfall. It is also the base for character packs such as [url=https://www.nexusmods.com/dungeonsettlers/mods/13]Delvers Frieren[/url], and it protects modded campaigns: if loading goes wrong, Core blocks saving and tells you.
 
-The three story characters cost no more than 500 gold each in the guild. Core also helps character packs keep unique recruits from appearing more than once, restore missing fixed traits and integrate with campaign loading. If Core detects certain errors while loading a modded campaign, it blocks further saves for that game session and displays a notice. Restart the game before saving again. This does not repair damaged saves or catch every possible error.
+[size=4][b]Features[/b][/size]
 
-[size=4][b]New in 0.5.0[/b][/size]
+[b]Apocalypse difficulty.[/b] One step above Downfall, separately for combat and management. You can choose it for a new campaign once Downfall is unlocked. In combat, enemies attack at once and the pause key only slows time for a few seconds. In management, merchants offer fewer goods. Without Core, such a campaign loads as Downfall.
 
-[b]Delvers menu.[/b] In the game's options, the last tab "Delvers" shows the verified game version, whether saving is allowed, Core's settings and the installed Delvers packs. During a running campaign it is locked and only available from the title menu. There you can turn Lowell, Liana and Kragas off as founders one by one, and switch Apocalypse, its pause rule and the revive scroll on or off.
+[b]Forest bandits.[/b] A faction of their own in combat Apocalypse, with their own group control. Watch your step in the forest.
 
-[b]Apocalypse difficulty.[/b] One step above Downfall, separately for combat and management. Choose it when you create a campaign once Downfall is unlocked. It shows in purple with its own description and tooltip. For now it uses Downfall's values. In management Apocalypse, every merchant offers about 40% fewer goods: each item keeps 60% of its amount, rounded down, at least one, and prices stay the same. In combat Apocalypse, enemies attack at once, unaware enemies take no extra damage, and the pause key slows time to half speed for up to 5 seconds instead of pausing. Without Core, the campaign loads as Downfall.
+[b]Bleeding and first aid.[/b] In combat Apocalypse, bleeding no longer stops on its own and gets worse in stages. Bandages, the aid kit, the portal or a revive stop it. Characters can treat each other, and bandages can be bought or made.
 
-[b]Revive scroll.[/b] A living character uses it next to a dead party member, who stands up again after 20 seconds. Revives per character depend on the combat difficulty: 2 on Apocalypse and Downfall, 4 on Very Hard, unlimited below. Afterwards health and energy are capped for a while. The guild merchant always sells it, dungeon merchants sometimes. Without Core it stays a return scroll.
+[b]Revival.[/b] With the revive scroll, a living character brings a fallen party member back after a short wait. How often depends on the combat difficulty, and the revived character stays weakened for a while.
 
-[b]Bleeding and first aid.[/b] In combat Apocalypse, bleeding no longer stops on its own. It keeps draining in four stages until a bandage, the aid kit, the portal or a revive stops it. Bandages are sold by merchants and made at the workbench and the alchemy table.
+[b]Enemy abilities.[/b] In combat Apocalypse, some enemies cause bleeding, silence or sleep.
 
-[b]Enemy abilities.[/b] In combat Apocalypse, some enemies cause bleeding with their hits, some casters silence their target, and spore enemies put it to sleep. Damage wakes a sleeping character.
+[b]Gear on the fallen.[/b] Fallen characters keep their equipment. Alt and right click on a body offers "Strip Equipment". Core asks before a dressed body is buried.
 
-[b]Forest Bandits.[/b] In combat Apocalypse, an enemy group of its own with its own group control. In the Vile Forest you may come across their camp, where a new ability awaits, and their boss party drops special items made for this difficulty. In the Delvers menu they can also be switched on for other difficulties.
+[b]Shield band.[/b] A band over the health bar shows a character's shield.
 
-[b]Strip equipment.[/b] Right-clicking the body of a party member or a bandit offers "Strip Equipment"; the body then drops everything it wears.
-
-[b]Equipment stays on the body.[/b] Fallen party members keep their equipped gear. Core asks before a dressed fallen member is buried.
-
-[b]Shield band.[/b] A honeycomb band over the bars shows a character's shield relative to their health, up to 200%.
+[b]Tactical formation (experimental).[/b] Each character gets a place in a lineup that follows a leader through the dungeon, plus places for skills the character casts first.
 
 [b]Group AI (experimental).[/b] Optional target choice, spacing, dodging and bandages for characters left on auto attack; up to Hard, off by default.
 
-Core stores its campaign data in its own field in the save, which the game skips without Core, and in one file per campaign. Logs no longer show your account name. This is an early release, so back up your saves before using it.
+[b]Delvers menu.[/b] The last tab in the game's options holds every switch of Core, from the title menu. You can turn the three founders off one by one, and switch each Apocalypse rule on for other difficulties too.
 
-[size=4][b]Requirements[/b][/size]
+[b]Guide.[/b] At the bottom of the game's guide, a Delvers section explains the rules and switches, with its own pictures.
 
-Windows x64, Dungeon Settlers DS_B.0.4.29 with the verified signature of Steam build 25846389, and BepInEx 6 for Unity IL2CPP x64, tested with 6.0.0-be.788. From 0.5.0 on, Delvers is available for BepInEx only; MelonLoader is no longer supported. Core remains inactive on an unsupported game version and reports this in the log.
+[size=4][b]Requirements and compatibility[/b][/size]
 
-If you use [url=https://www.nexusmods.com/dungeonsettlers/mods/13]Delvers Frieren[/url], update it together with Core.
+Windows x64, Dungeon Settlers DS_B.0.4.29 (Steam build 25846389) and BepInEx 6 for Unity IL2CPP x64, tested with 6.0.0-be.788. Delvers runs on BepInEx only.
+
+[url=https://www.nexusmods.com/dungeonsettlers/mods/13]Delvers Frieren[/url] 0.5.0 works with Core 0.5.0 and 0.5.1. [url=https://www.nexusmods.com/dungeonsettlers/mods/5]Extended Hotbar[/url] 1.0.1 to 1.0.3 is recognized as compatible.
 
 [size=4][b]Installation[/b][/size]
 
-Extract the ZIP into the Dungeon Settlers game folder. The ZIP already contains the required folders.
+Back up your saves first. Then extract the ZIP into the Dungeon Settlers game folder; it already contains the required folders. To update, extract the new ZIP over the old files.
 
-Both DLLs belong in BepInEx/plugins/DungeonSettlersDelvers/ and Core's images in its Core/ folder.
+Moving from MelonLoader: remove the old Core DLLs from Mods/ and UserLibs/ first.
 
-Moving from MelonLoader: remove the old Core DLLs from Mods/ and UserLibs/ first. The MelonLoader versions up to 0.4.1 are being archived.
+[size=4][b]New in 0.5.1[/b][/size]
 
-[size=4][b]Testing[/b][/size]
+Extended Hotbar 1.0.3 is recognized as compatible.
 
-For 0.4.1, an in-game self-test ran on DS_B.0.4.29 under both loaders, together with Frieren 0.4.1 and Extended Hotbar 1.0.2. Test campaigns with renamed keys and with missing fixed traits were loaded, saved and loaded again. A save with an unknown effect was detected: Core blocked saving, showed its notice and refused a manual save. The offline checks passed 168 Core tests per loader without build warnings or errors.
+Fixed: Delvers bandages on the extra slots of Extended Hotbar now stay there after loading.
 
-Quickload, long campaigns and every combination with other mods have not been fully checked in game. Please include your game build, loader version and a cleaned log when reporting a problem.
+[size=4][b]Reporting problems[/b][/size]
 
-[size=4][b]Source and rights[/b][/size]
+Please include your game build, BepInEx version and the log.
 
-Source code and further documentation: [url=https://github.com/Fre-yin/DNST-Delvers-Core]github.com/Fre-yin/DNST-Delvers-Core[/url]
+[size=4][b]Credits[/b][/size]
 
-The original mod code and instructions are MIT licensed. Game content, characters and trademarks are not covered by that license. This is an unofficial community project and is not made by CanOpener.
+Made by Fre-yin. Source code: [url=https://github.com/Fre-yin/DNST-Delvers-Core]github.com/Fre-yin/DNST-Delvers-Core[/url]. MIT license for the mod code; see THIRD_PARTY_NOTICES for everything else. An unofficial community project, not made by CanOpener.

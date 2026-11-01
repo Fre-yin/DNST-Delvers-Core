@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace DungeonSettlersDelvers.Core.BepInEx;
 
-[BepInPlugin(DelversCoreRuntime.BepInExPluginId, "Dungeon Settlers Delvers: Core", "0.5.0")]
+[BepInPlugin(DelversCoreRuntime.BepInExPluginId, "Dungeon Settlers Delvers: Core", "0.5.1")]
 [BepInProcess("DungeonSettlers.exe")]
 public sealed class CorePlugin : BasePlugin
 {

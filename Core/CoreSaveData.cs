@@ -80,16 +80,19 @@ internal sealed class CoreSaveData
 
     // ---- own item keys outside the item records (CoreSaveItems.Places): the item quick slot per unit and the cut
     // entries of the storage rules' item lists, per rule GUID. "itemSlots": { "<unit>": "<key>" },
-    // "storageItems": { "<rule>": [ { "key": "<key>", "on": true, "at": 4 } ] } (at: the entry's place in the list, from 0) ----
+    // "storageItems": { "<rule>": [ { "key": "<key>", "on": true, "at": 4 } ] } (at: the entry's place in the list, from 0);
+    // Extended Hotbar's two extra item slots per unit, "hotbarSlots": { "<unit>": [ "<key>", "" ] } ("" where none stood) ----
 
     private const string ItemSlotsName = "itemSlots";
     private const string StorageItemsName = "storageItems";
+    private const string HotbarSlotsName = "hotbarSlots";
 
     internal CoreSaveItems.Places ItemPlaces()
     {
         var places = new CoreSaveItems.Places();
         ReadItemSlots(places);
         ReadStorageItems(places);
+        ReadHotbarSlots(places);
         return places;
     }
 
@@ -120,10 +123,43 @@ internal sealed class CoreSaveData
         }
     }
 
+    private void ReadHotbarSlots(CoreSaveItems.Places places)
+    {
+        if (root[HotbarSlotsName] is not JsonObject units) return;
+        foreach (var pair in units)
+        {
+            if (!Guid.TryParse(pair.Key, out var unit) || pair.Value is not JsonArray list || list.Count != 2) continue;
+            var keys = new string[2];
+            var any = false;
+            for (var i = 0; i < 2; i++)
+            {
+                if (list[i] is not JsonValue value || !value.TryGetValue<string>(out var key)
+                    || !key.StartsWith(CoreSaveItems.Prefix, StringComparison.Ordinal)) continue;
+                keys[i] = key;
+                any = true;
+            }
+            if (any) places.HotbarSlots[unit] = keys;
+        }
+    }
+
     internal void SetItemPlaces(CoreSaveItems.Places places)
     {
         SetItemSlots(places);
         SetStorageItems(places);
+        SetHotbarSlots(places);
+    }
+
+    private void SetHotbarSlots(CoreSaveItems.Places places)
+    {
+        if (places == null || places.HotbarSlots.Count == 0)
+        {
+            root.Remove(HotbarSlotsName);
+            return;
+        }
+        var units = new JsonObject();
+        foreach (var pair in places.HotbarSlots)
+            units[pair.Key.ToString("D")] = new JsonArray(pair.Value[0] ?? "", pair.Value[1] ?? "");
+        root[HotbarSlotsName] = units;
     }
 
     private void SetItemSlots(CoreSaveItems.Places places)

@@ -12,7 +12,7 @@ Das Mod-Paket `DelversCore-0.5.0-BepInEx.zip` liegt unter [Releases](../../relea
 
 ## Funktionen
 
-- **Story-Figuren als Kandidaten:** Lowell, Liana und Kragas können über ihre originalen Spiel-Presets in „Eigene Expedition“ und im Gildenpool erscheinen. Ihre Grafiken und Daten kommen aus deinem installierten Spiel; Core kopiert nichts davon.
+- **Story-Figuren als Kandidaten:** Lowell, Liana und Kragas können über ihre originalen Spiel-Presets in „Eigene Expedition“ und im Gildenpool erscheinen.
 - **Gildenpreis-Deckel:** Diese drei kosten in der Gilde höchstens 500 Gold.
 - **Einzigartige Kandidaten beim Neu-Rekrutieren:** Ist das Neu-Rekrutieren wegen gesperrter Merkmale blockiert, zeigt der Button einheitlich den originalen Hinweis „Die gewählten Optionen stehen mit den aktuellen Sperren in Konflikt.“
   - Lowell, Liana, Kragas: Nur das Bild zu sperren erlaubt weiterhin, die übrigen Start-Merkmale neu zu würfeln. Sobald die primären Traits gesperrt sind, ist Neu-Rekrutieren sofort blockiert, denn ihr Story-Hintergrund kann nicht zufällig erzeugt werden.

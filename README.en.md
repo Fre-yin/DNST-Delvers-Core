@@ -14,7 +14,7 @@ The automatically generated source-code archives are not installation packages.
 
 ## Features
 
-- **Story characters as candidates:** Lowell, Liana and Kragas can appear through their original game presets in "Custom Expedition" and in the guild pool. Their art and data come from your installed game; Core copies none of it.
+- **Story characters as candidates:** Lowell, Liana and Kragas can appear through their original game presets in "Custom Expedition" and in the guild pool.
 - **Guild price cap:** These three cost at most 500 gold in the guild.
 - **Unique candidates when rerolling:** When a reroll is blocked by locked details, the button consistently shows the game's own message "The selected options conflict with the current locks."
   - Lowell, Liana, Kragas: locking only the portrait still lets you reroll the other starting details. As soon as the primary traits are locked, the reroll is blocked right away, because their story background can never be rolled randomly.

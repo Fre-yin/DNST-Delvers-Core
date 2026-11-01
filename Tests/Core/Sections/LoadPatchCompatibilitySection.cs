@@ -30,8 +30,18 @@ internal static class LoadPatchCompatibilitySection
                 "QuickSlotData.Deserialize", "prefix", "DungeonSettlersHotbar.BepInEx", "1.0.2.0",
                 "DungeonSettlers10Slots.LoadSlots", "Prefix"),
             "BepInEx Extended Hotbar 1.0.2 keeps the reviewed quick-slot restore");
-        Check(!LoadPatchCompatibilityRules.IsKnownExtendedHotbar(
+        Check(LoadPatchCompatibilityRules.IsKnownExtendedHotbar(
+                "UnitQuickSlotContainer.Deserialize", "postfix", "DungeonSettlersHotbar.BepInEx", "1.0.3.0",
+                "DungeonSettlers10Slots.ContainerSlotsLoaded", "Postfix")
+                && LoadPatchCompatibilityRules.IsKnownExtendedHotbar(
+                "QuickSlotData.Deserialize", "prefix", "DungeonSettlersHotbar.BepInEx", "1.0.3.0",
+                "DungeonSettlers10Slots.LoadSlots", "Prefix")
+                && LoadPatchCompatibilityRules.IsKnownExtendedHotbar(
                 "QuickSlotData.Deserialize", "prefix", "DungeonSettlers10Slots", "1.0.3.0",
+                "DungeonSettlers10Slots.LoadSlots", "Prefix"),
+            "Extended Hotbar 1.0.3 keeps both reviewed load patches");
+        Check(!LoadPatchCompatibilityRules.IsKnownExtendedHotbar(
+                "QuickSlotData.Deserialize", "prefix", "DungeonSettlers10Slots", "1.0.4.0",
                 "DungeonSettlers10Slots.LoadSlots", "Prefix"),
             "an unreviewed Extended Hotbar patch release remains a foreign patch");
         Check(!LoadPatchCompatibilityRules.IsKnownExtendedHotbar(

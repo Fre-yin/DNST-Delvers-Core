@@ -1,7 +1,7 @@
 #Requires -Version 7.0
 [CmdletBinding()]
 param(
-    [string]$Version = '0.5.0',
+    [string]$Version = '0.5.1',
     [string]$MelonGameDir = '',
     [string]$BepInExGameDir = '',
     [switch]$ValidateOnly,

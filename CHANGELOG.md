@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.1: 02.11.2026
+
+- Extended Hotbar 1.0.3 wird als verträglich erkannt.
+- Behoben: Verbände von Delvers auf den Zusatzplätzen von Extended Hotbar bleiben nach dem Laden erhalten.
+
 ## 0.5.0: 01.11.2026
 
 - Nur noch BepInEx, MelonLoader wird nicht mehr unterstützt.
