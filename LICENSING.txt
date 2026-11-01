@@ -5,18 +5,43 @@ instructions are covered by the MIT License in LICENSE. Preserve its copyright
 and license notice. This does not license Dungeon Settlers, game code, game
 data, artwork, fonts, trademarks or other third-party content.
 
-Core contains no copied game artwork, sounds or libraries. It makes the game's
-own Lowell, Liana and Kragas story presets available by referring to the
-game's installed data and keys at runtime; those characters, their names and
-their designs remain with CanOpener or the respective rights holders.
+Core makes the game's own Lowell, Liana and Kragas story presets available by
+referring to the game's installed data and keys at runtime; those characters,
+their names and their designs remain with CanOpener or the respective rights
+holders. The Core installation package contains two mod DLLs and 32 runtime
+PNGs. Fifteen of them (the four bandage icons, five skill images, the chain
+pull icon, two effect icons, the waterfall and the two parts of the wooden
+bridge) are original works of the project (Fre-yin) and are covered by the MIT
+License in LICENSE. The other seventeen are edited from native Dungeon
+Settlers graphics and are not covered by the MIT License: the Serrated Blade
+icon is a modified version of an original game icon, the Lifebloom skill book
+is a recoloured version of a game book icon, and the fifteen body blood images
+are adapted from the game's wound graphics. The original graphics and their
+rights remain with CanOpener. These statements do not claim ownership of the
+original game graphics. Core also shows further images from the installed
+game: the original images come from Dungeon Settlers by CanOpener
+(https://store.steampowered.com/app/2798330/). Delvers does not distribute them; it
+uses them in the game or recolours them at runtime. Their rights remain with
+CanOpener. See THIRD_PARTY_NOTICES.md for details.
 
 This is an unofficial community mod for a separately obtained game and a
-separately installed MelonLoader or BepInEx loader. The packages do not
-contain game binaries, loader binaries, generated interop assemblies or saved
-campaigns. Third-party components retain their own licenses and conditions;
-see THIRD_PARTY_NOTICES.md and the separate loader distribution's notices.
+separately installed BepInEx loader. The packages do not contain game
+binaries, loader binaries, generated interop assemblies or saved campaigns.
+Third-party components retain their own licenses and conditions; see
+THIRD_PARTY_NOTICES.md and the separate loader distribution's notices.
 
-Deutsch: Eigener Code, Tests, Buildskripte und eigene Anleitungen stehen unter
-MIT. Spielinhalte, Spieldaten, Figuren und Marken sind davon ausgenommen.
-Dieses Projekt erteilt keine eigenstaendigen Rechte an fremden Inhalten.
-Spiel und Loader werden separat installiert, nicht mit diesem Paket verteilt.
+Deutsch: Eigener Code, Tests, Buildskripte, eigene Anleitungen und 15 der 32
+Bilder im Ordner Core des Pakets (Verbaende, Faehigkeit, Kettenzug, zwei
+Effektsymbole, Wasserfall, Holzbruecke) stehen unter MIT; diese Bilder sind
+eigene Werke des Projekts (Fre-yin). Die uebrigen 17 Bilder sind Bearbeitungen
+von Grafik des Spiels und stehen nicht unter MIT: Das Icon Serrated Blade ist
+eine veraenderte Fassung eines Original-Icons des Spiels, das Skillbuch der
+Lebensbluete eine umgefaerbte Fassung eines Buch-Icons des Spiels, die 15
+Bilder des Koerperbluts sind eine Adaption der Wundgrafik des Spiels. Die
+Rechte daran liegen bei CanOpener. Weitere Bilder zeigt Core aus dem
+installierten Spiel: Die Originalbilder stammen aus Dungeon Settlers von
+CanOpener (https://store.steampowered.com/app/2798330/). Delvers verteilt sie nicht,
+sondern nutzt sie im Spiel oder faerbt sie zur Laufzeit um. Spielinhalte, Spieldaten, Figuren,
+native Grafikvorlagen und Marken sind ausgenommen. Dieses Projekt erteilt
+keine eigenstaendigen Rechte an fremden Inhalten. Spiel und Loader werden
+separat installiert, nicht mit diesem Paket verteilt.

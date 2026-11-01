@@ -18,8 +18,10 @@ internal static class NativeFoundersEstablish
         try
         {
             if (!string.IsNullOrEmpty(result.Token.PresetKey)) return;
+            if (!NativeFounderReplacementRule.MayReplace(DelversCoreRuntime.GetUniqueCandidateLockPolicy(result.Candidate))) return;
             var entry = NativeFounders.ForCandidate(result.Candidate);
-            if (entry == null || !NativeFounders.IsNativePresetAvailable(entry)
+            if (entry == null || !CoreSettings.IsFounderEnabled(entry)
+                || !NativeFounders.IsNativePresetAvailable(entry)
                 || !MatchesRestriction(entry, restriction)) return;
 
             // Respect the player's manually locked character details. Presets
@@ -35,7 +37,7 @@ internal static class NativeFoundersEstablish
             // Deterministic rare outcome within each matching race/gender group.
             var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(
                 $"{seed}|{slotIndex}|{refreshCount}|{entry.PresetKey}|native-founder"));
-            if (BitConverter.ToUInt32(bytes, 0) % RollsPerFounder != 0) return;
+            if (!NextCampaignTest.Shared.Pending && BitConverter.ToUInt32(bytes, 0) % RollsPerFounder != 0) return;
 
             var sourceToken = result.Token;
             var token = new EstablishUnitSelectionToken
@@ -108,7 +110,7 @@ internal static class NativeFoundersEstablishRollPatch
     private static MethodBase TargetMethod()
         => AccessTools.Method(PresenterType, "TryGenerateEstablishSlot", new[] { typeof(int), typeof(bool) });
 
-    private static void Postfix(CreateCampaignPresenter __instance, int __0, bool __result)
+    private static void Postfix(CreateCampaignPresenter __instance, int slotIndex, bool __result)
     {
         if (!__result || __instance == null) return;
         object slot = null;
@@ -119,22 +121,22 @@ internal static class NativeFoundersEstablishRollPatch
         {
             var slots = Slots?.GetValue(__instance);
             var item = slots?.GetType().GetProperty("Item", AllInstance);
-            slot = item?.GetValue(slots, new object[] { __0 });
+            slot = item?.GetValue(slots, new object[] { slotIndex });
             if (slot == null || !BindingsReady) return;
 
             previousCandidate = (RecruitCandidateData)Candidate.GetValue(slot);
             previousToken = (EstablishUnitSelectionToken)Token.GetValue(slot);
             if (previousCandidate == null || previousToken == null
                 || !string.IsNullOrEmpty(previousToken.PresetKey)) return;
-            var names = (Il2CppSystem.Collections.Generic.HashSet<string>)OtherNames.Invoke(__instance, new object[] { __0 });
-            var portraits = (Il2CppSystem.Collections.Generic.HashSet<string>)OtherPortraits.Invoke(__instance, new object[] { __0 });
+            var names = (Il2CppSystem.Collections.Generic.HashSet<string>)OtherNames.Invoke(__instance, new object[] { slotIndex });
+            var portraits = (Il2CppSystem.Collections.Generic.HashSet<string>)OtherPortraits.Invoke(__instance, new object[] { slotIndex });
             var namesReadOnly = names?.TryCast<ReadOnlyStrings>();
             var portraitsReadOnly = portraits?.TryCast<ReadOnlyStrings>();
             if (namesReadOnly == null || portraitsReadOnly == null) return;
 
             var result = new EstablishUnitGenerationResult(previousCandidate, previousToken);
             NativeFoundersEstablish.TryReplace((EstablishUnitGenerator)Generator.GetValue(__instance),
-                (string)Seed.GetValue(__instance), __0, (int)RefreshCount.GetValue(slot),
+                (string)Seed.GetValue(__instance), slotIndex, (int)RefreshCount.GetValue(slot),
                 namesReadOnly, portraitsReadOnly, (EstablishUnitRestriction)Restriction.GetValue(slot), ref result);
             if (string.IsNullOrEmpty(result.Token.PresetKey)) return;
 

@@ -48,6 +48,14 @@ internal sealed class LoadIntegrityState
         LoadSequence++;
     }
 
+    // A failed read of exactly the file being loaded (CoreSaveStore.ReadFailureOf) counts as the
+    // first failure of this load. Returns true when it was reported.
+    internal bool Begin(string campaign, bool readFailed)
+    {
+        Begin(campaign);
+        return readFailed && ReportFailure(LoadFailureSources.CoreRead);
+    }
+
     // Returns true only for the first failure of the current load.
     internal bool ReportFailure(string source)
     {

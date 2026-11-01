@@ -174,10 +174,10 @@ internal static class FixedTraitRestore
 internal static class FixedTraitRestorePatch
 {
     [HarmonyPriority(Priority.First)]
-    private static void Prefix(ComponentSaveList __0, IEntity __1)
+    private static void Prefix(ComponentSaveList savedDataList, IEntity entity)
     {
-        FixedTraitRestore.BeforeComponentsDeserialize(__0, __1);
-        DelversCoreRuntime.NotifyBeforeComponentsDeserialize(__0, __1);
+        FixedTraitRestore.BeforeComponentsDeserialize(savedDataList, entity);
+        DelversCoreRuntime.NotifyBeforeComponentsDeserialize(savedDataList, entity);
     }
 
     private static Exception Finalizer(Exception __exception)
@@ -188,8 +188,8 @@ internal static class FixedTraitRestorePatch
     new[] { typeof(ComponentSaveBaseData), typeof(IEntity) })]
 internal static class DelversUnitProfileLoadPatch
 {
-    private static void Prefix(ComponentSaveBaseData __0, IEntity __1)
-        => DelversCoreRuntime.NotifyBeforeUnitProfileDeserialize(__0, __1);
+    private static void Prefix(ComponentSaveBaseData data, IEntity entity)
+        => DelversCoreRuntime.NotifyBeforeUnitProfileDeserialize(data, entity);
 
     private static void Postfix(UnitProfileComponent __instance)
         => DelversCoreRuntime.NotifyAfterUnitProfileDeserialize(__instance);

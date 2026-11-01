@@ -1,6 +1,6 @@
 # Delvers Core: öffentliche API für Charakterpakete
 
-Stand: Core 0.4.1, API 1.4.0. Dieser Leitfaden beschreibt die vorhandenen Schnittstellen. Addons für eigene Items, Gebäude oder neue Skill-Definitionen brauchen zusätzliche Forschung und besitzen derzeit keine allgemeine Core-API.
+Stand: Core 0.5.0, API 1.11.0. Dieser Leitfaden beschreibt die Schnittstellen bis API 1.4.0, die Kampagnen-GUID aus API 1.9.0 (Abschnitt „Testkampagne erkennen“) und die Einstellungsdatei je Spielkopie aus API 1.10.0 (Abschnitt „Einstellungen je Spielkopie“). Die Erweiterungen 1.5.0 bis 1.8.0 (Seiten im Delvers-Menü, Testkampagnen, Wiederbelebung, Blutung) und die Test-Aufrufe der Formation aus 1.11.0 nennt das Changelog; in diesem Leitfaden stehen sie noch nicht. Addons für eigene Items, Gebäude oder neue Skill-Definitionen brauchen zusätzliche Forschung und besitzen derzeit keine allgemeine Core-API.
 
 Ein Charakterpaket benötigt das Core-Paket für denselben Loader. Registriere es erst, wenn `DelversCoreRuntime.IsReady` wahr ist und `SupportsApi` für die kleinste API-Version erfolgreich war, die dein Paket braucht: `"1.3.0"` für Lade-Callbacks, `"1.4.0"` für umbenannte Keys und `DelversNativeList`. Gib jede erhaltene `IDisposable`-Registrierung beim Shutdown frei. Pack-IDs bestehen aus Kleinbuchstaben, Ziffern und Bindestrichen.
 
@@ -38,3 +38,19 @@ Der Ladeschutz erkennt bestimmte Komponenten- und Abschnittsfehler. Er schützt 
 Unter BepInEx gibt `List<T>.Add` Strukturen des Spiels, etwa `AffecterHolder`, nicht korrekt an die native Liste weiter. Nutze dafür `DelversNativeList.AddValue`; unter MelonLoader verhält es sich gleich.
 
 Die genauen Delegattypen und Signaturen stehen in [`Core/DelversCoreRuntime.cs`](Core/DelversCoreRuntime.cs) und [`Core/PackLoadIntegrationRegistry.cs`](Core/PackLoadIntegrationRegistry.cs). Zum Bauen siehe [BUILDING.md](BUILDING.md).
+
+## Testkampagne erkennen
+
+Ab API 1.9.0 liefert `DelversCoreRuntime.CurrentCampaignGuid()` die GUID der Kampagne, an die Core gerade gebunden ist, als Text im Format „D“. Im Hauptmenü und bevor eine Kampagne geladen oder neu begonnen wurde, ist der Wert `null`. Lies ihn frühestens in den Lade-Callbacks (`RegisterLoadIntegration`) oder danach.
+
+`DelversCoreRuntime.IsCurrentCampaignTest()` fasst beides zusammen: Es ist `true`, wenn die gebundene Kampagne eine Testkampagne ist, sonst `false`, auch ohne Kampagne. Damit prüft ein Addon, bevor es Inhalte nur für Testkampagnen freigibt. Die GUID nicht aus Core-Logzeilen lesen. Prüfe vorher `ApiVersion` gegen `MinimumApiVersionForCampaignGuid` (1.9.0).
+
+## Drei Teile der Core-API
+
+Die **Pack-API** nutzen Charakterpakete mit einem Verweis auf Core; sie bleibt in Hauptversion 1 stabil. Die **Werkzeug-API** rufen Werkzeuge über Reflection auf, etwa `SettingsFilePath()` und `WoundStatus`; sie bleibt ebenfalls stabil. Die **Test-API** dient nur Testläufen in markierten Testkampagnen und hat keine Stabilitätszusage. Zur Test-API gehören alle Member, die auf `ForTest` enden, dazu `MarkTestCampaign`, `ForgetTestCampaign`, `SetRecruitmentFree`, `SetFounderOffersForced`, `MarkNextNewCampaignAsTest`, `IsNextNewCampaignMarkedAsTest`, `ApocalypseStatus`, `CoreOption`, `EnemyAbilityStatus`, `HintsStatus`, `GroupAiStatus`, `GroupAiBanditStatus`, `GroupAiResetWindow`, `LifebloomStatus`, `BanditsActive` und `AuditFixedTraitRestore`. Zwölf weitere öffentliche Member gehören zu keinem der drei Teile und sind nicht für Pakete gedacht: der Lebenszyklus der Adapter (`Initialize`, `Shutdown`, `DelversHost.Bind` und `Unbind` sowie die sechs Member von `IDelversHostServices`), `AuditNativeFounders` und `MelonAssemblyName`. Sie werden mit API 2.0 intern oder fallen weg. Die vollständige Tabelle aller Member mit Teil und Mindestversion folgt in einer späteren Fassung des Leitfadens.
+
+## Einstellungen je Spielkopie
+
+Ab API 1.10.0 hat jede Installation des Spiels ihre eigene Einstellungsdatei von Core: `<persistentDataPath>\DungeonSettlersDelvers\Core\copies\<Kennung>\settings.json`. Daneben liegt `copy.txt` mit dem Spielordner. Im Spiel liefert `DelversCoreRuntime.SettingsFilePath()` den vollen Pfad (die Datei muss noch nicht bestehen). Prüfe vorher `ApiVersion` gegen `MinimumApiVersionForSettingsCopy` (1.10.0).
+
+Ein Werkzeug, das Einstellungen vor dem Spielstart schreibt, rechnet die Kennung so: Spielordner (der Ordner über `DungeonSettlers_Data`) als voller Pfad, `/` als `\`, ohne `\` am Ende, in Kleinbuchstaben; davon SHA256 über die UTF-8-Bytes; die ersten 8 Hexziffern in Großbuchstaben. Fehlt die Datei der Kopie beim Start, übernimmt Core einmal die Werte aus der früheren gemeinsamen `DungeonSettlersDelvers\Core\settings.json`. Diese Datei liest Core danach nicht mehr und schreibt sie nie.

@@ -8,7 +8,7 @@ namespace DungeonSettlersDelvers.Core;
 internal static class UniqueCandidateRerollUI
 {
     private static readonly object Gate = new();
-    private static readonly Dictionary<IntPtr, PanelState> States = new();
+    private static readonly Dictionary<IntPtr, UniqueCandidateRerollState> States = new();
     private static bool uiWarningLogged;
 
     internal static bool BindingsReady
@@ -46,39 +46,22 @@ internal static class UniqueCandidateRerollUI
 
     internal static void BeforeSetUnitData(SubUI_EstablishUnitPanel panel)
     {
-        var state = RemoveState(panel);
-        if (state == null) return;
-        RestoreGenerationFailureDisable(state);
-        RestoreOrDiscard(panel, state);
+        RemoveState(panel)?.Release();
     }
 
     internal static void AfterSetUnitData(SubUI_EstablishUnitPanel panel, RecruitCandidateData candidate)
     {
         if (panel == null) return;
-        var state = new PanelState
-        {
-            Panel = panel,
-            LockPolicy = DelversCoreRuntime.GetUniqueCandidateLockPolicy(candidate),
-            ProfileLocked = IsProfileLocked(panel),
-            PrimaryTraitsLocked = ArePrimaryTraitsLocked(panel),
-            NativeGenerationFailed = IsGenerationFailed(panel)
-        };
+        var state = new UniqueCandidateRerollState(new NativePanel(panel),
+            DelversCoreRuntime.GetUniqueCandidateLockPolicy(candidate), IsProfileLocked(panel),
+            ArePrimaryTraitsLocked(panel), IsGenerationFailed(panel));
         lock (Gate) States[panel.Pointer] = state;
-        Reconcile(panel, state);
+        state.Reconcile();
     }
 
     internal static void BeforeNativeStateChange(SubUI_EstablishUnitPanel panel)
     {
-        var state = GetState(panel);
-        RestoreGenerationFailureDisable(state);
-        if (state?.OverrideApplied != true) return;
-        if (IsGenerationFailed(panel))
-        {
-            state.NativeGenerationFailed = true;
-            DiscardSnapshot(state);
-            return;
-        }
-        RestoreSnapshot(state);
+        GetState(panel)?.BeforeNativeStateChange();
     }
 
     internal static void AfterRestrictions(SubUI_EstablishUnitPanel panel, EstablishUnitRestriction restrictions)
@@ -98,7 +81,7 @@ internal static class UniqueCandidateRerollUI
             state.PrimaryTraitsLocked = ArePrimaryTraitsLocked(panel);
         }
         state.NativeGenerationFailed = IsGenerationFailed(panel);
-        Reconcile(panel, state);
+        state.Reconcile();
     }
 
     internal static void AfterGenerationFailed(SubUI_EstablishUnitPanel panel, bool generationFailed)
@@ -106,7 +89,7 @@ internal static class UniqueCandidateRerollUI
         var state = GetState(panel);
         if (state == null) return;
         state.NativeGenerationFailed = generationFailed || IsGenerationFailed(panel);
-        Reconcile(panel, state);
+        state.Reconcile();
     }
 
     internal static void AfterRefreshLanguage(SubUI_EstablishUnitPanel panel)
@@ -116,175 +99,19 @@ internal static class UniqueCandidateRerollUI
         state.ProfileLocked = IsProfileLocked(panel);
         state.PrimaryTraitsLocked = ArePrimaryTraitsLocked(panel);
         state.NativeGenerationFailed = IsGenerationFailed(panel);
-        Reconcile(panel, state);
+        state.Reconcile();
     }
 
     internal static void ResetLifecycle()
     {
-        PanelState[] states;
+        UniqueCandidateRerollState[] states;
         lock (Gate)
         {
             states = States.Values.ToArray();
             States.Clear();
             uiWarningLogged = false;
         }
-        foreach (var state in states)
-        {
-            RestoreGenerationFailureDisable(state);
-            if (state.NativeGenerationFailed || IsGenerationFailed(state.Panel)) DiscardSnapshot(state);
-            else RestoreSnapshot(state);
-        }
-    }
-
-    private static void Reconcile(SubUI_EstablishUnitPanel panel, PanelState state)
-    {
-        if (panel == null || state == null) return;
-        state.NativeGenerationFailed = state.NativeGenerationFailed || IsGenerationFailed(panel);
-        if (state.NativeGenerationFailed)
-        {
-            DiscardSnapshot(state);
-            if (UniqueCandidateRerollDecision.ShouldDisableAfterGenerationFailure(state.LockPolicy, true))
-                ApplyGenerationFailureDisable(panel, state);
-            return;
-        }
-        RestoreGenerationFailureDisable(state);
-        if (state.LockPolicy == UniqueCandidateLockPolicy.None && !state.OverrideApplied) return;
-        bool nativeButtonInteractable;
-        try
-        {
-            var button = panel._refreshButton;
-            nativeButtonInteractable = state.HasSnapshot
-                ? state.OriginalInteractable
-                : button != null && button.interactable;
-        }
-        catch (Exception ex)
-        {
-            if (state.OverrideApplied) RestoreSnapshot(state);
-            WarnUiOnce("Core could not inspect the native reroll button: " + ex.Message);
-            return;
-        }
-        var action = UniqueCandidateRerollDecision.Evaluate(state.LockPolicy, state.ProfileLocked,
-            state.PrimaryTraitsLocked, state.NativeGenerationFailed, nativeButtonInteractable,
-            state.OverrideApplied);
-
-        switch (action)
-        {
-            case UniqueCandidateRerollAction.ApplyCustomLock:
-                ApplyLockConflict(panel, state, disableButton: true);
-                break;
-            case UniqueCandidateRerollAction.ApplyLockConflictText:
-                ApplyLockConflict(panel, state, disableButton: false);
-                break;
-            case UniqueCandidateRerollAction.RestoreNativeState:
-                RestoreSnapshot(state);
-                break;
-            case UniqueCandidateRerollAction.DiscardStaleCustomState:
-                DiscardSnapshot(state);
-                break;
-        }
-    }
-
-    private static void ApplyLockConflict(SubUI_EstablishUnitPanel panel, PanelState state, bool disableButton)
-    {
-        try
-        {
-            var button = panel._refreshButton;
-            var text = panel._refreshButtonText;
-            if (button == null || text == null)
-            {
-                WarnUiOnce("Core could not reach the custom-expedition reroll button or its text.");
-                return;
-            }
-
-            if (!state.HasSnapshot) CaptureSnapshot(button, text, state);
-            if (disableButton) button.interactable = false;
-            text.text = UniqueCandidateLocalization.GetLockConflictText();
-            state.OverrideApplied = true;
-        }
-        catch (Exception ex)
-        {
-            RestoreSnapshot(state);
-            WarnUiOnce("Core could not apply the native lock-conflict explanation: " + ex.Message);
-        }
-    }
-
-    // Only the interactable flag is touched; the native failure text stays in place.
-    private static void ApplyGenerationFailureDisable(SubUI_EstablishUnitPanel panel, PanelState state)
-    {
-        if (state.FailureDisableApplied) return;
-        try
-        {
-            var button = panel._refreshButton;
-            if (button == null)
-            {
-                WarnUiOnce("Core could not reach the custom-expedition reroll button after a generation failure.");
-                return;
-            }
-            state.FailureButton = button;
-            state.FailureOriginalInteractable = button.interactable;
-            button.interactable = false;
-            state.FailureDisableApplied = true;
-        }
-        catch (Exception ex)
-        {
-            RestoreGenerationFailureDisable(state);
-            WarnUiOnce("Core could not disable the reroll button after a generation failure: " + ex.Message);
-        }
-    }
-
-    private static void RestoreGenerationFailureDisable(PanelState state)
-    {
-        if (state == null || !state.FailureDisableApplied) return;
-        try
-        {
-            if (state.FailureButton != null) state.FailureButton.interactable = state.FailureOriginalInteractable;
-        }
-        catch { /* A panel can be destroyed while its pool is being cleared. */ }
-        state.FailureDisableApplied = false;
-    }
-
-    private static void CaptureSnapshot(Button button, TMP_Text text, PanelState state)
-    {
-        state.Button = button;
-        state.ButtonText = text;
-        state.OriginalInteractable = button.interactable;
-        state.OriginalText = text.text;
-        state.OriginalColor = text.color;
-        state.HasSnapshot = true;
-    }
-
-    private static void RestoreOrDiscard(SubUI_EstablishUnitPanel panel, PanelState state)
-    {
-        if (state.NativeGenerationFailed || IsGenerationFailed(panel)) DiscardSnapshot(state);
-        else RestoreSnapshot(state);
-    }
-
-    private static void RestoreSnapshot(PanelState state)
-    {
-        if (state == null || !state.HasSnapshot) return;
-        try
-        {
-            if (state.Button != null) state.Button.interactable = state.OriginalInteractable;
-        }
-        catch { /* A panel can be destroyed while its pool is being cleared. */ }
-        try
-        {
-            if (state.ButtonText != null)
-            {
-                state.ButtonText.text = state.OriginalText;
-                state.ButtonText.color = state.OriginalColor;
-            }
-        }
-        catch { /* A panel can be destroyed while its pool is being cleared. */ }
-        state.HasSnapshot = false;
-        state.OverrideApplied = false;
-    }
-
-    private static void DiscardSnapshot(PanelState state)
-    {
-        if (state == null) return;
-        state.HasSnapshot = false;
-        state.OverrideApplied = false;
+        foreach (var state in states) state.Release();
     }
 
     private static bool IsGenerationFailed(SubUI_EstablishUnitPanel panel)
@@ -305,13 +132,13 @@ internal static class UniqueCandidateRerollUI
         catch { return false; }
     }
 
-    private static PanelState GetState(SubUI_EstablishUnitPanel panel)
+    private static UniqueCandidateRerollState GetState(SubUI_EstablishUnitPanel panel)
     {
         if (panel == null) return null;
         lock (Gate) return States.TryGetValue(panel.Pointer, out var state) ? state : null;
     }
 
-    private static PanelState RemoveState(SubUI_EstablishUnitPanel panel)
+    private static UniqueCandidateRerollState RemoveState(SubUI_EstablishUnitPanel panel)
     {
         if (panel == null) return null;
         lock (Gate)
@@ -340,23 +167,80 @@ internal static class UniqueCandidateRerollUI
         catch { }
     }
 
-    private sealed class PanelState
+    // The game's recruitment panel and its reroll button, as the reroll rule sees them.
+    private sealed class NativePanel : IUniqueRerollPanel
     {
-        internal SubUI_EstablishUnitPanel Panel;
-        internal UniqueCandidateLockPolicy LockPolicy;
-        internal bool ProfileLocked;
-        internal bool PrimaryTraitsLocked;
-        internal bool NativeGenerationFailed;
-        internal Button Button;
-        internal TMP_Text ButtonText;
-        internal bool OriginalInteractable;
-        internal string OriginalText;
-        internal Color OriginalColor;
-        internal bool HasSnapshot;
-        internal bool OverrideApplied;
-        internal Button FailureButton;
-        internal bool FailureOriginalInteractable;
-        internal bool FailureDisableApplied;
+        private readonly SubUI_EstablishUnitPanel panel;
+
+        internal NativePanel(SubUI_EstablishUnitPanel panel) => this.panel = panel;
+
+        public bool GenerationFailed => IsGenerationFailed(panel);
+
+        public bool NativeInteractable
+        {
+            get
+            {
+                var button = panel._refreshButton;
+                return button != null && button.interactable;
+            }
+        }
+
+        public IUniqueRerollSurface PresentationSurface
+        {
+            get
+            {
+                var button = panel._refreshButton;
+                var text = panel._refreshButtonText;
+                return button == null || text == null ? null : new NativeSurface(button, text);
+            }
+        }
+
+        public IUniqueRerollSurface FailureSurface
+        {
+            get
+            {
+                var button = panel._refreshButton;
+                return button == null ? null : new NativeSurface(button, null);
+            }
+        }
+
+        public string LockConflictText() => UniqueCandidateLocalization.GetLockConflictText();
+
+        public void Warn(string message) => WarnUiOnce(message);
+    }
+
+    private sealed class NativeSurface : IUniqueRerollSurface
+    {
+        private readonly Button button;
+        private readonly TMP_Text text;
+
+        internal NativeSurface(Button button, TMP_Text text)
+        {
+            this.button = button;
+            this.text = text;
+        }
+
+        public bool ButtonAlive => button != null;
+
+        public bool TextAlive => text != null;
+
+        public bool Interactable
+        {
+            get => button.interactable;
+            set => button.interactable = value;
+        }
+
+        public string Text
+        {
+            get => text.text;
+            set => text.text = value;
+        }
+
+        public object TextStyle
+        {
+            get => text.color;
+            set => text.color = (Color)value;
+        }
     }
 }
 
@@ -369,8 +253,8 @@ internal static class UniqueCandidateSetUnitDataPatch
     private static void Prefix(SubUI_EstablishUnitPanel __instance)
         => UniqueCandidateRerollUI.BeforeSetUnitData(__instance);
 
-    private static void Postfix(SubUI_EstablishUnitPanel __instance, RecruitCandidateData __0)
-        => UniqueCandidateRerollUI.AfterSetUnitData(__instance, __0);
+    private static void Postfix(SubUI_EstablishUnitPanel __instance, RecruitCandidateData candidateData)
+        => UniqueCandidateRerollUI.AfterSetUnitData(__instance, candidateData);
 }
 
 [HarmonyPatch]
@@ -383,8 +267,8 @@ internal static class UniqueCandidateSetRestrictionsPatch
     private static void Prefix(SubUI_EstablishUnitPanel __instance)
         => UniqueCandidateRerollUI.BeforeNativeStateChange(__instance);
 
-    private static void Postfix(SubUI_EstablishUnitPanel __instance, EstablishUnitRestriction __0)
-        => UniqueCandidateRerollUI.AfterRestrictions(__instance, __0);
+    private static void Postfix(SubUI_EstablishUnitPanel __instance, EstablishUnitRestriction restriction)
+        => UniqueCandidateRerollUI.AfterRestrictions(__instance, restriction);
 }
 
 [HarmonyPatch]
@@ -398,8 +282,8 @@ internal static class UniqueCandidateSetGenerationFailedPatch
         // postfix records the new error state without reapplying the custom lock.
         => UniqueCandidateRerollUI.BeforeNativeStateChange(__instance);
 
-    private static void Postfix(SubUI_EstablishUnitPanel __instance, bool __0)
-        => UniqueCandidateRerollUI.AfterGenerationFailed(__instance, __0);
+    private static void Postfix(SubUI_EstablishUnitPanel __instance, bool failed)
+        => UniqueCandidateRerollUI.AfterGenerationFailed(__instance, failed);
 }
 
 [HarmonyPatch]

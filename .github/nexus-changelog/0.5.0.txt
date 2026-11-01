@@ -1,0 +1,16 @@
+From 0.5.0 on, Delvers runs on BepInEx only. MelonLoader is no longer supported.
+New: the Delvers menu, the last tab in the game's options, with all of Core's switches.
+New: the Apocalypse difficulty above Downfall, for combat and management. Without Core, such a campaign loads as Downfall.
+New in Apocalypse: bleeding in stages, enemy abilities, enemies that attack at once and slow motion instead of pause.
+New in Apocalypse: the Forest Bandits, with their own camp, smaller groups and a boss party with special loot.
+Each Apocalypse rule can also be switched on for other difficulties in the Delvers menu.
+New: first aid with bandages, its own research and treating other characters.
+New: the Scroll of Revival, with aftereffects.
+New: fallen characters keep their gear, and bodies can be stripped with Alt and right click.
+New: a shield band on the health bars.
+New, experimental: the tactical formation and a group AI.
+New: a Delvers section in the game's guide.
+Founders can be turned off one by one, logs no longer show your account name, and saving is more robust.
+Fixed: Frieren and the founders could vanish after a crash while recruiting.
+For pack authors: Core API 1.11.0. See the changelog on GitHub.
+Tested with 1435 Core checks and 129 Frieren checks, in game under BepInEx on DS_B.0.4.29 with Frieren 0.5.0 and Extended Hotbar 1.0.2.

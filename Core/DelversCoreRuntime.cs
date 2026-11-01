@@ -3,17 +3,27 @@ using UnityEngine;
 
 namespace DungeonSettlersDelvers.Core;
 
-public static class DelversCoreRuntime
+public static partial class DelversCoreRuntime
 {
-    public const string ApiVersion = "1.4.0";
+    // static readonly, not const: a const would be baked into every pack at its build time, so
+    // an older Frieren would report its own Core version after a Core update (review, F9).
+    // The minimum versions below stay const on purpose: they are the pack's own requirement.
+    // It goes up with every change of Tests/Core/PublicApi.txt; the list's header line carries it and ApiSurfaceSection
+    // fails when the two part. 1.11.0: new test API members (the tactical formation among them); four members that never
+    // left a release became internal, so the pack and tool APIs of 1.x lost nothing.
+    public static readonly string ApiVersion = "1.11.0";
     public const string MinimumApiVersionForUniqueCandidatePredicates = "1.1.0";
     public const string MinimumApiVersionForFixedTraits = "1.2.0";
     public const string MinimumApiVersionForLoadIntegrations = "1.3.0";
     public const string MinimumApiVersionForNativeValueLists = "1.4.0";
     public const string MinimumApiVersionForSaveKeyRenames = "1.4.0";
+    public const string MinimumApiVersionForMenuPages = "1.5.0";
+    // Test campaigns by GUID, central uniqueness, "recruitment free", forced founder offers.
+    public const string MinimumApiVersionForTestCampaigns = "1.6.0";
+    public const string MinimumApiVersionForCampaignGuid = CampaignGuidRules.ApiVersion;
+    public const string MinimumApiVersionForSettingsCopy = CoreSettingsCopyRules.ApiVersion;
     public const string MelonAssemblyName = "DungeonSettlersDelvers.Core.MelonLoader";
     public const string BepInExPluginId = "fre-yin.dungeonsettlers.delvers.core";
-    // Read at runtime so packs always report the installed Core's builds.
     public static readonly string SupportedBuilds = "DS_B.0.4.29 / Steam build 25846389 (verified binary signature)";
     private const string GameAssemblySha256 = "4D7D851991C0DB7D16E68CA6FA2F4E33945A6289405C012100D9B5E6A570C04D";
     private const string MetadataSha256 = "C11FAC80BFC461E286BDB593E7D6CA06AD1717F3DE5D3086E4708EEB6DA357DB";
@@ -21,14 +31,21 @@ public static class DelversCoreRuntime
     private static string loaderProfile;
     private static string harmonyOwner;
     private static bool initialized;
-    private static readonly PackIntegrationRegistry<RecruitHelper> Integrations = new();
-    private static readonly UniqueCandidatePredicateRegistry<RecruitCandidateData> UniqueCandidatePredicates = new();
-    internal static readonly FixedTraitRegistry FixedTraits = new();
-    private static readonly PackLoadIntegrationRegistry LoadIntegrations = new();
-    internal static readonly SaveKeyRenameRegistry SaveKeyRenames = new();
+    // Each registry announces itself here; Shutdown clears them all through CoreRegistries.
+    private static readonly PackIntegrationRegistry<RecruitHelper> Integrations = CoreRegistries.Track(new PackIntegrationRegistry<RecruitHelper>());
+    private static readonly UniqueCandidatePredicateRegistry<RecruitCandidateData> UniqueCandidatePredicates = CoreRegistries.Track(new UniqueCandidatePredicateRegistry<RecruitCandidateData>());
+    internal static readonly FixedTraitRegistry FixedTraits = CoreRegistries.Track(new FixedTraitRegistry());
+    private static readonly PackLoadIntegrationRegistry LoadIntegrations = CoreRegistries.Track(new PackLoadIntegrationRegistry());
+    internal static readonly SaveKeyRenameRegistry SaveKeyRenames = CoreRegistries.Track(new SaveKeyRenameRegistry());
+    internal static readonly DelversMenuRegistry MenuPages = CoreRegistries.Track(new DelversMenuRegistry());
+    private static readonly TestCampaignSwitches TestSwitches = CoreRegistries.Track(
+        new TestCampaignSwitches(CampaignPresence.IsTestCampaign));
+    private static IDisposable corePage;
 
     public static bool IsReady { get { lock (Gate) return initialized; } }
     public static string LoaderProfile { get { lock (Gate) return loaderProfile; } }
+    // The id of Core's Harmony instance, for patches put on by hand later (FalconCritInstall); null while Core is not ready.
+    internal static string HarmonyOwner { get { lock (Gate) return harmonyOwner; } }
     public static bool IsSaveAllowed => LoadIntegrityGuard.IsSaveAllowed;
     public static string SaveBlockReason => LoadIntegrityGuard.SaveBlockReason;
 
@@ -37,42 +54,6 @@ public static class DelversCoreRuntime
         if (!Version.TryParse(ApiVersion, out var actual) || !Version.TryParse(minimumVersion, out var minimum))
             return false;
         return actual.Major == minimum.Major && actual >= minimum;
-    }
-
-    public static void Initialize(Harmony harmony, string loader)
-    {
-        if (harmony == null) throw new ArgumentNullException(nameof(harmony));
-        if (loader is not ("Melon" or "BepInEx")) throw new ArgumentOutOfRangeException(nameof(loader));
-        lock (Gate)
-        {
-            if (initialized)
-            {
-                if (!string.Equals(loaderProfile, loader, StringComparison.Ordinal))
-                    throw new InvalidOperationException("A different Dungeon Settlers Delvers loader profile is already active.");
-                return;
-            }
-            if (!DelversHost.IsBound) throw new InvalidOperationException("Core host services must be bound before initialization.");
-            loaderProfile = loader;
-            try
-            {
-                VerifyGameBuild();
-                LoadIntegrityGuard.ResetLifecycle();
-                harmony.PatchAll(typeof(DelversCoreRuntime).Assembly);
-                harmonyOwner = harmony.Id;
-                try { UniqueCandidateLocalization.EnsureCurrent(); }
-                catch (Exception ex) { DelversHost.Warning("CORE_LOCALIZATION_REGISTRATION_FAILED: " + ex.Message); }
-                initialized = true;
-                DelversHost.Info($"DELVERS_CORE_READY api={ApiVersion} loader={loader} founders=Lowell,Liana,Kragas; {SupportedBuilds} verified.");
-            }
-            catch
-            {
-                harmony.UnpatchSelf();
-                LoadIntegrityGuard.ResetLifecycle();
-                harmonyOwner = null;
-                loaderProfile = null;
-                throw;
-            }
-        }
     }
 
     public static IDisposable RegisterRecruitmentIntegration(string packId,
@@ -123,6 +104,31 @@ public static class DelversCoreRuntime
 
     public static IReadOnlyList<string> GetFixedTraits(string profileKey)
         => FixedTraits.TryGet(profileKey, out _, out var traits) ? traits : null;
+
+    // A page of the Delvers menu, the entry under "Quit" in the title menu (Core shows the menu, every mod offers its
+    // settings there). Rows are dictionaries, built
+    // with DelversMenuRows or by hand, so mods without a reference to Core can register through
+    // reflection. The menu asks for the rows whenever the page is opened. Since API 1.5.0.
+    public static IDisposable RegisterMenuPage(string packId, string title,
+        Func<IEnumerable<IReadOnlyDictionary<string, object>>> rows)
+    {
+        lock (Gate)
+        {
+            if (!initialized) throw new InvalidOperationException("Dungeon Settlers Delvers Core is not initialized.");
+            return MenuPages.Register(packId, title, rows);
+        }
+    }
+
+    // Opens the Delvers menu, on the page of the given pack if it has one.
+    public static void OpenMenu(string packId = null)
+    {
+        if (!IsReady) throw new InvalidOperationException("Dungeon Settlers Delvers Core is not initialized.");
+        DelversMenuWindow.Open(packId);
+    }
+
+    public static bool IsMenuOpen => DelversMenuWindow.IsOpen;
+
+    public static void CloseMenu() => DelversMenuWindow.Close();
 
     public static IDisposable RegisterLoadIntegration(string packId,
         BeforeComponentsDeserializeHandler beforeComponentsDeserialize = null,
@@ -175,6 +181,8 @@ public static class DelversCoreRuntime
         catch (Exception ex) { DelversHost.Warning("CORE_CAMPAIGN_REFRESH_FAILED: " + ex.Message); }
         Integrations.Notify(helper, (packId, ex) =>
             DelversHost.Warning("CORE_PACK_CAMPAIGN_REFRESH_FAILED pack=" + packId + ": " + ex.Message));
+        try { NativeFoundersGuild.LoosenExistingForTest(helper); }
+        catch (Exception ex) { DelversHost.Warning("CORE_TEST_RECRUITMENT_FREE_FAILED: " + ex.Message); }
     }
 
     internal static void NotifyBeforeComponentsDeserialize(
@@ -189,7 +197,11 @@ public static class DelversCoreRuntime
         => LoadIntegrations.NotifyAfterProfile(profile, ReportLoadIntegrationFailure);
 
     internal static void NotifyAfterCampaignLoaded(CampaignDataContainer campaign)
-        => LoadIntegrations.NotifyAfterCampaign(campaign, ReportLoadIntegrationFailure);
+    {
+        LoadIntegrations.NotifyAfterCampaign(campaign, ReportLoadIntegrationFailure);
+        // Core's own work after a load never marks the load as failed: it only logs.
+        ReviveCampaign.OnCampaignLoaded();
+    }
 
     internal static void AuditLoadPatches()
         => LoadPatchAudit.Run(harmonyOwner);
@@ -200,43 +212,6 @@ public static class DelversCoreRuntime
             + " stage=" + stage + " error=" + exception);
         LoadIntegrityGuard.ReportFailure("pack=" + packId + ":" + stage, exception);
     }
-
-    public static void Shutdown(string loader)
-    {
-        lock (Gate)
-        {
-            if (!initialized || !string.Equals(loaderProfile, loader, StringComparison.Ordinal)) return;
-            initialized = false;
-            loaderProfile = null;
-            harmonyOwner = null;
-            Integrations.Clear();
-            UniqueCandidatePredicates.Clear();
-            FixedTraits.Clear();
-            LoadIntegrations.Clear();
-            SaveKeyRenames.Clear();
-            LoadIntegrityGuard.ResetLifecycle();
-            LoadPatchAudit.ResetLifecycle();
-            UniqueCandidateRerollUI.ResetLifecycle();
-            UniqueCandidateLocalization.ResetLifecycle();
-        }
-    }
-
-    private static void VerifyGameBuild()
-    {
-        var root = Path.GetDirectoryName(Application.dataPath);
-        var assemblyPath = Path.Combine(root, "GameAssembly.dll");
-        var metadataPath = Path.Combine(Application.dataPath, "il2cpp_data", "Metadata", "global-metadata.dat");
-        if (FileHash(assemblyPath) != GameAssemblySha256 || FileHash(metadataPath) != MetadataSha256)
-            throw new InvalidOperationException("Diese Ausgabe benötigt die geprüfte Spielsignatur: " + SupportedBuilds + ".");
-    }
-
-    private static string FileHash(string path)
-    {
-        using var stream = File.OpenRead(path);
-        using var hash = System.Security.Cryptography.SHA256.Create();
-        return Convert.ToHexString(hash.ComputeHash(stream));
-    }
-
 }
 
 [HarmonyPatch(typeof(RecruitHelper), nameof(RecruitHelper.RefreshExist))]

@@ -8,7 +8,7 @@ namespace DungeonSettlersDelvers.Core;
 // struct data, so the list receives the object header and a garbage string pointer; reading
 // or saving that entry later can crash the game. MelonLoader's Il2CppInterop is not affected.
 // Calling the native Add with the unboxed data avoids the wrapper and behaves the same under
-// both loaders. Found by the in-game self-test on 29.09.2026. Core API 1.4.0.
+// both loaders. Found by the in-game self-test. Core API 1.4.0.
 public static class DelversNativeList
 {
     private static readonly ConcurrentDictionary<IntPtr, IntPtr> AddMethods = new();

@@ -14,13 +14,25 @@
     <Reference Include="Il2CppSystem.Core"><HintPath>$(GameInteropDir)/Il2CppSystem.Core.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Il2CppNewtonsoft.Json" Condition="'$(LoaderProfile)' == 'Melon'"><HintPath>$(GameInteropDir)/Il2CppNewtonsoft.Json.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Newtonsoft.Json" Condition="'$(LoaderProfile)' == 'BepInEx'"><HintPath>$(GameInteropDir)/Newtonsoft.Json.dll</HintPath><Private>false</Private></Reference>
+    <!-- Base class of some game views (UnitEntityHUD derives from SerializedMonoBehaviour). -->
+    <Reference Include="Il2CppSirenix.Serialization" Condition="'$(LoaderProfile)' == 'Melon'"><HintPath>$(GameInteropDir)/Il2CppSirenix.Serialization.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Sirenix.Serialization" Condition="'$(LoaderProfile)' == 'BepInEx'"><HintPath>$(GameInteropDir)/Sirenix.Serialization.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine"><HintPath>$(GameInteropDir)/UnityEngine.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.CoreModule"><HintPath>$(GameInteropDir)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.GridModule"><HintPath>$(GameInteropDir)/UnityEngine.GridModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.TilemapModule"><HintPath>$(GameInteropDir)/UnityEngine.TilemapModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="BehaviorDesigner.Runtime"><HintPath>$(GameInteropDir)/BehaviorDesigner.Runtime.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.ImageConversionModule"><HintPath>$(GameInteropDir)/UnityEngine.ImageConversionModule.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.UI"><HintPath>$(GameInteropDir)/UnityEngine.UI.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.IMGUIModule"><HintPath>$(GameInteropDir)/UnityEngine.IMGUIModule.dll</HintPath><Private>false</Private></Reference>
-    <Reference Include="UnityEngine.UIModule" Condition="'$(LoaderProfile)' == 'BepInEx'"><HintPath>$(GameInteropDir)/UnityEngine.UIModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.UIModule"><HintPath>$(GameInteropDir)/UnityEngine.UIModule.dll</HintPath><Private>false</Private></Reference>
+    <!-- The Delvers menu: TextAnchor for its layouts and Escape to close it. -->
+    <Reference Include="UnityEngine.TextRenderingModule"><HintPath>$(GameInteropDir)/UnityEngine.TextRenderingModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.InputLegacyModule"><HintPath>$(GameInteropDir)/UnityEngine.InputLegacyModule.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Unity.TextMeshPro"><HintPath>$(GameInteropDir)/Unity.TextMeshPro.dll</HintPath><Private>false</Private></Reference>
+    <!-- Apocalypse's slow motion: a copy of the game's vignette (URP volume, profile and vignette). -->
+    <Reference Include="Unity.RenderPipelines.Core.Runtime"><HintPath>$(GameInteropDir)/Unity.RenderPipelines.Core.Runtime.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Unity.RenderPipelines.Universal.Runtime"><HintPath>$(GameInteropDir)/Unity.RenderPipelines.Universal.Runtime.dll</HintPath><Private>false</Private></Reference>
   </ItemGroup>
   <Target Name="ValidateLocalLoaderReferences" BeforeTargets="ResolveReferences">
     <Error Condition="'$(LoaderProfile)' != 'Melon' and '$(LoaderProfile)' != 'BepInEx'" Text="Set LoaderProfile to Melon or BepInEx." />

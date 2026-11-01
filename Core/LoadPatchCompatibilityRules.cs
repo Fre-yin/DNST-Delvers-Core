@@ -1,7 +1,7 @@
 namespace DungeonSettlersDelvers.Core;
 
 // Known integrations are exact, reviewed patch identities. Recognition only
-// changes audit presentation; every patch remains covered by Core's finalizers.
+// changes audit presentation; every patch remains covered by Core's finalizers. The owner rule below tells Core's ids from foreign ones.
 internal static class LoadPatchCompatibilityRules
 {
     private const string ExtendedHotbarMelonAssembly = "DungeonSettlers10Slots";
@@ -26,6 +26,13 @@ internal static class LoadPatchCompatibilityRules
                 && declaringType == "DungeonSettlers10Slots.LoadSlots"
                 && methodName == "Prefix";
     }
+
+    // Whether a Harmony id is Core's own: the id itself, or an id below it ("<core id>.<name>", like the probe classes' and the
+    // enemy skill test's). A similar id without the dot stays foreign.
+    internal static bool IsCoreOwner(string owner, string coreOwner)
+        => !string.IsNullOrEmpty(coreOwner) && owner != null
+            && (string.Equals(owner, coreOwner, StringComparison.Ordinal)
+                || owner.StartsWith(coreOwner + ".", StringComparison.Ordinal));
 
     private static bool IsReviewedExtendedHotbarAssembly(string assemblyName)
         => string.Equals(assemblyName, ExtendedHotbarMelonAssembly, StringComparison.Ordinal)

@@ -2,8 +2,9 @@ using HarmonyLib;
 
 namespace DungeonSettlersDelvers.Core;
 
-// The campaign generator needs a live campaign injector. This startup audit
-// checks the native presets and hook registration without creating a campaign.
+// The campaign generator needs a live campaign injector. This audit, run from the self-test
+// (DelversCoreRuntime.AuditNativeFounders), checks the native presets and hook registration
+// without creating a campaign.
 internal static class NativeFoundersAudit
 {
     internal static void Run()

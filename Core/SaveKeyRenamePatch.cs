@@ -9,13 +9,13 @@ namespace DungeonSettlersDelvers.Core;
 internal static class DelversSaveKeyRenamePatch
 {
     [HarmonyPriority(Priority.First)]
-    private static void Prefix(ref string __0)
+    private static void Prefix(ref string json)
     {
         try
         {
-            var renamed = DelversCoreRuntime.SaveKeyRenames.Apply(__0, out var tokens, out var packs);
+            var renamed = DelversCoreRuntime.SaveKeyRenames.Apply(json, out var tokens, out var packs);
             if (tokens == 0) return;
-            __0 = renamed;
+            json = renamed;
             DelversHost.Info("CORE_SAVE_KEYS_RENAMED packs=" + string.Join(",", packs) + " tokens=" + tokens);
         }
         catch (Exception ex)

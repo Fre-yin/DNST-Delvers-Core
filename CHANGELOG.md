@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.5.0: 01.11.2026
+
+- Nur noch BepInEx, MelonLoader wird nicht mehr unterstützt.
+- Neu: das Delvers Menü als letzter Reiter in den Optionen, mit allen Schaltern von Core.
+- Neu: der Schwierigkeitsgrad Apocalypse über Downfall, für Kampf und Management. Ohne Core lädt eine solche Kampagne als Downfall.
+- Neu bei Apocalypse: Blutungen in Stufen, Gegnerfähigkeiten, sofort angreifende Gegner und Zeitlupe statt Pause.
+- Neu bei Apocalypse: die Waldbanditen, mit eigenem Lager, kleineren Gruppen und einer Boss Party mit besonderer Beute.
+- Die Regeln von Apocalypse lassen sich im Delvers Menü einzeln auch für andere Schwierigkeitsgrade einschalten.
+- Neu: Erste Hilfe mit Verbänden, eigener Forschung und dem Verarzten anderer Figuren.
+- Neu: die Wiederbelebungsrolle, mit Nachwirkungen.
+- Neu: Gefallene behalten ihre Ausrüstung, Leichen lassen sich mit Alt und Rechtsklick ausziehen.
+- Neu: ein Schildband an den Lebensleisten.
+- Neu, experimentell: die taktische Formation und eine KI für die Gruppe.
+- Neu: ein eigener Bereich Delvers in der Spielhilfe.
+- Gründer lassen sich einzeln abschalten, Logs zeigen keinen Kontonamen mehr, Speichern ist robuster.
+- Behoben: Frieren und die Gründer konnten nach einem Absturz beim Rekrutieren verschwinden. Ein Fehler des Spiels in der Zielauswahl konnte im Kampf die Spielzeit anhalten.
+- Für Paketautoren: Core API 1.11.0, veröffentlicht war 1.4.0. Neu sind Menüseiten, Testkampagnen, Wiederbelebung und Blutung. Pack API und Werkzeug API bleiben in Hauptversion 1 stabil, die Test API nicht. Alle Member stehen in `Tests/Core/PublicApi.txt`, die Erklärung im Leitfaden.
+- Geprüft: 1435 Prüfungen für Core und 129 für Frieren ohne Buildwarnungen. Im Spiel unter BepInEx auf DS_B.0.4.29, zusammen mit Frieren 0.5.0 und Extended Hotbar 1.0.2.
+
 ## 0.4.1: 10.10.2026
 
 - Angepasst an das Spielupdate DS_B.0.4.29 (Steam-Build 25846389). Core erkennt die neue Spielsignatur und startet wieder. Auf älteren Spielversionen bleibt 0.4.1 inaktiv. Sonst ändert sich nichts, die Core-API bleibt 1.4.0.

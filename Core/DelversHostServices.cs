@@ -39,9 +39,10 @@ public static class DelversHost
             if (ReferenceEquals(current, host)) current = null;
     }
 
-    public static void Info(string message) => GetCurrent()?.Info(message);
-    public static void Warning(string message) => GetCurrent()?.Warning(message);
-    public static void Error(string message) => GetCurrent()?.Error(message);
+    // Every line is masked here, so no caller can leak the user folder into a shared log.
+    public static void Info(string message) => GetCurrent()?.Info(DelversLogPrivacy.Mask(message));
+    public static void Warning(string message) => GetCurrent()?.Warning(DelversLogPrivacy.Mask(message));
+    public static void Error(string message) => GetCurrent()?.Error(DelversLogPrivacy.Mask(message));
     public static object StartCoroutine(IEnumerator routine) => GetCurrent()?.StartCoroutine(routine);
     public static void StopCoroutine(object handle) => GetCurrent()?.StopCoroutine(handle);
 

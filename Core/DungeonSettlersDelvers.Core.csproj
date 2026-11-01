@@ -8,5 +8,25 @@
   <ItemGroup>
     <!-- Lets the private in-game self-test reach internal members; no runtime cost. -->
     <InternalsVisibleTo Include="DungeonSettlersDelvers.SelfTest" />
+    <!-- The Core adapters drive Core's frame (DelversCoreRuntime.LateFrame), which packs do not see. -->
+    <InternalsVisibleTo Include="DungeonSettlersDelvers.Core.BepInEx" />
+    <InternalsVisibleTo Include="DungeonSettlersDelvers.Core.MelonLoader" />
+    <!-- Core's own pictures (CoreAssets), next to the DLL in <package>/Core like Frieren's. -->
+    <Content Include="Assets/*.png" Link="Core/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Core's own sounds (CoreSound): AudioClip, AudioSource and the game's mixer group. The interop's UnityEngine.dll repeats
+         ManagedSpanWrapper, so the core module gets an alias as well (as in Frieren). -->
+    <Content Include="Assets/Sounds/*.wav" Link="Core/Sounds/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The bandit camp's room files (BanditCampRoomFiles), inside the DLL: no file next to it can go missing. -->
+    <EmbeddedResource Include="Rooms/*.json" LogicalName="DungeonSettlersDelvers.Core.Rooms.%(Filename)%(Extension)" />
+    <Reference Include="UnityEngine.AudioModule"><HintPath>$(GameInteropDir)/UnityEngine.AudioModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Update="UnityEngine.CoreModule" Aliases="global,UnityCore" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The bandits' camp: the game's dungeon generator Edgar (templates read, seeds scanned in test campaigns).
+         Only here: under Melon Il2CppEdgarSingleFile carries its own JsonConvert, which clashes in other projects. -->
+    <Reference Include="Edgar.Unity" Condition="'$(LoaderProfile)' == 'BepInEx'"><HintPath>$(GameInteropDir)/Edgar.Unity.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="EdgarSingleFile" Condition="'$(LoaderProfile)' == 'BepInEx'"><HintPath>$(GameInteropDir)/EdgarSingleFile.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppEdgar.Unity" Condition="'$(LoaderProfile)' == 'Melon'"><HintPath>$(GameInteropDir)/Il2CppEdgar.Unity.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppEdgarSingleFile" Condition="'$(LoaderProfile)' == 'Melon'"><HintPath>$(GameInteropDir)/Il2CppEdgarSingleFile.dll</HintPath><Private>false</Private></Reference>
   </ItemGroup>
 </Project>

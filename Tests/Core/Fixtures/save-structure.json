@@ -1,0 +1,2335 @@
+{
+  "EntityContainerSaveData": {
+    "UnitContainerSaveData": {
+      "Base": {
+        "UnitSaveDataDictionary": {
+          "00000000-0000-4000-8000-000000000001": {
+            "Guid": "00000000-0000-4000-8000-000000000001",
+            "Key": "UNIT_PlayerUnit"
+          },
+          "00000000-0000-4000-8000-000000000002": {
+            "Guid": "00000000-0000-4000-8000-000000000002",
+            "Key": "UNIT_PlayerUnit"
+          },
+          "00000000-0000-4000-8000-000000000003": {
+            "Guid": "00000000-0000-4000-8000-000000000003",
+            "Key": "UNIT_PlayerUnit"
+          },
+          "00000000-0000-4000-8000-000000000004": {
+            "Guid": "00000000-0000-4000-8000-000000000004",
+            "Key": "UNIT_PlayerUnit"
+          }
+        },
+        "UnitSummonerDictionary": {},
+        "PlayerGuidList": [
+          "00000000-0000-4000-8000-000000000001",
+          "00000000-0000-4000-8000-000000000002",
+          "00000000-0000-4000-8000-000000000003",
+          "00000000-0000-4000-8000-000000000004"
+        ],
+        "AllyGuidList": []
+      },
+      "Dungeon": {
+        "UnitSaveDataDictionary": {},
+        "UnitSummonerDictionary": {},
+        "PlayerGuidList": [],
+        "AllyGuidList": []
+      }
+    },
+    "BuildingContainerSaveData": {
+      "Base": {
+        "BuildingSaveData": {
+          "00000000-0000-4000-8000-000000000005": {
+            "Guid": "00000000-0000-4000-8000-000000000005",
+            "Key": "BUILDING_SmallDarkThornVine"
+          },
+          "00000000-0000-4000-8000-000000000006": {
+            "Guid": "00000000-0000-4000-8000-000000000006",
+            "Key": "BUILDING_SmallDarkThornVine"
+          },
+          "00000000-0000-4000-8000-000000000007": {
+            "Guid": "00000000-0000-4000-8000-000000000007",
+            "Key": "BUILDING_SmallDarkThornVine"
+          }
+        },
+        "BuildingSummonerDictionary": {},
+        "BuildingRotations": {
+          "00000000-0000-4000-8000-000000000005": 0,
+          "00000000-0000-4000-8000-000000000006": 0,
+          "00000000-0000-4000-8000-000000000007": 0
+        }
+      },
+      "Dungeon": {
+        "BuildingSaveData": {},
+        "BuildingSummonerDictionary": {},
+        "BuildingRotations": {}
+      }
+    },
+    "ItemContainerSaveData": {
+      "Base": {
+        "ItemSaveData": {
+          "00000000-0000-4000-8000-000000000008": {
+            "Guid": "00000000-0000-4000-8000-000000000008",
+            "Key": "ITEM_ClothArmor"
+          },
+          "00000000-0000-4000-8000-000000000009": {
+            "Guid": "00000000-0000-4000-8000-000000000009",
+            "Key": "ITEM_ClothCoif"
+          },
+          "00000000-0000-4000-8000-00000000000a": {
+            "Guid": "00000000-0000-4000-8000-00000000000a",
+            "Key": "ITEM_FireWoodStaff"
+          },
+          "00000000-0000-4000-8000-00000000000e": {
+            "Guid": "00000000-0000-4000-8000-00000000000e",
+            "Key": "ITEM_AidKit"
+          },
+          "00000000-0000-4000-8000-00000000000f": {
+            "Guid": "00000000-0000-4000-8000-00000000000f",
+            "Key": "ITEM_Textile"
+          },
+          "00000000-0000-4000-8000-000000000010": {
+            "Guid": "00000000-0000-4000-8000-000000000010",
+            "Key": "ITEM_Hardtack"
+          },
+          "00000000-0000-4000-8000-000000000011": {
+            "Guid": "00000000-0000-4000-8000-000000000011",
+            "Key": "ITEM_AidKit"
+          },
+          "00000000-0000-4000-8000-000000000012": {
+            "Guid": "00000000-0000-4000-8000-000000000012",
+            "Key": "ITEM_Textile"
+          },
+          "00000000-0000-4000-8000-000000000013": {
+            "Guid": "00000000-0000-4000-8000-000000000013",
+            "Key": "ITEM_WoodSword"
+          },
+          "00000000-0000-4000-8000-000000000014": {
+            "Guid": "00000000-0000-4000-8000-000000000014",
+            "Key": "ITEM_ClothArmor"
+          },
+          "00000000-0000-4000-8000-000000000015": {
+            "Guid": "00000000-0000-4000-8000-000000000015",
+            "Key": "ITEM_Hardtack"
+          },
+          "00000000-0000-4000-8000-000000000016": {
+            "Guid": "00000000-0000-4000-8000-000000000016",
+            "Key": "ITEM_WoodBow"
+          },
+          "00000000-0000-4000-8000-000000000017": {
+            "Guid": "00000000-0000-4000-8000-000000000017",
+            "Key": "ITEM_ClothCoif"
+          },
+          "00000000-0000-4000-8000-000000000018": {
+            "Guid": "00000000-0000-4000-8000-000000000018",
+            "Key": "ITEM_ClothArmor"
+          },
+          "00000000-0000-4000-8000-000000000019": {
+            "Guid": "00000000-0000-4000-8000-000000000019",
+            "Key": "ITEM_WoodArrow"
+          },
+          "00000000-0000-4000-8000-00000000001a": {
+            "Guid": "00000000-0000-4000-8000-00000000001a",
+            "Key": "ITEM_Hardtack"
+          },
+          "00000000-0000-4000-8000-00000000001b": {
+            "Guid": "00000000-0000-4000-8000-00000000001b",
+            "Key": "ITEM_WoodSword"
+          },
+          "00000000-0000-4000-8000-00000000001c": {
+            "Guid": "00000000-0000-4000-8000-00000000001c",
+            "Key": "ITEM_ClothCoif"
+          },
+          "00000000-0000-4000-8000-00000000001d": {
+            "Guid": "00000000-0000-4000-8000-00000000001d",
+            "Key": "ITEM_ClothArmor"
+          }
+        },
+        "ItemAutoFixable": {
+          "00000000-0000-4000-8000-000000000008": true,
+          "00000000-0000-4000-8000-000000000009": true,
+          "00000000-0000-4000-8000-00000000000a": true,
+          "00000000-0000-4000-8000-00000000000e": true,
+          "00000000-0000-4000-8000-00000000000f": true,
+          "00000000-0000-4000-8000-000000000010": true,
+          "00000000-0000-4000-8000-000000000011": true,
+          "00000000-0000-4000-8000-000000000012": true,
+          "00000000-0000-4000-8000-000000000013": true,
+          "00000000-0000-4000-8000-000000000014": true,
+          "00000000-0000-4000-8000-000000000015": true,
+          "00000000-0000-4000-8000-000000000016": true,
+          "00000000-0000-4000-8000-000000000017": true,
+          "00000000-0000-4000-8000-000000000018": true,
+          "00000000-0000-4000-8000-000000000019": true,
+          "00000000-0000-4000-8000-00000000001a": true,
+          "00000000-0000-4000-8000-00000000001b": true,
+          "00000000-0000-4000-8000-00000000001c": true,
+          "00000000-0000-4000-8000-00000000001d": true
+        },
+        "OnMapItems": {
+          "00000000-0000-4000-8000-00000000000b": {
+            "Guid": "00000000-0000-4000-8000-00000000000b",
+            "Key": "ITEM_Hardtack",
+            "Amount": 9,
+            "AutoFixed": false
+          },
+          "00000000-0000-4000-8000-00000000000c": {
+            "Guid": "00000000-0000-4000-8000-00000000000c",
+            "Key": "ITEM_WildLongGrass",
+            "Amount": 20,
+            "AutoFixed": false
+          },
+          "00000000-0000-4000-8000-00000000000d": {
+            "Guid": "00000000-0000-4000-8000-00000000000d",
+            "Key": "ITEM_WildLongGrass",
+            "Amount": 20,
+            "AutoFixed": false
+          }
+        }
+      },
+      "Dungeon": {
+        "ItemSaveData": {},
+        "ItemAutoFixable": {},
+        "OnMapItems": {}
+      }
+    },
+    "ThingContainerSaveData": {
+      "Base": {
+        "ThingSaveDatas": {}
+      },
+      "Dungeon": {
+        "ThingSaveDatas": {}
+      }
+    },
+    "BlueprintContainerSaveData": {
+      "Base": {
+        "BlueprintSaveDatas": {},
+        "Rotations": {}
+      },
+      "Dungeon": {
+        "BlueprintSaveDatas": {},
+        "Rotations": {}
+      }
+    },
+    "FarmContainerSaveData": {
+      "Base": {
+        "FarmSaveDatas": {},
+        "FarmTypes": {}
+      },
+      "Dungeon": {
+        "FarmSaveDatas": {},
+        "FarmTypes": {}
+      }
+    },
+    "EntityPositions": {
+      "Base": {
+        "00000000-0000-4000-8000-000000000005": {
+          "x": 125.5,
+          "y": 140.5
+        },
+        "00000000-0000-4000-8000-000000000006": {
+          "x": 125.5,
+          "y": 148.5
+        },
+        "00000000-0000-4000-8000-000000000007": {
+          "x": 125.5,
+          "y": 155.5
+        },
+        "00000000-0000-4000-8000-000000000001": {
+          "x": 150.5,
+          "y": 143.5
+        },
+        "00000000-0000-4000-8000-000000000002": {
+          "x": 149.5,
+          "y": 145.5
+        },
+        "00000000-0000-4000-8000-000000000003": {
+          "x": 146.686737,
+          "y": 146.313263
+        },
+        "00000000-0000-4000-8000-000000000004": {
+          "x": 147.5,
+          "y": 146.5
+        }
+      },
+      "Dungeon": {}
+    }
+  },
+  "EntityComponentSaveData": {
+    "EntityComponents": {
+      "00000000-0000-4000-8000-000000000001": [
+        {
+          "Type": 0,
+          "Data": {
+            "$type": "Refactor.StatusComponentSaveData, Assembly-CSharp",
+            "SchemaVersion": 2,
+            "StateStats": {
+              "HealthHead": 1.0,
+              "HealthBody": 1.0,
+              "Energy": 0.557394,
+              "Hunger": 0.9914995,
+              "Stress": 0.0
+            },
+            "ProgressionStats": {
+              "Level": 1.0,
+              "TalentStrength": -1.0,
+              "TalentWillPower": 3.0,
+              "TalentIntelligence": 3.0,
+              "MainSkillPoint": 10.0,
+              "SubSkillPoint": 6.0,
+              "Exp": 0.0,
+              "TalentConstitution": 0.0,
+              "TalentAgility": 0.0,
+              "TalentPerception": 0.0
+            },
+            "GeneratedStats": {
+              "Strength": 1.0,
+              "Constitution": 2.0,
+              "WillPower": 6.0,
+              "Intelligence": 7.0,
+              "Agility": 2.0,
+              "Perception": 3.0
+            },
+            "PermanentStats": {}
+          }
+        },
+        {
+          "Type": 3,
+          "Data": {
+            "$type": "Refactor.AffecterComponentSaveData, Assembly-CSharp",
+            "AffecterHolders": [
+              {
+                "Key": "AFFECTER_Elf",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_DelversElfArchmage",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_DelversBooklover",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_NewRecruit",
+                "Stack": 1,
+                "Duration": 2862.18652,
+                "InitialDuration": 2880.0
+              },
+              {
+                "Key": "AFFECTER_TreatmentExpectationLv1",
+                "Stack": 1,
+                "Duration": 1.0,
+                "InitialDuration": 1.0
+              },
+              {
+                "Key": "AFFECTER_PlayerManagementDifficultyNormal",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_PlayerDifficultyNormal",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_PortalHeal",
+                "Stack": 1,
+                "Duration": 0.112897396,
+                "InitialDuration": 2.0
+              }
+            ],
+            "InactiveMoodCauseHolders": []
+          }
+        },
+        {
+          "Type": 5,
+          "Data": {
+            "$type": "Refactor.InventoryComponentSaveData, Assembly-CSharp",
+            "ItemSlots": [
+              {
+                "Guid": "00000000-0000-4000-8000-00000000000e",
+                "Key": "ITEM_AidKit",
+                "Amount": 3,
+                "AutoFixed": true
+              },
+              {
+                "Guid": "00000000-0000-4000-8000-00000000000f",
+                "Key": "ITEM_Textile",
+                "Amount": 2,
+                "AutoFixed": true
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              }
+            ],
+            "TempSlot": {
+              "Guid": "00000000-0000-0000-0000-000000000000",
+              "Key": "",
+              "Amount": 0,
+              "AutoFixed": false
+            }
+          }
+        },
+        {
+          "Type": 6,
+          "Data": {
+            "$type": "Refactor.InventoryComponentSaveData, Assembly-CSharp",
+            "ItemSlots": [
+              {
+                "Guid": "00000000-0000-4000-8000-00000000000a",
+                "Key": "ITEM_FireWoodStaff",
+                "Amount": 1,
+                "AutoFixed": true
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              },
+              {
+                "Guid": "00000000-0000-4000-8000-000000000009",
+                "Key": "ITEM_ClothCoif",
+                "Amount": 1,
+                "AutoFixed": true
+              },
+              {
+                "Guid": "00000000-0000-4000-8000-000000000008",
+                "Key": "ITEM_ClothArmor",
+                "Amount": 1,
+                "AutoFixed": true
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              }
+            ],
+            "TempSlot": {
+              "Guid": "00000000-0000-0000-0000-000000000000",
+              "Key": "",
+              "Amount": 0,
+              "AutoFixed": false
+            }
+          }
+        },
+        {
+          "Type": 8,
+          "Data": {
+            "$type": "Refactor.SkillComponentSaveData, Assembly-CSharp",
+            "BasicSkills": [
+              "SKILL_BasicPunchAttack",
+              "SKILL_BasicMagicMissile"
+            ],
+            "ActiveSkills": [
+              "SKILL_EmergencyEscape",
+              "SKILL_FireMissile",
+              "SKILL_SummonBubbling",
+              "SKILL_StrangeSeed",
+              "SKILL_DelversZoltraak"
+            ],
+            "PassiveSkills": [],
+            "EquipBypassList": [],
+            "Cooldowns": {},
+            "SkillDurations": {},
+            "AutoUse": {
+              "SKILL_EmergencyEscape": true,
+              "SKILL_FireMissile": true,
+              "SKILL_SummonBubbling": true,
+              "SKILL_StrangeSeed": true,
+              "SKILL_DelversZoltraak": true
+            }
+          }
+        },
+        {
+          "Type": 10,
+          "Data": {
+            "$type": "Refactor.UnitProfileComponentSaveData, Assembly-CSharp",
+            "ProfileKey": "UNITVISUAL_ElfSlimUnisex_10_DelversFrieren",
+            "UnitNameTextKey": "TEXTKEY_EXAMPLE_NAME_8",
+            "DefaultUnitNameTextKey": "",
+            "UnitBioTextKey": "TEXTKEY_UNITBIO_DelversFrieren",
+            "UnitPortraitID": "Delvers_Frieren_ElfFemale",
+            "UnitVisualType": 5,
+            "HeadType": 1,
+            "GenderType": 1,
+            "BodyType": 0,
+            "SkinColorType": 0,
+            "HairType": 10086,
+            "FacialDecoType": 0,
+            "EyesType": 4,
+            "HideHeadEquipment": false
+          }
+        }
+      ],
+      "00000000-0000-4000-8000-000000000002": [
+        {
+          "Type": 0,
+          "Data": {
+            "$type": "Refactor.StatusComponentSaveData, Assembly-CSharp",
+            "SchemaVersion": 2,
+            "StateStats": {
+              "HealthHead": 1.0,
+              "HealthBody": 1.0,
+              "Energy": 0.8794439,
+              "Hunger": 0.9949002,
+              "Stress": 0.0
+            },
+            "ProgressionStats": {
+              "Level": 1.0,
+              "TalentStrength": 1.0,
+              "TalentWillPower": 2.0,
+              "TalentIntelligence": -1.0,
+              "TalentPerception": 1.0,
+              "MainSkillPoint": 10.0,
+              "SubSkillPoint": 6.0,
+              "Exp": 0.0,
+              "TalentConstitution": 0.0,
+              "TalentAgility": 0.0
+            },
+            "GeneratedStats": {
+              "Strength": 2.0,
+              "WillPower": 5.0,
+              "Perception": 3.0
+            },
+            "PermanentStats": {}
+          }
+        },
+        {
+          "Type": 3,
+          "Data": {
+            "$type": "Refactor.AffecterComponentSaveData, Assembly-CSharp",
+            "AffecterHolders": [
+              {
+                "Key": "AFFECTER_Human",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_CityGuard",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_LightEater",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_NewRecruit",
+                "Stack": 1,
+                "Duration": 2862.18652,
+                "InitialDuration": 2880.0
+              },
+              {
+                "Key": "AFFECTER_TreatmentExpectationLv1",
+                "Stack": 1,
+                "Duration": 1.0,
+                "InitialDuration": 1.0
+              },
+              {
+                "Key": "AFFECTER_PlayerManagementDifficultyNormal",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_PlayerDifficultyNormal",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_PortalHeal",
+                "Stack": 1,
+                "Duration": 1.11489844,
+                "InitialDuration": 2.0
+              }
+            ],
+            "InactiveMoodCauseHolders": []
+          }
+        },
+        {
+          "Type": 5,
+          "Data": {
+            "$type": "Refactor.InventoryComponentSaveData, Assembly-CSharp",
+            "ItemSlots": [
+              {
+                "Guid": "00000000-0000-4000-8000-000000000010",
+                "Key": "ITEM_Hardtack",
+                "Amount": 5,
+                "AutoFixed": true
+              },
+              {
+                "Guid": "00000000-0000-4000-8000-000000000011",
+                "Key": "ITEM_AidKit",
+                "Amount": 3,
+                "AutoFixed": true
+              },
+              {
+                "Guid": "00000000-0000-4000-8000-000000000012",
+                "Key": "ITEM_Textile",
+                "Amount": 2,
+                "AutoFixed": true
+              }
+            ],
+            "TempSlot": {
+              "Guid": "00000000-0000-0000-0000-000000000000",
+              "Key": "",
+              "Amount": 0,
+              "AutoFixed": false
+            }
+          }
+        },
+        {
+          "Type": 6,
+          "Data": {
+            "$type": "Refactor.InventoryComponentSaveData, Assembly-CSharp",
+            "ItemSlots": [
+              {
+                "Guid": "00000000-0000-4000-8000-000000000013",
+                "Key": "ITEM_WoodSword",
+                "Amount": 1,
+                "AutoFixed": true
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              },
+              {
+                "Guid": "00000000-0000-4000-8000-000000000014",
+                "Key": "ITEM_ClothArmor",
+                "Amount": 1,
+                "AutoFixed": true
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              }
+            ],
+            "TempSlot": {
+              "Guid": "00000000-0000-0000-0000-000000000000",
+              "Key": "",
+              "Amount": 0,
+              "AutoFixed": false
+            }
+          }
+        },
+        {
+          "Type": 8,
+          "Data": {
+            "$type": "Refactor.SkillComponentSaveData, Assembly-CSharp",
+            "BasicSkills": [
+              "SKILL_BasicPunchAttack",
+              "SKILL_BasicSwordAttack"
+            ],
+            "ActiveSkills": [
+              "SKILL_EmergencyEscape",
+              "SKILL_SweepingCleave"
+            ],
+            "PassiveSkills": [],
+            "EquipBypassList": [],
+            "Cooldowns": {},
+            "SkillDurations": {},
+            "AutoUse": {
+              "SKILL_EmergencyEscape": true,
+              "SKILL_SweepingCleave": true
+            }
+          }
+        },
+        {
+          "Type": 10,
+          "Data": {
+            "$type": "Refactor.UnitProfileComponentSaveData, Assembly-CSharp",
+            "ProfileKey": "UNITVISUAL_HumanStandardMale_0",
+            "UnitNameTextKey": "TEXTKEY_EXAMPLE_NAME_9",
+            "DefaultUnitNameTextKey": "TEXTKEY_EXAMPLE_NAME_10",
+            "UnitBioTextKey": "",
+            "UnitPortraitID": "HumanStandardMale_000",
+            "UnitVisualType": 0,
+            "HeadType": 0,
+            "GenderType": 0,
+            "BodyType": 1,
+            "SkinColorType": 1,
+            "HairType": 215,
+            "FacialDecoType": 3,
+            "EyesType": 2,
+            "HideHeadEquipment": false
+          }
+        }
+      ],
+      "00000000-0000-4000-8000-000000000003": [
+        {
+          "Type": 0,
+          "Data": {
+            "$type": "Refactor.StatusComponentSaveData, Assembly-CSharp",
+            "SchemaVersion": 2,
+            "StateStats": {
+              "HealthHead": 1.0,
+              "HealthBody": 1.0,
+              "Energy": 0.895568252,
+              "Hunger": 0.988100052,
+              "Stress": 0.0
+            },
+            "ProgressionStats": {
+              "Level": 1.0,
+              "TalentStrength": -1.0,
+              "TalentWillPower": 1.0,
+              "TalentIntelligence": 3.0,
+              "TalentAgility": 1.0,
+              "TalentPerception": -1.0,
+              "MainSkillPoint": 10.0,
+              "SubSkillPoint": 6.0,
+              "Exp": 0.0,
+              "TalentConstitution": 0.0
+            },
+            "GeneratedStats": {
+              "Constitution": -2.0,
+              "WillPower": 4.0,
+              "Intelligence": 1.0,
+              "Perception": 4.0
+            },
+            "PermanentStats": {}
+          }
+        },
+        {
+          "Type": 3,
+          "Data": {
+            "$type": "Refactor.AffecterComponentSaveData, Assembly-CSharp",
+            "AffecterHolders": [
+              {
+                "Key": "AFFECTER_Human",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_Wanderer",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_Adventurous",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_BellyBeggar",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_Claustrophobic",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_NewRecruit",
+                "Stack": 1,
+                "Duration": 2862.18652,
+                "InitialDuration": 2880.0
+              },
+              {
+                "Key": "AFFECTER_TreatmentExpectationLv1",
+                "Stack": 1,
+                "Duration": 1.0,
+                "InitialDuration": 1.0
+              },
+              {
+                "Key": "AFFECTER_PlayerManagementDifficultyNormal",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_PlayerDifficultyNormal",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_Boredom",
+                "Stack": 1,
+                "Duration": 1.0,
+                "InitialDuration": 1.0
+              },
+              {
+                "Key": "AFFECTER_PortalHeal",
+                "Stack": 1,
+                "Duration": 0.112897396,
+                "InitialDuration": 2.0
+              }
+            ],
+            "InactiveMoodCauseHolders": []
+          }
+        },
+        {
+          "Type": 5,
+          "Data": {
+            "$type": "Refactor.InventoryComponentSaveData, Assembly-CSharp",
+            "ItemSlots": [
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              },
+              {
+                "Guid": "00000000-0000-4000-8000-000000000015",
+                "Key": "ITEM_Hardtack",
+                "Amount": 2,
+                "AutoFixed": true
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              }
+            ],
+            "TempSlot": {
+              "Guid": "00000000-0000-0000-0000-000000000000",
+              "Key": "",
+              "Amount": 0,
+              "AutoFixed": false
+            }
+          }
+        },
+        {
+          "Type": 6,
+          "Data": {
+            "$type": "Refactor.InventoryComponentSaveData, Assembly-CSharp",
+            "ItemSlots": [
+              {
+                "Guid": "00000000-0000-4000-8000-000000000016",
+                "Key": "ITEM_WoodBow",
+                "Amount": 1,
+                "AutoFixed": true
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              },
+              {
+                "Guid": "00000000-0000-4000-8000-000000000017",
+                "Key": "ITEM_ClothCoif",
+                "Amount": 1,
+                "AutoFixed": true
+              },
+              {
+                "Guid": "00000000-0000-4000-8000-000000000018",
+                "Key": "ITEM_ClothArmor",
+                "Amount": 1,
+                "AutoFixed": true
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              },
+              {
+                "Guid": "00000000-0000-4000-8000-000000000019",
+                "Key": "ITEM_WoodArrow",
+                "Amount": 100,
+                "AutoFixed": true
+              }
+            ],
+            "TempSlot": {
+              "Guid": "00000000-0000-0000-0000-000000000000",
+              "Key": "",
+              "Amount": 0,
+              "AutoFixed": false
+            }
+          }
+        },
+        {
+          "Type": 8,
+          "Data": {
+            "$type": "Refactor.SkillComponentSaveData, Assembly-CSharp",
+            "BasicSkills": [
+              "SKILL_BasicPunchAttack",
+              "SKILL_BasicBowAttack"
+            ],
+            "ActiveSkills": [
+              "SKILL_EmergencyEscape",
+              "SKILL_RapidFire"
+            ],
+            "PassiveSkills": [],
+            "EquipBypassList": [],
+            "Cooldowns": {},
+            "SkillDurations": {},
+            "AutoUse": {
+              "SKILL_EmergencyEscape": true,
+              "SKILL_RapidFire": true
+            }
+          }
+        },
+        {
+          "Type": 10,
+          "Data": {
+            "$type": "Refactor.UnitProfileComponentSaveData, Assembly-CSharp",
+            "ProfileKey": "UNITVISUAL_HumanFatUnisex_1",
+            "UnitNameTextKey": "TEXTKEY_EXAMPLE_NAME_11",
+            "DefaultUnitNameTextKey": "TEXTKEY_EXAMPLE_NAME_12",
+            "UnitBioTextKey": "",
+            "UnitPortraitID": "HumanFatMale_001",
+            "UnitVisualType": 2,
+            "HeadType": 0,
+            "GenderType": 0,
+            "BodyType": 3,
+            "SkinColorType": 1,
+            "HairType": 29,
+            "FacialDecoType": 0,
+            "EyesType": 2,
+            "HideHeadEquipment": false
+          }
+        }
+      ],
+      "00000000-0000-4000-8000-000000000004": [
+        {
+          "Type": 0,
+          "Data": {
+            "$type": "Refactor.StatusComponentSaveData, Assembly-CSharp",
+            "SchemaVersion": 2,
+            "StateStats": {
+              "HealthHead": 1.0,
+              "HealthBody": 1.0,
+              "Energy": 0.986220539,
+              "Hunger": 0.9914995,
+              "Stress": 0.0
+            },
+            "ProgressionStats": {
+              "Level": 1.0,
+              "TalentStrength": -1.0,
+              "TalentConstitution": 3.0,
+              "TalentWillPower": -1.0,
+              "TalentIntelligence": -1.0,
+              "TalentAgility": -1.0,
+              "TalentPerception": 3.0,
+              "MainSkillPoint": 10.0,
+              "SubSkillPoint": 6.0,
+              "Exp": 0.0
+            },
+            "GeneratedStats": {
+              "Strength": 3.0,
+              "WillPower": -1.0,
+              "Agility": 2.0,
+              "Perception": 4.0
+            },
+            "PermanentStats": {}
+          }
+        },
+        {
+          "Type": 3,
+          "Data": {
+            "$type": "Refactor.AffecterComponentSaveData, Assembly-CSharp",
+            "AffecterHolders": [
+              {
+                "Key": "AFFECTER_Lycan",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_Carter",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_Curious",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_NewRecruit",
+                "Stack": 1,
+                "Duration": 2862.18652,
+                "InitialDuration": 2880.0
+              },
+              {
+                "Key": "AFFECTER_TreatmentExpectationLv1",
+                "Stack": 1,
+                "Duration": 1.0,
+                "InitialDuration": 1.0
+              },
+              {
+                "Key": "AFFECTER_PlayerManagementDifficultyNormal",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_PlayerDifficultyNormal",
+                "Stack": 1,
+                "Duration": 0.0,
+                "InitialDuration": 0.0
+              },
+              {
+                "Key": "AFFECTER_NocturnalDayTime",
+                "Stack": 1,
+                "Duration": 1.0,
+                "InitialDuration": 1.0
+              },
+              {
+                "Key": "AFFECTER_PortalHeal",
+                "Stack": 1,
+                "Duration": 0.112897396,
+                "InitialDuration": 2.0
+              }
+            ],
+            "InactiveMoodCauseHolders": []
+          }
+        },
+        {
+          "Type": 5,
+          "Data": {
+            "$type": "Refactor.InventoryComponentSaveData, Assembly-CSharp",
+            "ItemSlots": [
+              {
+                "Guid": "00000000-0000-4000-8000-00000000001a",
+                "Key": "ITEM_Hardtack",
+                "Amount": 2,
+                "AutoFixed": true
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              }
+            ],
+            "TempSlot": {
+              "Guid": "00000000-0000-0000-0000-000000000000",
+              "Key": "",
+              "Amount": 0,
+              "AutoFixed": false
+            }
+          }
+        },
+        {
+          "Type": 6,
+          "Data": {
+            "$type": "Refactor.InventoryComponentSaveData, Assembly-CSharp",
+            "ItemSlots": [
+              {
+                "Guid": "00000000-0000-4000-8000-00000000001b",
+                "Key": "ITEM_WoodSword",
+                "Amount": 1,
+                "AutoFixed": true
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              },
+              {
+                "Guid": "00000000-0000-4000-8000-00000000001c",
+                "Key": "ITEM_ClothCoif",
+                "Amount": 1,
+                "AutoFixed": true
+              },
+              {
+                "Guid": "00000000-0000-4000-8000-00000000001d",
+                "Key": "ITEM_ClothArmor",
+                "Amount": 1,
+                "AutoFixed": true
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              },
+              {
+                "Guid": "00000000-0000-0000-0000-000000000000",
+                "Key": "",
+                "Amount": 0,
+                "AutoFixed": false
+              }
+            ],
+            "TempSlot": {
+              "Guid": "00000000-0000-0000-0000-000000000000",
+              "Key": "",
+              "Amount": 0,
+              "AutoFixed": false
+            }
+          }
+        },
+        {
+          "Type": 8,
+          "Data": {
+            "$type": "Refactor.SkillComponentSaveData, Assembly-CSharp",
+            "BasicSkills": [
+              "SKILL_BasicPunchAttack",
+              "SKILL_BasicSwordAttack"
+            ],
+            "ActiveSkills": [
+              "SKILL_EmergencyEscape",
+              "SKILL_SweepingCleave"
+            ],
+            "PassiveSkills": [],
+            "EquipBypassList": [],
+            "Cooldowns": {},
+            "SkillDurations": {},
+            "AutoUse": {
+              "SKILL_EmergencyEscape": true,
+              "SKILL_SweepingCleave": true
+            }
+          }
+        },
+        {
+          "Type": 10,
+          "Data": {
+            "$type": "Refactor.UnitProfileComponentSaveData, Assembly-CSharp",
+            "ProfileKey": "UNITVISUAL_LycanMale_5",
+            "UnitNameTextKey": "TEXTKEY_EXAMPLE_NAME_13",
+            "DefaultUnitNameTextKey": "TEXTKEY_EXAMPLE_NAME_14",
+            "UnitBioTextKey": "",
+            "UnitPortraitID": "LycanMale_005",
+            "UnitVisualType": 7,
+            "HeadType": 4,
+            "GenderType": 0,
+            "BodyType": 9,
+            "SkinColorType": 8,
+            "HairType": 999,
+            "FacialDecoType": 0,
+            "EyesType": 1,
+            "HideHeadEquipment": false
+          }
+        }
+      ]
+    }
+  },
+  "CampaignSaveHeader": {
+    "CampaignGuid": "00000000-0000-4000-8000-00000000001e",
+    "ClanName": "Example",
+    "SaveName": "Example",
+    "DisplayName": "Example",
+    "PassedDate": "Tag0",
+    "PassedDay": 0,
+    "SaveTime": "2026-01-01 00:00:00",
+    "Version": "DS_B.0.0.0",
+    "CurrentMap": 0,
+    "CurrentDungeonRegion": -1,
+    "CurrentFloor": null,
+    "ScenarioType": 9999,
+    "CombatDifficulty": 1,
+    "ManagementDifficulty": 1,
+    "IronModeEnabled": false,
+    "FreeSaveMode": true,
+    "HasClearedLastRegion": false,
+    "PlayedTimeMinute": 0,
+    "IsAutoSave": false,
+    "StatusBalanceFingerprint": "0123456789ABCDEF"
+  },
+  "CampaignSettingSaveData": {
+    "GameSpeed": 1,
+    "CameraSettingSaveData": {
+      "Position": {
+        "x": 150.5,
+        "y": 146.5,
+        "z": -10.0
+      },
+      "OrthoSize": 10.0
+    },
+    "CampaignStartSettingSaveData": {
+      "ScenarioType": 9999,
+      "CampaignName": "Example",
+      "CombatDifficulty": 1,
+      "ManagementDifficulty": 1,
+      "IronModeEnabled": false,
+      "FreeSaveEnabled": true,
+      "MagicSaturationEnabled": false,
+      "LockConsecrationEnabled": true,
+      "LockConsecrationNoticeAcknowledged": true,
+      "PlayTutorial": false,
+      "Seed": "EXAMPLESEED0",
+      "EstablishSelectionPayload": "{\"ExpectedSlotCount\":4,\"Tokens\":[{\"SlotIndex\":0,\"RefreshCount\":6,\"GenerationSeed\":1037219026,\"ConstraintRelaxedFlag\":false,\"PresetKey\":\"\",\"Restriction\":{\"UseRaceRestriction\":true,\"RaceType\":2,\"UseGenderRestriction\":true,\"GenderType\":1,\"UseProfileRestriction\":false,\"UnitProfileKey\":\"\",\"Locks\":{\"MajorStatsLocked\":false,\"MajorStats\":[],\"Talents\":[],\"MainTraitsLocked\":false,\"RaceType\":0,\"BackgroundTrait\":\"\",\"SubTraitsLocked\":false,\"IndividualTraits\":[],\"InscriptionsTraits\":[]}},\"ExcludedPortraitKeys\":[\"HumanFatMale_001\",\"HumanStandardMale_000\",\"LycanMale_005\"],\"OverriddenNameTextKey\":\"TEXTKEY_EXAMPLE_NAME_0\"},{\"SlotIndex\":1,\"RefreshCount\":0,\"GenerationSeed\":668866117,\"ConstraintRelaxedFlag\":false,\"PresetKey\":\"CADIDATEPRESET_BuildWarrior\",\"Restriction\":{\"UseRaceRestriction\":false,\"RaceType\":0,\"UseGenderRestriction\":false,\"GenderType\":0,\"UseProfileRestriction\":false,\"UnitProfileKey\":\"\",\"Locks\":{\"MajorStatsLocked\":false,\"MajorStats\":[],\"Talents\":[],\"MainTraitsLocked\":false,\"RaceType\":0,\"BackgroundTrait\":\"\",\"SubTraitsLocked\":false,\"IndividualTraits\":[],\"InscriptionsTraits\":[]}},\"ExcludedPortraitKeys\":[\"HumanStandardFemale_000\"],\"OverriddenNameTextKey\":\"\"},{\"SlotIndex\":2,\"RefreshCount\":0,\"GenerationSeed\":718088760,\"ConstraintRelaxedFlag\":false,\"PresetKey\":\"\",\"Restriction\":{\"UseRaceRestriction\":false,\"RaceType\":0,\"UseGenderRestriction\":false,\"GenderType\":0,\"UseProfileRestriction\":false,\"UnitProfileKey\":\"\",\"Locks\":{\"MajorStatsLocked\":false,\"MajorStats\":[],\"Talents\":[],\"MainTraitsLocked\":false,\"RaceType\":0,\"BackgroundTrait\":\"\",\"SubTraitsLocked\":false,\"IndividualTraits\":[],\"InscriptionsTraits\":[]}},\"ExcludedPortraitKeys\":[\"HumanStandardFemale_000\",\"HumanStandardMale_000\"],\"OverriddenNameTextKey\":\"TEXTKEY_EXAMPLE_NAME_0\"},{\"SlotIndex\":3,\"RefreshCount\":0,\"GenerationSeed\":1965924435,\"ConstraintRelaxedFlag\":false,\"PresetKey\":\"\",\"Restriction\":{\"UseRaceRestriction\":false,\"RaceType\":0,\"UseGenderRestriction\":false,\"GenderType\":0,\"UseProfileRestriction\":false,\"UnitProfileKey\":\"\",\"Locks\":{\"MajorStatsLocked\":false,\"MajorStats\":[],\"Talents\":[],\"MainTraitsLocked\":false,\"RaceType\":0,\"BackgroundTrait\":\"\",\"SubTraitsLocked\":false,\"IndividualTraits\":[],\"InscriptionsTraits\":[]}},\"ExcludedPortraitKeys\":[\"HumanFatMale_001\",\"HumanStandardFemale_000\",\"HumanStandardMale_000\"],\"OverriddenNameTextKey\":\"TEXTKEY_EXAMPLE_NAME_0\"}]}"
+    },
+    "CampaignUISettingSaveData": {
+      "OpenedItemTypes": []
+    },
+    "CampaignItemSettingSaveData": {
+      "IsValid": true,
+      "AutoPickUp": false,
+      "Common": true,
+      "Uncommon": true,
+      "Rare": true,
+      "Legendary": true,
+      "WeightOption": 0
+    },
+    "CampaignBalanceSaveData": {
+      "IsValid": true,
+      "ManagementDifficulty": 1,
+      "TreatmentExpectationMoodValues": [
+        7.0,
+        4.0,
+        0.0,
+        -4.0,
+        -7.0
+      ],
+      "DungeonStayMoodPenaltyValues": [
+        -3.0,
+        -6.0,
+        -9.0,
+        -12.0
+      ],
+      "BalanceHash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    }
+  },
+  "CampaignRandomSaveData": {
+    "SequenceByContext": {},
+    "LevelUpPrayerAttemptIndexByUnitGuid": {}
+  },
+  "AnimationStateSaveData": {
+    "States": {
+      "Base": {
+        "00000000-0000-4000-8000-000000000001": {
+          "IsIdle": true,
+          "IsMove": false
+        },
+        "00000000-0000-4000-8000-000000000002": {
+          "IsIdle": true,
+          "IsMove": false
+        },
+        "00000000-0000-4000-8000-000000000003": {
+          "IsIdle": false,
+          "IsMove": true
+        },
+        "00000000-0000-4000-8000-000000000004": {
+          "IsIdle": true,
+          "IsMove": false
+        }
+      }
+    }
+  },
+  "RawMapContainerSaveData": {
+    "Maps": {
+      "Base": {
+        "Type": 0,
+        "MaxSize": {
+          "x": 300,
+          "y": 300
+        },
+        "RawGrids": {
+          "Rows": 300,
+          "Cols": 300,
+          "Segments": [0,90000]
+        },
+        "LowDecorationTypes": {
+          "Rows": 300,
+          "Cols": 300,
+          "Segments": [0,37651,2]
+        },
+        "HighDecorationTypes": {
+          "Rows": 300,
+          "Cols": 300,
+          "Segments": [0,37653,3]
+        },
+        "SoilTypeFlags": {
+          "Rows": 300,
+          "Cols": 300,
+          "Segments": [0,40349,1]
+        },
+        "ImplementedPositions": {
+          "Rows": 300,
+          "Cols": 300,
+          "Segments": [0,37640,1]
+        },
+        "VisitedPositions": {
+          "Rows": 300,
+          "Cols": 300,
+          "Segments": [0,41246,1]
+        },
+        "BuildingVariations": {
+          "Rows": 300,
+          "Cols": 300,
+          "Segments": [0,37661,1]
+        },
+        "BuildingVariationSavedFlags": {
+          "Rows": 300,
+          "Cols": 300,
+          "Segments": [0,37640,1]
+        },
+        "FloorGrids": {
+          "Rows": 300,
+          "Cols": 300,
+          "Values": [
+            null
+          ],
+          "Segments": [0,90000]
+        },
+        "FloorDecoGrids": {
+          "Rows": 300,
+          "Cols": 300,
+          "Values": [
+            null
+          ],
+          "Segments": [0,90000]
+        },
+        "RemovedThornPositions": []
+      },
+      "Dungeon": {
+        "Type": 1,
+        "MaxSize": {
+          "x": 0,
+          "y": 0
+        },
+        "RawGrids": {
+          "Rows": 0,
+          "Cols": 0,
+          "Segments": []
+        },
+        "LowDecorationTypes": {
+          "Rows": 0,
+          "Cols": 0,
+          "Segments": []
+        },
+        "HighDecorationTypes": {
+          "Rows": 0,
+          "Cols": 0,
+          "Segments": []
+        },
+        "SoilTypeFlags": {
+          "Rows": 0,
+          "Cols": 0,
+          "Segments": []
+        },
+        "ImplementedPositions": {
+          "Rows": 0,
+          "Cols": 0,
+          "Segments": []
+        },
+        "VisitedPositions": {
+          "Rows": 0,
+          "Cols": 0,
+          "Segments": []
+        },
+        "BuildingVariations": {
+          "Rows": 0,
+          "Cols": 0,
+          "Segments": []
+        },
+        "BuildingVariationSavedFlags": {
+          "Rows": 0,
+          "Cols": 0,
+          "Segments": []
+        },
+        "FloorGrids": {
+          "Rows": 0,
+          "Cols": 0,
+          "Values": [],
+          "Segments": []
+        },
+        "FloorDecoGrids": {
+          "Rows": 0,
+          "Cols": 0,
+          "Values": [],
+          "Segments": []
+        },
+        "RemovedThornPositions": []
+      }
+    }
+  },
+  "RawBaseSaveData": {
+    "BaseFieldAreas": [
+      {
+        "Guid": "00000000-0000-4000-8000-00000000001f",
+        "AreaType": 0,
+        "IsDiscovered": true,
+        "Positions": [134,149,134],
+        "FertileSoilPositions": [],
+        "GrassyPositions": [],
+        "RockyPositions": [],
+        "RoomFloorPositions": [148,141,149],
+        "AreaSpawnInfos": {
+          "Entries": [
+            {
+              "Position": {
+                "x": 150,
+                "y": 150
+              },
+              "SpawnInfo": "BUILDING_PortalLevel1"
+            },
+            {
+              "Position": {
+                "x": 150,
+                "y": 147
+              },
+              "SpawnInfo": "BUILDING_AlphaNearPortalBlock"
+            },
+            {
+              "Position": {
+                "x": 153,
+                "y": 156
+              },
+              "SpawnInfo": "BUILDING_LargeTwistedTree"
+            }
+          ]
+        }
+      },
+      {
+        "Guid": "00000000-0000-4000-8000-000000000020",
+        "AreaType": 4,
+        "IsDiscovered": false,
+        "Positions": [96,158,96],
+        "FertileSoilPositions": [],
+        "GrassyPositions": [],
+        "RockyPositions": [105,157,106],
+        "RoomFloorPositions": [105,154,113],
+        "AreaSpawnInfos": {
+          "Entries": [
+            {
+              "Position": {
+                "x": 101,
+                "y": 159
+              },
+              "SpawnInfo": "BUILDING_LargeTwistedTree"
+            },
+            {
+              "Position": {
+                "x": 102,
+                "y": 164
+              },
+              "SpawnInfo": "BUILDING_SmallTwistedTree"
+            },
+            {
+              "Position": {
+                "x": 116,
+                "y": 160
+              },
+              "SpawnInfo": "BUILDING_TwistedBush"
+            }
+          ]
+        }
+      }
+    ],
+    "CreepRemovedAreas": {
+      "Rows": 300,
+      "Cols": 300,
+      "Segments": [0,23227,1]
+    },
+    "DarkThornData": [134,139],
+    "BasePreMapSettingType": 0
+  },
+  "RawDungeonSaveData": {
+    "CurrentRegion": 0,
+    "CurrentFloor": 0,
+    "CurrentPhase": 1,
+    "RequestedSeed": 0,
+    "CurrentSeed": 0,
+    "UsedDefaultSeedFallback": false,
+    "GenerationAttemptCount": 1,
+    "CurrentRegionBossDefeated": false,
+    "EnteredDungeonMin": 0,
+    "DungeonPenaltyLevel": 0,
+    "Rooms": {},
+    "DungeonOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "PatrolSpawnPositions": []
+  },
+  "PlayerUnitsSaveData": {
+    "SkillTrees": {
+      "00000000-0000-4000-8000-000000000001": {
+        "SkillTrees": {
+          "Main": [
+            "FireMagic",
+            "WaterMagic",
+            "NatureMagic"
+          ],
+          "Sub": [
+            "Burst",
+            "Tide",
+            "Harmony"
+          ],
+          "Other": []
+        },
+        "ExtraSkills": [
+          "SKILL_EmergencyEscape",
+          "SKILL_FireMissile",
+          "SKILL_SummonBubbling",
+          "SKILL_StrangeSeed",
+          "SKILL_DelversZoltraak"
+        ],
+        "UsedSkillPoints": {
+          "Main": 0,
+          "Sub": 0,
+          "Other": 0
+        },
+        "LearnedSkills": {
+          "FireMagic": [],
+          "WaterMagic": [],
+          "NatureMagic": [],
+          "Burst": [],
+          "Tide": [],
+          "Harmony": []
+        }
+      },
+      "00000000-0000-4000-8000-000000000002": {
+        "SkillTrees": {
+          "Main": [
+            "Sword",
+            "Shield",
+            "Spear"
+          ],
+          "Sub": [
+            "Warrior",
+            "Stake",
+            "Guardian"
+          ],
+          "Other": []
+        },
+        "ExtraSkills": [
+          "SKILL_EmergencyEscape",
+          "SKILL_SweepingCleave"
+        ],
+        "UsedSkillPoints": {
+          "Main": 0,
+          "Sub": 0,
+          "Other": 0
+        },
+        "LearnedSkills": {
+          "Sword": [],
+          "Shield": [],
+          "Spear": [],
+          "Warrior": [],
+          "Stake": [],
+          "Guardian": []
+        }
+      },
+      "00000000-0000-4000-8000-000000000003": {
+        "SkillTrees": {
+          "Main": [
+            "Spear",
+            "Bow",
+            "WaterMagic"
+          ],
+          "Sub": [
+            "Blitz",
+            "Tide"
+          ],
+          "Other": []
+        },
+        "ExtraSkills": [
+          "SKILL_EmergencyEscape",
+          "SKILL_RapidFire"
+        ],
+        "UsedSkillPoints": {
+          "Main": 0,
+          "Sub": 0,
+          "Other": 0
+        },
+        "LearnedSkills": {
+          "Spear": [],
+          "Bow": [],
+          "WaterMagic": [],
+          "Blitz": [],
+          "Tide": []
+        }
+      },
+      "00000000-0000-4000-8000-000000000004": {
+        "SkillTrees": {
+          "Main": [
+            "Sword",
+            "Bow",
+            "Greatsword"
+          ],
+          "Sub": [
+            "Blitz",
+            "Execution",
+            "Warrior"
+          ],
+          "Other": []
+        },
+        "ExtraSkills": [
+          "SKILL_EmergencyEscape",
+          "SKILL_SweepingCleave"
+        ],
+        "UsedSkillPoints": {
+          "Main": 0,
+          "Sub": 0,
+          "Other": 0
+        },
+        "LearnedSkills": {
+          "Sword": [],
+          "Bow": [],
+          "Greatsword": [],
+          "Blitz": [],
+          "Execution": [],
+          "Warrior": []
+        }
+      }
+    },
+    "SkillLearnNotices": {
+      "00000000-0000-4000-8000-000000000001": {
+        "HasSnapshot": false,
+        "ShowNotice": false,
+        "MainSkillPoint": 0,
+        "SubSkillPoint": 0
+      },
+      "00000000-0000-4000-8000-000000000002": {
+        "HasSnapshot": false,
+        "ShowNotice": false,
+        "MainSkillPoint": 0,
+        "SubSkillPoint": 0
+      },
+      "00000000-0000-4000-8000-000000000003": {
+        "HasSnapshot": false,
+        "ShowNotice": false,
+        "MainSkillPoint": 0,
+        "SubSkillPoint": 0
+      },
+      "00000000-0000-4000-8000-000000000004": {
+        "HasSnapshot": false,
+        "ShowNotice": false,
+        "MainSkillPoint": 0,
+        "SubSkillPoint": 0
+      }
+    },
+    "QuickSlots": {
+      "00000000-0000-4000-8000-000000000001": {
+        "QuickSlots": [
+          "SKILL_FireMissile",
+          "SKILL_SummonBubbling",
+          "SKILL_StrangeSeed",
+          "SKILL_DelversZoltraak",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "ItemQuickSlotKey": "ITEM_AidKit"
+      },
+      "00000000-0000-4000-8000-000000000002": {
+        "QuickSlots": [
+          "SKILL_SweepingCleave",
+          null,
+          null,
+          null,
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "ItemQuickSlotKey": "ITEM_AidKit"
+      },
+      "00000000-0000-4000-8000-000000000003": {
+        "QuickSlots": [
+          "SKILL_RapidFire",
+          null,
+          null,
+          null,
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "ItemQuickSlotKey": null
+      },
+      "00000000-0000-4000-8000-000000000004": {
+        "QuickSlots": [
+          "SKILL_SweepingCleave",
+          null,
+          null,
+          null,
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "ItemQuickSlotKey": null
+      }
+    },
+    "ConsumePolicies": {
+      "00000000-0000-4000-8000-000000000001": {
+        "Policy": {
+          "ITEM_GlothEggOmelet": true,
+          "ITEM_MeatSkewer": true,
+          "ITEM_MeatStew": true,
+          "ITEM_MushroomSkewer": true,
+          "ITEM_MushroomStew": true
+        }
+      },
+      "00000000-0000-4000-8000-000000000002": {
+        "Policy": {
+          "ITEM_GlothEggOmelet": true,
+          "ITEM_MeatSkewer": true,
+          "ITEM_MeatStew": true,
+          "ITEM_MushroomSkewer": true,
+          "ITEM_MushroomStew": true
+        }
+      },
+      "00000000-0000-4000-8000-000000000003": {
+        "Policy": {
+          "ITEM_GlothEggOmelet": true,
+          "ITEM_MeatSkewer": true,
+          "ITEM_MeatStew": true,
+          "ITEM_MushroomSkewer": true,
+          "ITEM_MushroomStew": true
+        }
+      },
+      "00000000-0000-4000-8000-000000000004": {
+        "Policy": {
+          "ITEM_GlothEggOmelet": true,
+          "ITEM_MeatSkewer": true,
+          "ITEM_MeatStew": true,
+          "ITEM_MushroomSkewer": true,
+          "ITEM_MushroomStew": true
+        }
+      }
+    },
+    "TaskPriorities": {
+      "00000000-0000-4000-8000-000000000001": {
+        "Priority": {
+          "PickUp": 2,
+          "Feeding": 2,
+          "Research": 2,
+          "Construct": 2,
+          "Demolition": 2,
+          "Store": 2,
+          "Crafting": 2,
+          "Cooking": 2,
+          "Farming": 2,
+          "Harvesting": 2,
+          "Gathering": 2,
+          "Logging": 2,
+          "Mining": 2
+        }
+      },
+      "00000000-0000-4000-8000-000000000002": {
+        "Priority": {
+          "PickUp": 2,
+          "Feeding": 2,
+          "Research": 2,
+          "Construct": 2,
+          "Demolition": 2,
+          "Store": 2,
+          "Crafting": 2,
+          "Cooking": 2,
+          "Farming": 2,
+          "Harvesting": 2,
+          "Gathering": 2,
+          "Logging": 2,
+          "Mining": 2
+        }
+      },
+      "00000000-0000-4000-8000-000000000003": {
+        "Priority": {
+          "PickUp": 2,
+          "Feeding": 2,
+          "Research": 2,
+          "Construct": 2,
+          "Demolition": 2,
+          "Store": 2,
+          "Crafting": 2,
+          "Cooking": 2,
+          "Farming": 2,
+          "Harvesting": 2,
+          "Gathering": 2,
+          "Logging": 2,
+          "Mining": 2
+        }
+      },
+      "00000000-0000-4000-8000-000000000004": {
+        "Priority": {
+          "PickUp": 2,
+          "Feeding": 2,
+          "Research": 2,
+          "Construct": 2,
+          "Demolition": 2,
+          "Store": 2,
+          "Crafting": 2,
+          "Cooking": 2,
+          "Farming": 2,
+          "Harvesting": 2,
+          "Gathering": 2,
+          "Logging": 2,
+          "Mining": 2
+        }
+      }
+    },
+    "WayPointQueues": {
+      "00000000-0000-4000-8000-000000000001": [],
+      "00000000-0000-4000-8000-000000000002": [],
+      "00000000-0000-4000-8000-000000000003": [],
+      "00000000-0000-4000-8000-000000000004": []
+    },
+    "RecruitCosts": {
+      "00000000-0000-4000-8000-000000000001": 191,
+      "00000000-0000-4000-8000-000000000002": 299,
+      "00000000-0000-4000-8000-000000000003": 283,
+      "00000000-0000-4000-8000-000000000004": 196
+    }
+  },
+  "ResearchSaveData": {
+    "ResearchDatas": {
+      
+      "RESEARCH_WoodProcessing1": {
+        "Workload": 0.0,
+        "RequiredWorkload": 7.0,
+        "IsLocked": false
+      },
+      "RESEARCH_BasicStorage": {
+        "Workload": 0.0,
+        "RequiredWorkload": 13.0,
+        "IsLocked": false
+      },
+      "RESEARCH_WoodProcessing2": {
+        "Workload": 0.0,
+        "RequiredWorkload": 67.0,
+        "IsLocked": true
+      }
+    },
+    "ResearchKeyQueue": []
+  },
+  "ClanSaveData": {
+    "CampaignGuid": "00000000-0000-4000-8000-00000000001e",
+    "ClanName": "Example",
+    "ClanGold": 0,
+    "CurrentCP": 0,
+    "ClanRank": 1,
+    "CurrentPopulation": 4,
+    "MinPassedSinceLastRecruitRefresh": 22,
+    "AvailableRecruitCandidates": [
+      {
+        "Level": 2,
+        "RaceType": 0,
+        "UnitProfileKey": "UNITVISUAL_HumanStandardFemale_2",
+        "NameTextKey": "TEXTKEY_EXAMPLE_NAME_15",
+        "BioTextKey": "TEXTKEY_BACKGROUNDBIO_Carpenter_0",
+        "RaceTrait": "AFFECTER_Human",
+        "BackgroundTrait": "AFFECTER_Carpenter",
+        "IndividualTraits": [
+          "AFFECTER_Pacifist"
+        ],
+        "InscriptionsTraits": [
+          "AFFECTER_LowGradeCooldownReductionInscription"
+        ],
+        "MajorStats": {
+          "Strength": 16,
+          "Constitution": 13,
+          "WillPower": 20,
+          "Intelligence": 19,
+          "Agility": 12,
+          "Perception": 19
+        },
+        "AptitudeStats": {
+          "LoggingCapabilityPerModifier": 20.0,
+          "ConstructionCapabilityPerModifier": 20.0,
+          "CookingCapabilityPerModifier": 30.0,
+          "SwordSkillAptitude": 1.0,
+          "GreatSwordSkillAptitude": 1.0,
+          "FireMagicSkillAptitude": 1.0,
+          "ExpGainedBonus": 15.0
+        },
+        "MainSkillTrees": [
+          4,
+          3,
+          11
+        ],
+        "SubSkillTrees": [
+          14,
+          9
+        ],
+        "InitialEquipments": [
+          {
+            "Item1": "ITEM_WoodClub",
+            "Item2": 1
+          },
+          {
+            "Item1": "ITEM_ClothArmor",
+            "Item2": 1
+          },
+          {
+            "Item1": "ITEM_ClothCoif",
+            "Item2": 1
+          }
+        ],
+        "InitialInventoryItems": [
+          {
+            "Item1": "ITEM_Hardtack",
+            "Item2": 2
+          }
+        ],
+        "RecruitPrice": 377,
+        "MajorStatTalents": {
+          "TalentStrength": 1,
+          "TalentConstitution": -1,
+          "TalentWillPower": 1,
+          "TalentIntelligence": 1,
+          "TalentAgility": -1,
+          "TalentPerception": 1
+        }
+      }
+    ],
+    "RecentlySelectedRegion": 0,
+    "IsSkipSafeFloor": false,
+    "ExpeditionMapData": [
+      {
+        "Region": 0,
+        "IsLocked": false,
+        "IsCleared": false,
+        "MaxClearedFloor": -1,
+        "MaxReachedFloor": -1
+      }
+    ],
+    "SelectedBuildingSkins": {}
+  },
+  "EnvironmentSaveData": {
+    "EnvironmentDatas": {
+      "None": [
+        "DayTime"
+      ],
+      "VeilSilence": [
+        "RichManaStone",
+        "DayTime"
+      ],
+      "FesteringBurrow": [
+        "WillpowerFortify",
+        "DayTime"
+      ],
+      "AbandonedMine": [
+        "RichManaStone",
+        "DayTime"
+      ],
+      "ForgottenAbyss": [
+        "PerceptionFortify",
+        "DayTime"
+      ],
+      "DeadSwamp": [
+        "PerceptionFortify",
+        "DayTime"
+      ],
+      "TowerApocalypse": [
+        "ToughnessFortify",
+        "DayTime"
+      ],
+      "Abyss": [
+        "RichManaStone",
+        "DayTime"
+      ],
+      "Tutorial": [
+        "DayTime"
+      ]
+    },
+    "WeatherDatas": {
+      "VeilSilence": "Rain",
+      "FesteringBurrow": "Sunny",
+      "AbandonedMine": "Rain",
+      "ForgottenAbyss": "Sunny",
+      "DeadSwamp": "Sunny",
+      "TowerApocalypse": "Sunny",
+      "Abyss": "Sunny",
+      "None": "Sunny"
+    },
+    "DepletionDatas": {
+      "VeilSilence": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "FesteringBurrow": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "AbandonedMine": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "ForgottenAbyss": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "DeadSwamp": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "TowerApocalypse": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "Abyss": [
+        5,
+        5,
+        5,
+        5
+      ]
+    },
+    "BaseWeatherChangeMin": 476,
+    "DungeonWeatherChangeMin": 408,
+    "NextDepletionIncreaseMin": 4320,
+    "RemainingDepletionIncreaseMin": 4297
+  },
+  "TimeSaveData": {
+    "Day": 0,
+    "Hour": 8,
+    "Min": 23,
+    "Tick": 22673
+  },
+  "TaskContainerSaveData": {
+    "AllTasks": [
+      {
+        "$type": "Refactor.StoreTaskSaveData, Assembly-CSharp",
+        "ItemHolder": {
+          "Guid": "00000000-0000-4000-8000-00000000000b",
+          "Key": "ITEM_Hardtack",
+          "Amount": 9,
+          "AutoFixed": false
+        },
+        "ItemHolderPosition": {
+          "x": 147,
+          "y": 147
+        },
+        "TargetBuildingGuid": "00000000-0000-0000-0000-000000000000",
+        "TaskGuid": "00000000-0000-4000-8000-00000000002a",
+        "TaskType": 120,
+        "TargetGuid": "00000000-0000-4000-8000-00000000000b",
+        "PerformPosition": {
+          "x": 147,
+          "y": 147
+        },
+        "MaxWorkload": 0.0,
+        "Workload": 0.0,
+        "PendingType": 8
+      },
+      {
+        "$type": "Refactor.StoreTaskSaveData, Assembly-CSharp",
+        "ItemHolder": {
+          "Guid": "00000000-0000-4000-8000-00000000000c",
+          "Key": "ITEM_WildLongGrass",
+          "Amount": 20,
+          "AutoFixed": false
+        },
+        "ItemHolderPosition": {
+          "x": 152,
+          "y": 146
+        },
+        "TargetBuildingGuid": "00000000-0000-0000-0000-000000000000",
+        "TaskGuid": "00000000-0000-4000-8000-00000000002b",
+        "TaskType": 120,
+        "TargetGuid": "00000000-0000-4000-8000-00000000000c",
+        "PerformPosition": {
+          "x": 152,
+          "y": 146
+        },
+        "MaxWorkload": 0.0,
+        "Workload": 0.0,
+        "PendingType": 8
+      }
+    ]
+  },
+  "QuestContainerSaveData": {
+    "ActiveQuestSaveDatas": [
+      {
+        "QuestKey": "QUEST_Main100",
+        "Conditions": [
+          {
+            "ConditionKey": "HasRoomTypeAmount",
+            "ValueType": "System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+            "CurrentValueJson": "0"
+          },
+          {
+            "ConditionKey": "HasRoomTypeAmount",
+            "ValueType": "System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+            "CurrentValueJson": "0"
+          }
+        ]
+      }
+    ],
+    "CompletedQuests": []
+  },
+  "FarmingCropSaveData": {
+    "FarmCropMap": {}
+  },
+  "BedOwnerSaveData": {
+    "BedOwnerMap": {}
+  },
+  "GraveOwnerSave": {
+    "GraveOwnerMap": {}
+  },
+  "EventSaveData": {
+    "CompletedEventKeys": [
+      "Event_Fixed47"
+    ],
+    "CompletedEventKeywords": [
+      "Main100"
+    ],
+    "CurrentEventKey": "",
+    "CurrentEventKeyword": "",
+    "RandomEventData": {
+      "RequestedTick": 0,
+      "PendingEventKey": null,
+      "PendingEventKeyword": "",
+      "LastRandomEventTick": 21600,
+      "IntervalTick": 189675
+    },
+    "EventSourceData": {
+      "EventInstanceSaveData": {
+        "Event_Decision0": {
+          "EventKey": "Event_Decision0",
+          "EventKeyword": "Decision",
+          "TargetUnits": [],
+          "Conditions": [
+            {
+              "ConditionKey": "CurrentMap",
+              "ValueType": "System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+              "CurrentValueJson": "true"
+            },
+            {
+              "ConditionKey": "Cooldown",
+              "ValueType": "System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+              "CurrentValueJson": "2147483647"
+            }
+          ],
+          "TargetConditions": []
+        },
+        "Event_DecisionResult0": {
+          "EventKey": "Event_DecisionResult0",
+          "EventKeyword": "DecisionResult",
+          "TargetUnits": [],
+          "Conditions": [
+            {
+              "ConditionKey": "QuestTypeFinished",
+              "ValueType": "System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+              "CurrentValueJson": "false"
+            },
+            {
+              "ConditionKey": "Cooldown",
+              "ValueType": "System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+              "CurrentValueJson": "2147483647"
+            }
+          ],
+          "TargetConditions": []
+        },
+        "Event_Event0": {
+          "EventKey": "Event_Event0",
+          "EventKeyword": "EventDeveloperLetter",
+          "TargetUnits": [],
+          "Conditions": [
+            {
+              "ConditionKey": "UseItem",
+              "ValueType": "System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+              "CurrentValueJson": "0"
+            }
+          ],
+          "TargetConditions": []
+        }
+      }
+    }
+  },
+  "ReportSaveData": {
+    "AnnihilationData": {
+      "AnnihilationCount": 0
+    },
+    "LevelUpTimeData": {
+      "UnitExpMaxStamp": {}
+    },
+    "InGameRecordData": {
+      "States": [],
+      "Times": {},
+      "Counts": {},
+      "Bools": {},
+      "FirstEnterAbyss": 0
+    }
+  },
+  "RecreationSaveData": {
+    "Recreations": []
+  },
+  "DecisionSaveData": {
+    "CurrentDecisionKey": null,
+    "DecisionActivated": false,
+    "StartTick": 0,
+    "EndTick": 0,
+    "DismissedTick": 0,
+    "IntervalTick": 0,
+    "SourceData": {
+      "Instances": [
+        {
+          "DecisionKey": "CommonMood",
+          "Conditions": [
+            {
+              "ConditionKey": "UnitMoodAverageUnder",
+              "ValueType": "System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+              "CurrentValueJson": "10"
+            }
+          ]
+        },
+        {
+          "DecisionKey": "Rank1Resource1",
+          "Conditions": [
+            {
+              "ConditionKey": "HasItemUnder",
+              "ValueType": "System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+              "CurrentValueJson": "32"
+            }
+          ]
+        },
+        {
+          "DecisionKey": "Rank1Resource2",
+          "Conditions": [
+            {
+              "ConditionKey": "HasItemUnder",
+              "ValueType": "System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+              "CurrentValueJson": "0"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "StoragePolicySaveData": {
+    "StoragePolicies": {
+      "00000000-0000-4000-8000-000000000035": {
+        "MinDurability": 0,
+        "MaxDurability": 100,
+        "AvailableItems": {
+          "ITEM_DeputyCaptainsInsignia": false,
+          "ITEM_WildHerb": true,
+          "ITEM_Textile": true,
+          "ITEM_Ointment": true,
+          "ITEM_Textile": true,
+          "ITEM_AshOfSolace": true,
+          "ITEM_HellLeech": true,
+          "ITEM_RoyalJelly": true,
+          "ITEM_MetalSkinPotion": true,
+          "ITEM_MagicResistancePotion": true,
+          "ITEM_AccuracyPotion": true,
+          "ITEM_MagicalAttackPotion": true,
+          "ITEM_PhysicalAttackPotion": true,
+          "ITEM_AttackSpeedPotion": true,
+          "ITEM_WeightPotion": true,
+          "ITEM_SwiftPotion": true,
+          "ITEM_VampirePotion": true,
+          "ITEM_BlackSerum": true,
+          "ITEM_ReturnScroll": true,
+          "ITEM_Textile": true,
+          "ITEM_Ointment": true,
+          "ITEM_PerceptionElixir": true,
+          "ITEM_ExpeditionHorn": true,
+          "ITEM_SkillResetElixir": true,
+          "ITEM_AgilityElixir": true,
+          "ITEM_StrengthElixir": true,
+          "ITEM_WillPowerElixir": true,
+          "ITEM_ConstitutionElixir": true,
+          "ITEM_AidKit": true,
+          "ITEM_IntelligenceElixir": true,
+          "ITEM_BloodSoakedFruit": true,
+          "ITEM_RedMonsterRatSoulStone": true,
+          "ITEM_GoddessTears": true,
+          "ITEM_Mandrake": true,
+          "ITEM_AlphaAcidSlogelSoulStone": true,
+          "ITEM_SymbioticInsect": true,
+          "ITEM_DeveloperLetter": true,
+          "ITEM_GoblinChiefShamanSoulStone": true,
+          "ITEM_ElderGlothSoulStone": true,
+          "ITEM_EyeBallSoulStone": true,
+          "ITEM_GiantStoneGolemSoulStone": true,
+          "ITEM_ChainKnightSentinelSoulStone": true,
+          "ITEM_ReturnScroll": true,
+          "ITEM_Textile": true
+        }
+      }
+    }
+  }
+,"DungeonSettlers10Slots_Items":{"Version":1,"Units":{"00000000-0000-4000-8000-000000000001":["","ITEM_Textile"]}},
+  "DelversCore": {"version":1,"campaign":"00000000-0000-4000-8000-00000000001e","units":{"00000000-0000-4000-8000-000000000001":{"snapshot":["AFFECTER_DelversBooklover:1","AFFECTER_DelversElfArchmage:1","AFFECTER_Elf:1"]},"00000000-0000-4000-8000-000000000002":{"snapshot":["AFFECTER_CityGuard:1","AFFECTER_Human:1","AFFECTER_LightEater:1"]},"00000000-0000-4000-8000-000000000003":{"snapshot":["AFFECTER_Adventurous:1","AFFECTER_BellyBeggar:1","AFFECTER_Claustrophobic:1","AFFECTER_Human:1","AFFECTER_Wanderer:1"]},"00000000-0000-4000-8000-000000000004":{"snapshot":["AFFECTER_Carter:1","AFFECTER_Curious:1","AFFECTER_Lycan:1"]}},"research":[{"key":"RESEARCH_DelversCoreFirstAid","queue":-1,"body":"{\r\n        \u0022Workload\u0022: 0.0,\r\n        \u0022RequiredWorkload\u0022: 134.0,\r\n        \u0022IsLocked\u0022: true\r\n      }"}],"items":{"00000000-0000-4000-8000-00000000000f":"ITEM_DelversCoreHerbalBandage","00000000-0000-4000-8000-000000000012":"ITEM_DelversCoreHerbalBandage"}}
+}

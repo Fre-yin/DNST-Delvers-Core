@@ -4,13 +4,16 @@ namespace DungeonSettlersDelvers.Core;
 
 internal static class UniqueCandidateLocalization
 {
-    private static readonly TextKeyTableData[] Rows =
+    // The rows come from the plain list CoreTextRows.Registered, in its order.
+    private static readonly TextKeyTableData[] Rows = BuildRows();
+
+    // A loop, not a lambda over the tuples: it would need NullableAttribute, which the IL2CPP reference set lacks (CS0656).
+    private static TextKeyTableData[] BuildRows()
     {
-        Row(UniqueCandidateLocalizationText.NativeLockConflictKey,
-            UniqueCandidateLocalizationText.LockConflictFallback),
-        Row(LoadIntegrityNoticeText.SaveBlockedKey, LoadIntegrityNoticeText.SaveBlocked),
-        Row(LoadIntegrityNoticeText.SaveBlockedShortKey, LoadIntegrityNoticeText.SaveBlockedShort)
-    };
+        var rows = new List<TextKeyTableData>();
+        foreach (var (key, text) in CoreTextRows.Registered) rows.Add(Row(key, text));
+        return rows.ToArray();
+    }
 
     private static IntPtr registeredSheet;
     private static LanguageType registeredLanguage;
@@ -79,26 +82,8 @@ internal static class UniqueCandidateLocalization
 
     internal static void ValidateAllLanguages()
     {
-        foreach (var translation in UniqueCandidateLocalizationText.LockConflictFallback.AllLanguages)
-        {
-            if (string.IsNullOrWhiteSpace(translation))
-                throw new InvalidOperationException("Leere Core-Fallback-Übersetzung: "
-                    + UniqueCandidateLocalizationText.NativeLockConflictKey);
-            RejectLongDash(UniqueCandidateLocalizationText.NativeLockConflictKey, translation);
-        }
-        foreach (var (key, text) in LoadIntegrityNoticeText.All)
-            foreach (var translation in text.AllLanguages)
-            {
-                if (string.IsNullOrWhiteSpace(translation))
-                    throw new InvalidOperationException("Leere Core-Übersetzung: " + key);
-                RejectLongDash(key, translation);
-            }
-    }
-
-    private static void RejectLongDash(string key, string text)
-    {
-        if (text.IndexOf('\u2013') >= 0 || text.IndexOf('\u2014') >= 0)
-            throw new InvalidOperationException("Core-Übersetzung enthält einen Langstrich: " + key);
+        var problem = CoreTextRules.Problems(CoreTextRows.Checked).FirstOrDefault();
+        if (problem != null) throw new InvalidOperationException(problem);
     }
 
     private static bool SameTranslations(TextKeyTableData left, TextKeyTableData right)
@@ -109,28 +94,29 @@ internal static class UniqueCandidateLocalization
         return true;
     }
 
+    // Each language laid out by CoreTextLayout (a number stays with its percent sign).
     private static TextKeyTableData Row(string key, UniqueCandidateTranslations text) => new()
     {
         Key = key,
-        English = text.English,
-        Korean = text.Korean,
-        French = text.French,
-        German = text.German,
-        Russian = text.Russian,
-        ChineseSimplified = text.ChineseSimplified,
-        ChineseTraditional = text.ChineseTraditional,
-        Japanese = text.Japanese,
-        Spanish = text.Spanish,
-        PortugueseBrazil = text.PortugueseBrazil
+        English = CoreTextLayout.KeepUnits(text.English),
+        Korean = CoreTextLayout.KeepUnits(text.Korean),
+        French = CoreTextLayout.KeepUnits(text.French),
+        German = CoreTextLayout.KeepUnits(text.German),
+        Russian = CoreTextLayout.KeepUnits(text.Russian),
+        ChineseSimplified = CoreTextLayout.KeepUnits(text.ChineseSimplified),
+        ChineseTraditional = CoreTextLayout.KeepUnits(text.ChineseTraditional),
+        Japanese = CoreTextLayout.KeepUnits(text.Japanese),
+        Spanish = CoreTextLayout.KeepUnits(text.Spanish),
+        PortugueseBrazil = CoreTextLayout.KeepUnits(text.PortugueseBrazil)
     };
 }
 
 [HarmonyPatch(typeof(TextSheet), nameof(TextSheet.ParseMatchingLanguage))]
 internal static class DelversLanguageRegistrationPatch
 {
-    private static void Postfix(TextSheet __instance, LanguageType __0)
+    private static void Postfix(TextSheet __instance, LanguageType type)
     {
-        try { UniqueCandidateLocalization.Register(__instance, __0); }
+        try { UniqueCandidateLocalization.Register(__instance, type); }
         catch (Exception ex)
         {
             try { DelversHost.Warning("CORE_LOCALIZATION_REGISTRATION_FAILED: " + ex.Message); }

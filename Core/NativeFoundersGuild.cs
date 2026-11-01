@@ -74,6 +74,26 @@ internal static class NativeFoundersGuild
             }
     }
 
+    // Test campaign with "recruitment free": the game and the packs have just listed living and
+    // remembered unique characters as taken. Founders and every profile with registered fixed
+    // traits (pack characters such as Frieren) are released again, so they can be offered twice.
+    internal static void LoosenExistingForTest(RecruitHelper helper)
+    {
+        var clan = helper?._clanDataContainer;
+        if (clan == null || DelversCoreRuntime.UniquenessEnforced(clan.CampaignGuid.ToString())) return;
+        var profiles = helper._existProfiles;
+        var names = helper._existNames;
+        var released = 0;
+        foreach (var entry in NativeFounders.All)
+        {
+            if (profiles?.Remove(entry.ProfileKey) == true) released++;
+            names?.Remove(entry.NameTextKey);
+        }
+        foreach (var profileKey in DelversCoreRuntime.FixedTraits.ProfileKeys())
+            if (profiles?.Remove(profileKey) == true) released++;
+        if (released > 0) DelversHost.Info("CORE_TEST_RECRUITMENT_FREE_APPLIED released=" + released);
+    }
+
     private static bool HasLiveCollision(RecruitHelper helper, NativeFounders.Entry entry)
     {
         var entities = helper?._entityContainer?.GetAllEntitiesOnCampaign();
@@ -117,16 +137,22 @@ internal static class NativeFoundersGuild
             || DelversCoreRuntime.SuppressNativeFounderRolls
             || helper._campaignSetting?.CampaignStart?.GetScenario() == ScenarioType.CrawlingDoom) return;
         var campaign = helper._clanDataContainer.CampaignGuid;
+        var campaignId = campaign.ToString();
         // A stable campaign identity is required for the once-only guarantee.
-        if (!CampaignPresence.IsValidCampaign(campaign.ToString())) return;
+        if (!CampaignPresence.IsValidCampaign(campaignId)) return;
+        // Only a marked test campaign may loosen this ("recruitment free", forced offers).
+        var strict = DelversCoreRuntime.UniquenessEnforced(campaignId);
+        var forced = DelversCoreRuntime.FounderOffersForced(campaignId);
         for (var index = 0; index < candidates.Count; index++)
         {
             var current = candidates[index];
+            if (!NativeFounderReplacementRule.MayReplace(DelversCoreRuntime.GetUniqueCandidateLockPolicy(current))) continue;
             var entry = NativeFounders.ForCandidate(current);
-            if (entry == null || Seen(campaign, entry) || HasLiveCollision(helper, entry)
+            if (entry == null || !CoreSettings.IsFounderEnabled(entry)
+                || (strict && (Seen(campaign, entry) || HasLiveCollision(helper, entry)))
                 || CollidesWithOtherCandidates(candidates, index, entry)
                 || !NativeFounders.IsNativePresetAvailable(entry)
-                || Rolls.NextDouble() >= RollChancePerMatchingCandidate) continue;
+                || (!forced && Rolls.NextDouble() >= RollChancePerMatchingCandidate)) continue;
             var preset = DataSheetManager.Instance.GetCandidatePresetData(entry.PresetKey);
             var nativeCandidate = helper.CreatePresetCandidate(preset);
             if (nativeCandidate == null || ExactMatch(nativeCandidate.UnitProfileKey,
@@ -172,7 +198,7 @@ internal static class NativeFoundersGuildCandidatesPatch
     new[] { typeof(MapType), typeof(RecruitCandidateData), typeof(Vector2Int), typeof(FactionType) })]
 internal static class NativeFoundersSpawnPatch
 {
-    private static void Postfix(EntityLifecycleHelper __instance, RecruitCandidateData __1,
-        FactionType __3, UnitEntity __result)
-        => NativeFoundersGuild.OnPlayerSpawn(__instance, __1, __3, __result);
+    private static void Postfix(EntityLifecycleHelper __instance, RecruitCandidateData candidateData,
+        FactionType faction, UnitEntity __result)
+        => NativeFoundersGuild.OnPlayerSpawn(__instance, candidateData, faction, __result);
 }

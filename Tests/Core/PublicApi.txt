@@ -1,0 +1,165 @@
+# The public surface of the Core assembly, one line per type and per member of a public type, sorted.
+# A line reads "Type.Member(parameter types) : return type | modifiers"; a property or field has no parentheses.
+# This list records what is public now. It does not say what stays. When a public member is added, removed or changed,
+# this list changes in the same commit (ApiSurfaceSection compares it with the sources of Core).
+# Core API 1.11.0, checksum E5744D82 (SHA256 of the member lines below joined by line feeds, first 8 hex digits). Both change with the list.
+AfterCampaignLoadedHandler(CampaignDataContainer) : void | delegate
+AfterUnitProfileDeserializeHandler(UnitProfileComponent) : void | delegate
+BeforeComponentsDeserializeHandler(ComponentSaveList, IEntity) : void | delegate
+BeforeUnitProfileDeserializeHandler(ComponentSaveBaseData, IEntity) : void | delegate
+CampaignPresence | static class
+CampaignPresence.IsValidCampaign(string) : bool | static
+CampaignPresence.LegacyMarkerName(string, string = null) : string | static
+CampaignPresence.Mark(string, string, string, string) : bool | static
+CampaignPresence.Seen(string, string, string = null) : bool | static
+DelversCoreRuntime | static class
+DelversCoreRuntime.ApiVersion : string | static, readonly
+DelversCoreRuntime.ApocalypseSlowForTest(string) : string | static
+DelversCoreRuntime.ApocalypseStatus() : string | static
+DelversCoreRuntime.AuditFixedTraitRestore() : void | static
+DelversCoreRuntime.AuditNativeFounders() : void | static
+DelversCoreRuntime.BanditCampForTest(string) : bool | static
+DelversCoreRuntime.BanditsActive() : bool | static
+DelversCoreRuntime.BepInExPluginId : string | const
+DelversCoreRuntime.CampProbeReconForTest() : string | static
+DelversCoreRuntime.CampSeedScanForTest(int, int) : string | static
+DelversCoreRuntime.CampSeedScanStatusForTest() : string | static
+DelversCoreRuntime.CampTemplatesForTest() : string | static
+DelversCoreRuntime.CanRevive(string) : string | static
+DelversCoreRuntime.ClearBanditsForTest() : bool | static
+DelversCoreRuntime.ClearHintsForTest() : bool | static
+DelversCoreRuntime.CloseMenu() : void | static
+DelversCoreRuntime.CoreOption(string) : bool | static
+DelversCoreRuntime.CorpseStatusForTest(string) : string | static
+DelversCoreRuntime.CorpseUndressValueForTest() : int | static
+DelversCoreRuntime.CurrentCampaignGuid() : string | static
+DelversCoreRuntime.EnemyAbilityStatus(string) : string | static
+DelversCoreRuntime.EquipmentMarkerSummaryForTest() : string | static
+DelversCoreRuntime.ExcludeFromGroupAiForTest(string, bool) : bool | static
+DelversCoreRuntime.ForgetTestCampaign(string) : bool | static
+DelversCoreRuntime.FormationCloseForTest() : bool | static
+DelversCoreRuntime.FormationIsOnForTest(string) : bool | static
+DelversCoreRuntime.FormationListMoveForTest(string, int) : bool | static
+DelversCoreRuntime.FormationMoveForTest(string, int, int) : bool | static
+DelversCoreRuntime.FormationOpenForTest() : bool | static
+DelversCoreRuntime.FormationPageForTest(int) : bool | static
+DelversCoreRuntime.FormationResetForTest() : bool | static
+DelversCoreRuntime.FormationSetCastForTest(string, int, string) : bool | static
+DelversCoreRuntime.FormationSetCrownForTest(string) : bool | static
+DelversCoreRuntime.FormationSkillsForTest(string) : string | static
+DelversCoreRuntime.FormationStatusForTest() : string | static
+DelversCoreRuntime.FormationSwapForTest(string, string) : bool | static
+DelversCoreRuntime.FormationSwitchForTest(string, bool) : bool | static
+DelversCoreRuntime.FormationTestForTest() : bool | static
+DelversCoreRuntime.GetFixedTraits(string) : IReadOnlyList<string> | static
+DelversCoreRuntime.GrantLifebloomForTest(string) : bool | static
+DelversCoreRuntime.GroupAiBanditStatus() : string | static
+DelversCoreRuntime.GroupAiResetWindow() : bool | static
+DelversCoreRuntime.GroupAiStatus() : string | static
+DelversCoreRuntime.HintsStatus() : string | static
+DelversCoreRuntime.Initialize(Harmony, string) : void | static
+DelversCoreRuntime.InjectReviveFailureForTest(string) : bool | static
+DelversCoreRuntime.IsCurrentCampaignTest() : bool | static
+DelversCoreRuntime.IsMenuOpen : bool | static, get
+DelversCoreRuntime.IsNextNewCampaignMarkedAsTest() : bool | static
+DelversCoreRuntime.IsReady : bool | static, get
+DelversCoreRuntime.IsReviveRunning() : bool | static
+DelversCoreRuntime.IsSaveAllowed : bool | static, get
+DelversCoreRuntime.IsTestCampaign(string) : bool | static
+DelversCoreRuntime.LastReviveResult() : string | static
+DelversCoreRuntime.LifebloomHealedForTest() : string | static
+DelversCoreRuntime.LifebloomStatus(string) : string | static
+DelversCoreRuntime.LoaderProfile : string | static, get
+DelversCoreRuntime.MarkNextNewCampaignAsTest() : bool | static
+DelversCoreRuntime.MarkTestCampaign(string) : bool | static
+DelversCoreRuntime.MelonAssemblyName : string | const
+DelversCoreRuntime.MinimumApiVersionForCampaignGuid : string | const
+DelversCoreRuntime.MinimumApiVersionForFixedTraits : string | const
+DelversCoreRuntime.MinimumApiVersionForLoadIntegrations : string | const
+DelversCoreRuntime.MinimumApiVersionForMenuPages : string | const
+DelversCoreRuntime.MinimumApiVersionForNativeValueLists : string | const
+DelversCoreRuntime.MinimumApiVersionForRevive : string | const
+DelversCoreRuntime.MinimumApiVersionForSaveKeyRenames : string | const
+DelversCoreRuntime.MinimumApiVersionForSettingsCopy : string | const
+DelversCoreRuntime.MinimumApiVersionForTestCampaigns : string | const
+DelversCoreRuntime.MinimumApiVersionForUniqueCandidatePredicates : string | const
+DelversCoreRuntime.MinimumApiVersionForWounds : string | const
+DelversCoreRuntime.OpenMenu(string = null) : void | static
+DelversCoreRuntime.PlantBanditSeedForTest(string, string = null, bool = false) : string | static
+DelversCoreRuntime.PlayWoundFxForTest(string, string) : string | static
+DelversCoreRuntime.RegisterFixedTraits(string, string, IEnumerable<string>) : IDisposable | static
+DelversCoreRuntime.RegisterLoadIntegration(string, BeforeComponentsDeserializeHandler = null, BeforeUnitProfileDeserializeHandler = null, AfterUnitProfileDeserializeHandler = null, AfterCampaignLoadedHandler = null) : IDisposable | static
+DelversCoreRuntime.RegisterMenuPage(string, string, Func<IEnumerable<IReadOnlyDictionary<string, object>>>) : IDisposable | static
+DelversCoreRuntime.RegisterRecruitmentIntegration(string, Action<RecruitHelper>, Func<bool>) : IDisposable | static
+DelversCoreRuntime.RegisterSaveKeyRenames(string, IReadOnlyDictionary<string, string>) : IDisposable | static
+DelversCoreRuntime.RegisterUniqueCandidatePredicate(string, Func<RecruitCandidateData, bool>) : IDisposable | static
+DelversCoreRuntime.ResetHintsForTest() : bool | static
+DelversCoreRuntime.RevivalPanicEffectKey : string | const
+DelversCoreRuntime.RevivalSicknessCap(string) : double | static
+DelversCoreRuntime.RevivalSicknessDaysLeft(string) : double | static
+DelversCoreRuntime.RevivalSicknessDaysTotal(string) : double | static
+DelversCoreRuntime.RevivalSicknessEffectKey : string | const
+DelversCoreRuntime.ReviveSnapshot(string) : string[] | static
+DelversCoreRuntime.ReviveStartHealthShare : double | const
+DelversCoreRuntime.RevivesLeft(string) : int | static
+DelversCoreRuntime.SaveBlockReason : string | static, get
+DelversCoreRuntime.SetApocalypseForTest(string, bool, bool) : bool | static
+DelversCoreRuntime.SetBanditProtectForTest(bool) : bool | static
+DelversCoreRuntime.SetBanditsForTest(bool) : bool | static
+DelversCoreRuntime.SetCampProbeForTest(bool) : bool | static
+DelversCoreRuntime.SetCoreOptionForTest(string, bool) : bool | static
+DelversCoreRuntime.SetEnemyAbilityChanceForTest(string, float) : bool | static
+DelversCoreRuntime.SetEnemyAbilityRollForTest(string, string) : bool | static
+DelversCoreRuntime.SetEnemyAbilityStacksForTest(string, int) : bool | static
+DelversCoreRuntime.SetFounderOffersForced(string, bool) : bool | static
+DelversCoreRuntime.SetGroupAiForTest(bool) : bool | static
+DelversCoreRuntime.SetHintsForTest(bool) : bool | static
+DelversCoreRuntime.SetRecruitmentFree(string, bool) : bool | static
+DelversCoreRuntime.SetRevivalSicknessDaysForTest(string, double) : bool | static
+DelversCoreRuntime.SetRevivesLeftForTest(string, int) : bool | static
+DelversCoreRuntime.SetShiftForTest(bool) : bool | static
+DelversCoreRuntime.SetWoundForTest(string, int) : bool | static
+DelversCoreRuntime.SetWoundFxModeForTest(string) : bool | static
+DelversCoreRuntime.SetWoundRollForTest(string, string) : bool | static
+DelversCoreRuntime.SettingsFilePath() : string | static
+DelversCoreRuntime.ShowHintForTest(string) : bool | static
+DelversCoreRuntime.Shutdown(string) : void | static
+DelversCoreRuntime.SicknessBarsShownByCore : bool | const
+DelversCoreRuntime.SlowUiProbeForTest() : string | static
+DelversCoreRuntime.StartRevive(string) : string | static
+DelversCoreRuntime.SupportedBuilds : string | static, readonly
+DelversCoreRuntime.SupportsApi(string) : bool | static
+DelversCoreRuntime.UniquenessEnforced(string) : bool | static
+DelversCoreRuntime.UseEnemySkillForTest(string, string, string = null) : string | static
+DelversCoreRuntime.WoundDrainTotalForTest(string) : double | static
+DelversCoreRuntime.WoundStatus(string) : string | static
+DelversHost | static class
+DelversHost.Bind(IDelversHostServices) : void | static
+DelversHost.Error(string) : void | static
+DelversHost.Info(string) : void | static
+DelversHost.IsBound : bool | static, get
+DelversHost.PackageDirectory : string | static, get
+DelversHost.StartCoroutine(IEnumerator) : object | static
+DelversHost.StopCoroutine(object) : void | static
+DelversHost.Unbind(IDelversHostServices) : void | static
+DelversHost.Warning(string) : void | static
+DelversLogPrivacy | static class
+DelversLogPrivacy.Mask(string) : string | static
+DelversMenuRows | static class
+DelversMenuRows.Button(string, Func<string>, Action, Func<bool> = null, bool = false, Func<bool> = null) : IReadOnlyDictionary<string, object> | static
+DelversMenuRows.Choice(string, IReadOnlyList<string>, Func<int>, Action<int>, Func<bool> = null, Func<bool> = null) : IReadOnlyDictionary<string, object> | static
+DelversMenuRows.Section(string) : IReadOnlyDictionary<string, object> | static
+DelversMenuRows.Text(Func<string>, bool = false, Func<bool> = null, bool = false) : IReadOnlyDictionary<string, object> | static
+DelversMenuRows.Toggle(Func<string>, Func<bool>, Action<bool>, Func<bool> = null, Func<bool> = null) : IReadOnlyDictionary<string, object> | static
+DelversMenuRows.Toggle(string, Func<bool>, Action<bool>, Func<bool> = null, Func<bool> = null) : IReadOnlyDictionary<string, object> | static
+DelversNativeList | static class
+DelversNativeList.AddValue<T>(Il2CppSystem.Collections.Generic.List<T>, T) : void | static
+DelversSummons | static class
+DelversSummons.SummonerGuid(IEntity) : string | static
+IDelversHostServices | interface
+IDelversHostServices.Error(string) : void
+IDelversHostServices.Info(string) : void
+IDelversHostServices.PackageDirectory : string | get
+IDelversHostServices.StartCoroutine(IEnumerator) : object
+IDelversHostServices.StopCoroutine(object) : void
+IDelversHostServices.Warning(string) : void

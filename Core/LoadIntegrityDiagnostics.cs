@@ -19,3 +19,12 @@ internal static class LoadIntegrityDiagnostics
             ? "unknown load stage"
             : string.Join(" ", value.Split((char[])null, StringSplitOptions.RemoveEmptyEntries));
 }
+
+// The detection sources of the failures that Core's own binding reports (named in the log and in
+// the save-block notice).
+internal static class LoadFailureSources
+{
+    internal const string CoreRead = "CoreSaveStore.Remember";
+    internal const string CoreBind = "CoreSaveStore.BindLoaded";
+    internal const string ApocalypseBind = "ApocalypseDifficulty.BindLoaded";
+}

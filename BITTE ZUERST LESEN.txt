@@ -1,15 +1,14 @@
-DUNGEON SETTLERS DELVERS: CORE 0.4.1
+DUNGEON SETTLERS DELVERS: CORE 0.5.0
 
-Installiere nur das Paket für deinen Loader. Sichere deine Spielstände vor der ersten Nutzung. MelonLoader und BepInEx gehören nicht gemeinsam in dieselbe Spielinstallation.
+Ab 0.5.0 gibt es Delvers nur noch für BepInEx, MelonLoader wird nicht mehr unterstützt. Sichere deine Spielstände vor der ersten Nutzung. Verwendest du bisher MelonLoader, entferne die alten Core-Dateien aus Mods und UserLibs und installiere BepInEx 6. Die MelonLoader-Fassungen bis 0.4.1 werden archiviert.
 
-MelonLoader 0.7.3:
-- Mods/DungeonSettlersDelvers.Core.MelonLoader.dll
-- UserLibs/DungeonSettlersDelvers.Core.dll
-
-BepInEx 6 Unity IL2CPP x64:
+BepInEx 6 Unity IL2CPP x64 (getestet mit 6.0.0-be.788):
 - BepInEx/plugins/DungeonSettlersDelvers/DungeonSettlersDelvers.Core.BepInEx.dll
 - BepInEx/plugins/DungeonSettlersDelvers/DungeonSettlersDelvers.Core.dll
+- BepInEx/plugins/DungeonSettlersDelvers/Core/ (die Bilder von Core)
 
-Core ist eigenständig. Optionale Charakterpakete benötigen Core für denselben Loader und eine passende Core-API. Bei einem erkannten Ladefehler sperrt Core das Speichern für die laufende Spielsitzung. Starte das Spiel dann neu und prüfe den betroffenen Mod und das Log, bevor du erneut speicherst.
+Kopiere den Ordner Core mit. Ohne ihn fehlen die Bilder von Core, und die Symbole zeigen die des Spiels.
+
+Die Einstellungen von Core findest du in den Optionen des Spiels im letzten Reiter „Delvers“. Während einer laufenden Kampagne ist er gesperrt und nur im Titelmenü nutzbar. Core ist eigenständig. Optionale Charakterpakete benötigen Core und eine passende Core-API. Bei einem erkannten Ladefehler sperrt Core das Speichern für die laufende Spielsitzung. Starte das Spiel dann neu und prüfe den betroffenen Mod und das Log, bevor du erneut speicherst.
 
 Geprüfte Spielsignatur: Dungeon Settlers DS_B.0.4.29, Steam-Build 25846389. Andere Spielversionen bleiben inaktiv.

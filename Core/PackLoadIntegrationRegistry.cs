@@ -12,10 +12,14 @@ public delegate void AfterCampaignLoadedHandler(CampaignDataContainer campaign);
 // Throwing is therefore fatal: saving stays blocked until the game restarts.
 // Throw only when saved data may be lost or half-migrated; runtime fix-ups that
 // can be retried must handle their own failures.
-internal sealed class PackLoadIntegrationRegistry
+internal sealed class PackLoadIntegrationRegistry : ICoreRegistry
 {
-    private readonly object gate = new();
-    private readonly Dictionary<string, Registration> registrations = new(StringComparer.Ordinal);
+    private readonly LeaseRegistry<string, Registration> registrations = new(DuplicateRegistration.ShareIfEqual,
+        (existing, added) => Equals(existing.BeforeComponents, added.BeforeComponents)
+            && Equals(existing.BeforeProfile, added.BeforeProfile)
+            && Equals(existing.AfterProfile, added.AfterProfile)
+            && Equals(existing.AfterCampaign, added.AfterCampaign),
+        StringComparer.Ordinal);
 
     internal IDisposable Register(string packId,
         BeforeComponentsDeserializeHandler beforeComponents,
@@ -23,29 +27,12 @@ internal sealed class PackLoadIntegrationRegistry
         AfterUnitProfileDeserializeHandler afterProfile,
         AfterCampaignLoadedHandler afterCampaign)
     {
-        if (!IsValidPackId(packId))
-            throw new ArgumentException("Pack IDs may use lowercase letters, digits, and hyphens.", nameof(packId));
+        PackIds.Require(packId, nameof(packId));
         if (beforeComponents == null && beforeProfile == null && afterProfile == null && afterCampaign == null)
             throw new ArgumentException("At least one load callback is required.", nameof(beforeComponents));
-
-        lock (gate)
-        {
-            if (registrations.TryGetValue(packId, out var existing))
-            {
-                if (!Equals(existing.BeforeComponents, beforeComponents)
-                    || !Equals(existing.BeforeProfile, beforeProfile)
-                    || !Equals(existing.AfterProfile, afterProfile)
-                    || !Equals(existing.AfterCampaign, afterCampaign))
-                    throw new InvalidOperationException("A different load integration already uses pack ID " + packId + ".");
-                existing.LeaseCount++;
-                return new Lease(this, existing);
-            }
-
-            var registration = new Registration(packId, beforeComponents, beforeProfile,
-                afterProfile, afterCampaign);
-            registrations.Add(packId, registration);
-            return new Lease(this, registration);
-        }
+        return registrations.Register(packId,
+            new Registration(packId, beforeComponents, beforeProfile, afterProfile, afterCampaign),
+            _ => new InvalidOperationException("A different load integration already uses pack ID " + packId + "."));
     }
 
     internal void NotifyBeforeComponents(ComponentSaveList saved, IEntity entity,
@@ -64,47 +51,18 @@ internal sealed class PackLoadIntegrationRegistry
         Action<string, string, Exception> onFailure)
         => Notify("after-campaign", registration => registration.AfterCampaign?.Invoke(campaign), onFailure);
 
-    internal int Count
-    {
-        get { lock (gate) return registrations.Count; }
-    }
+    internal int Count => registrations.Count;
 
-    internal void Clear()
-    {
-        lock (gate) registrations.Clear();
-    }
+    public void Clear() => registrations.Clear();
 
     private void Notify(string stage, Action<Registration> callback,
         Action<string, string, Exception> onFailure)
     {
-        foreach (var registration in Snapshot())
+        foreach (var registration in registrations.Snapshot())
         {
             try { callback(registration); }
             catch (Exception ex) { onFailure?.Invoke(registration.PackId, stage, ex); }
         }
-    }
-
-    private Registration[] Snapshot()
-    {
-        lock (gate) return registrations.Values.ToArray();
-    }
-
-    private void Release(Registration registration)
-    {
-        lock (gate)
-        {
-            if (registrations.TryGetValue(registration.PackId, out var current)
-                && ReferenceEquals(current, registration) && --registration.LeaseCount <= 0)
-                registrations.Remove(registration.PackId);
-        }
-    }
-
-    private static bool IsValidPackId(string packId)
-    {
-        if (string.IsNullOrEmpty(packId)) return false;
-        foreach (var character in packId)
-            if (!(character is >= 'a' and <= 'z' or >= '0' and <= '9' or '-')) return false;
-        return true;
     }
 
     private sealed class Registration
@@ -114,7 +72,6 @@ internal sealed class PackLoadIntegrationRegistry
         internal readonly BeforeUnitProfileDeserializeHandler BeforeProfile;
         internal readonly AfterUnitProfileDeserializeHandler AfterProfile;
         internal readonly AfterCampaignLoadedHandler AfterCampaign;
-        internal int LeaseCount = 1;
 
         internal Registration(string packId,
             BeforeComponentsDeserializeHandler beforeComponents,
@@ -127,26 +84,6 @@ internal sealed class PackLoadIntegrationRegistry
             BeforeProfile = beforeProfile;
             AfterProfile = afterProfile;
             AfterCampaign = afterCampaign;
-        }
-    }
-
-    private sealed class Lease : IDisposable
-    {
-        private readonly PackLoadIntegrationRegistry owner;
-        private readonly Registration registration;
-        private bool disposed;
-
-        internal Lease(PackLoadIntegrationRegistry owner, Registration registration)
-        {
-            this.owner = owner;
-            this.registration = registration;
-        }
-
-        public void Dispose()
-        {
-            if (disposed) return;
-            disposed = true;
-            owner.Release(registration);
         }
     }
 }

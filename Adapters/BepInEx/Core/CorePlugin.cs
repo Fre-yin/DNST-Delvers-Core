@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace DungeonSettlersDelvers.Core.BepInEx;
 
-[BepInPlugin(DelversCoreRuntime.BepInExPluginId, "Dungeon Settlers Delvers: Core", "0.4.1")]
+[BepInPlugin(DelversCoreRuntime.BepInExPluginId, "Dungeon Settlers Delvers: Core", "0.5.0")]
 [BepInProcess("DungeonSettlers.exe")]
 public sealed class CorePlugin : BasePlugin
 {
@@ -32,8 +32,9 @@ public sealed class CorePlugin : BasePlugin
             if (runner) UnityEngine.Object.Destroy(runner);
             host = null;
             runner = null;
-            Log.LogError("Core initialization failed before it became ready: " + ex);
-            throw;
+            // Masked twice: our line, and the rethrow the loader prints without our host.
+            Log.LogError(DelversLogPrivacy.Mask("Core initialization failed before it became ready: " + ex));
+            throw new InvalidOperationException(DelversLogPrivacy.Mask("Core initialization failed: " + ex.Message));
         }
     }
 
@@ -44,4 +45,7 @@ public sealed class CorePlugin : BasePlugin
 public sealed class DelversCoroutineRunner : MonoBehaviour
 {
     public DelversCoroutineRunner(IntPtr pointer) : base(pointer) { }
+
+    // After the game's animations, before drawing (the bandits' orange seeds, BanditTint).
+    private void LateUpdate() => DelversCoreRuntime.LateFrame();
 }

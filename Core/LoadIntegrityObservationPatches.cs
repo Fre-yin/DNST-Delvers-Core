@@ -53,14 +53,37 @@ internal static class DelversQuickSlotDataIntegrityPatch
     new[] { typeof(string), typeof(string), typeof(LogType) })]
 internal static class DelversNativeLoadErrorSignalPatch
 {
-    private static void Prefix(string __0, string __1, LogType __2)
-    {
-        if (!LoadIntegrityGuard.IsLoadInProgress
-            || !LoadIntegritySignalRules.IsDeserializationFailure(__0,
-                __2 is LogType.Error or LogType.Exception or LogType.Assert)) return;
+    private static bool checkFailureLogged;
 
-        var details = string.IsNullOrWhiteSpace(__1) ? __0 : __0 + Environment.NewLine + __1;
-        LoadIntegrityGuard.ReportFailure("native-deserialization-log",
-            new InvalidOperationException("Native load diagnostic (" + __2 + "): " + details));
+    // Never throws: an exception here would drop the game's own ErrorLog line, and logging it
+    // through Unity could re-enter this hook. If an error line during a load cannot be
+    // classified, it counts as a load failure. A restart is recoverable, a partly loaded
+    // campaign that gets saved is not (review).
+    private static void Prefix(string condition, string stackTrace, LogType type)
+    {
+        var isError = type is LogType.Error or LogType.Exception or LogType.Assert;
+        try
+        {
+            if (!LoadIntegrityGuard.IsLoadInProgress
+                || !LoadIntegritySignalRules.IsDeserializationFailure(condition, isError)) return;
+
+            var details = string.IsNullOrWhiteSpace(stackTrace) ? condition : condition + Environment.NewLine + stackTrace;
+            LoadIntegrityGuard.ReportFailure("native-deserialization-log",
+                new InvalidOperationException("Native load diagnostic (" + type + "): " + details));
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                if (!checkFailureLogged)
+                {
+                    checkFailureLogged = true;
+                    DelversHost.Error("CORE_LOAD_SIGNAL_CHECK_FAILED: " + ex);
+                }
+                if (isError && LoadIntegrityGuard.IsLoadInProgress)
+                    LoadIntegrityGuard.ReportFailure("native-log-check-failed", ex);
+            }
+            catch { /* The native logger must keep running. */ }
+        }
     }
 }

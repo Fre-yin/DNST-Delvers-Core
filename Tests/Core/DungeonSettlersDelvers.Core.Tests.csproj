@@ -9,14 +9,71 @@
     <AssemblyName>DungeonSettlersDelvers.Core.Tests</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../Shared/SourceRules.cs" Link="SourceRules.cs" />
     <Compile Include="../../Core/CampaignPresenceStore.cs" Link="CampaignPresenceStore.cs" />
+    <Compile Include="../../Core/CampaignPresenceRules.cs" Link="CampaignPresenceRules.cs" />
+    <Compile Include="../../Core/BanditCampFile.cs" Link="BanditCampFile.cs" />
+    <Compile Include="../../Core/BanditCampFootprintRules.cs" Link="BanditCampFootprintRules.cs" />
+    <Compile Include="../../Core/BanditCampFurnishRules.cs" Link="BanditCampFurnishRules.cs" />
+    <Compile Include="../../Core/BanditCampModel.cs" Link="BanditCampModel.cs" />
+    <Compile Include="../../Core/BanditCampLayout.cs" Link="BanditCampLayout.cs" />
+    <Compile Include="../../Core/BanditCampPlacement.cs" Link="BanditCampPlacement.cs" />
+    <Compile Include="../../Core/BanditCampMirror.cs" Link="BanditCampMirror.cs" />
+    <Compile Include="../../Core/CampaignPresenceBook.cs" Link="CampaignPresenceBook.cs" />
+    <Compile Include="../../Core/CampaignGuidRules.cs" Link="CampaignGuidRules.cs" />
     <Compile Include="../../Core/DelversHostServices.cs" Link="DelversHostServices.cs" />
+    <Compile Include="../../Core/DelversLogPrivacy.cs" Link="DelversLogPrivacy.cs" />
+    <Compile Include="../../Core/CoreSettingsFile.cs" Link="CoreSettingsFile.cs" />
+    <Compile Include="../../Core/CoreSettingsCopyRules.cs" Link="CoreSettingsCopyRules.cs" />
+    <Compile Include="../../Core/CoreStartup.cs" Link="CoreStartup.cs" />
+    <Compile Include="../../Core/EnemySkillTestRules.cs" Link="EnemySkillTestRules.cs" />
+    <Compile Include="../../Core/GroupAiAreaRules.cs" Link="GroupAiAreaRules.cs" />
+    <Compile Include="../../Core/GroupAiZoneRules.cs" Link="GroupAiZoneRules.cs" />
+    <Compile Include="../../Core/PackRegistry.cs" Link="PackRegistry.cs" />
+    <Compile Include="../../Core/TestCampaignSwitches.cs" Link="TestCampaignSwitches.cs" />
+    <Compile Include="../../Core/ApocalypseDifficultyRules.cs" Link="ApocalypseDifficultyRules.cs" />
+    <Compile Include="../../Core/ApocalypseText.cs" Link="ApocalypseText.cs" />
+    <Compile Include="../../Core/ApocalypseMerchantRules.cs" Link="ApocalypseMerchantRules.cs" />
+    <Compile Include="../../Core/WoundRules.cs" Link="WoundRules.cs" />
+    <Compile Include="../../Core/WoundBandageRules.cs" Link="WoundBandageRules.cs" />
+    <Compile Include="../../Core/WoundBodyArtRules.cs" Link="WoundBodyArtRules.cs" />
+    <Compile Include="../../Core/WoundText.cs" Link="WoundText.cs" />
+    <Compile Include="../../Core/BandageText.cs" Link="BandageText.cs" />
+    <Compile Include="../../Core/BandageIconRules.cs" Link="BandageIconRules.cs" />
+    <Compile Include="../../Core/BandageRules.cs" Link="BandageRules.cs" />
+    <Compile Include="../../Core/LifebloomBookRules.cs" Link="LifebloomBookRules.cs" />
+    <Compile Include="../../Core/BanditChainRules.cs" Link="BanditChainRules.cs" />
+    <Compile Include="../../Core/BanditOffensiveRules.cs" Link="BanditOffensiveRules.cs" />
+    <Compile Include="../../Core/BanditKitKeys.cs" Link="BanditKitKeys.cs" />
+    <Compile Include="../../Core/BanditSerratedRules.cs" Link="BanditSerratedRules.cs" />
+    <Compile Include="../../Core/BanditArmorRules.cs" Link="BanditArmorRules.cs" />
+    <Compile Include="../../Core/BanditTintRules.cs" Link="BanditTintRules.cs" />
+    <Compile Include="../../Core/BanditBarRules.cs" Link="BanditBarRules.cs" />
+    <Compile Include="../../Core/BanditBossBarRules.cs" Link="BanditBossBarRules.cs" />
+    <Compile Include="../../Core/ShieldRules.cs" Link="ShieldRules.cs" />
+    <Compile Include="../../Core/EquipmentMarkerRules.cs" Link="EquipmentMarkerRules.cs" />
+    <Compile Include="../../Core/BanditRoomFeatureRules.cs" Link="BanditRoomFeatureRules.cs" />
+    <Compile Include="../../Core/BanditFearRules.cs" Link="BanditFearRules.cs" />
+    <Compile Include="../../Core/NextCampaignTest.cs" Link="NextCampaignTest.cs" />
+    <Compile Include="../../Core/ReviveRules.cs" Link="ReviveRules.cs" />
+    <Compile Include="../../Core/ScrollGlowRules.cs" Link="ScrollGlowRules.cs" />
+    <Compile Include="../../Core/GuideTopicText.cs" Link="GuideTopicText.cs" />
+    <Compile Include="../../Core/QolText.cs" Link="QolText.cs" />
+    <Compile Include="../../Core/ReviveShareRules.cs" Link="ReviveShareRules.cs" />
+    <Compile Include="../../Core/ReviveText.cs" Link="ReviveText.cs" />
+    <Compile Include="../../Core/CoreSaveBlock.cs" Link="CoreSaveBlock.cs" />
+    <Compile Include="../../Core/CoreSaveData.cs" Link="CoreSaveData.cs" />
+    <Compile Include="../../Core/CoreSaveEffects.cs" Link="CoreSaveEffects.cs" />
+    <Compile Include="../../Core/CoreSaveItems.cs" Link="CoreSaveItems.cs" />
+    <Compile Include="../../Core/CoreSaveStore.cs" Link="CoreSaveStore.cs" />
     <Compile Include="../../Core/PackIntegrationRegistry.cs" Link="PackIntegrationRegistry.cs" />
     <Compile Include="../../Core/PackLoadIntegrationRegistry.cs" Link="PackLoadIntegrationRegistry.cs" />
     <Compile Include="../../Core/UniqueCandidateRules.cs" Link="UniqueCandidateRules.cs" />
     <Compile Include="../../Core/UniqueCandidateRerollDecision.cs" Link="UniqueCandidateRerollDecision.cs" />
+    <Compile Include="../../Core/UniqueCandidateRerollState.cs" Link="UniqueCandidateRerollState.cs" />
     <Compile Include="../../Core/UniqueCandidatePredicateRegistry.cs" Link="UniqueCandidatePredicateRegistry.cs" />
     <Compile Include="../../Core/UniqueCandidateLocalizationText.cs" Link="UniqueCandidateLocalizationText.cs" />
+    <Compile Include="../../Core/CoreTextRows.cs" Link="CoreTextRows.cs" />
     <Compile Include="../../Core/FixedTraitRules.cs" Link="FixedTraitRules.cs" />
     <Compile Include="../../Core/FixedTraitRegistry.cs" Link="FixedTraitRegistry.cs" />
     <Compile Include="../../Core/LoadIntegritySignalRules.cs" Link="LoadIntegritySignalRules.cs" />
@@ -25,5 +82,86 @@
     <Compile Include="../../Core/LoadIntegrityNoticeText.cs" Link="LoadIntegrityNoticeText.cs" />
     <Compile Include="../../Core/LoadPatchCompatibilityRules.cs" Link="LoadPatchCompatibilityRules.cs" />
     <Compile Include="../../Core/SaveKeyRenames.cs" Link="SaveKeyRenames.cs" />
+    <Compile Include="../../Core/DelversMenuRegistry.cs" Link="DelversMenuRegistry.cs" />
+    <Compile Include="../../Core/DelversMenuRows.cs" Link="DelversMenuRows.cs" />
+    <Compile Include="../../Core/DelversMenuText.cs" Link="DelversMenuText.cs" />
+    <Compile Include="../../Core/DelversMenuEntryRules.cs" Link="DelversMenuEntryRules.cs" />
+    <Compile Include="../../Core/ApocalypseOptionRules.cs" Link="ApocalypseOptionRules.cs" />
+    <Compile Include="../../Core/CoreSaveText.cs" Link="CoreSaveText.cs" />
+    <Compile Include="../../Core/CoreSaveResearch.cs" Link="CoreSaveResearch.cs" />
+    <Compile Include="../../Core/CoreSaveTasks.cs" Link="CoreSaveTasks.cs" />
+    <Compile Include="../../Core/CoreSaveUnits.cs" Link="CoreSaveUnits.cs" />
+    <Compile Include="../../Core/CoreSaveSkills.cs" Link="CoreSaveSkills.cs" />
+    <Compile Include="../../Core/CoreUnitRules.cs" Link="CoreUnitRules.cs" />
+    <Compile Include="../../Core/WeakBanditRules.cs" Link="WeakBanditRules.cs" />
+    <Compile Include="../../Core/DelversResearchTree.cs" Link="DelversResearchTree.cs" />
+    <Compile Include="../../Core/BanditDifficultyRules.cs" Link="BanditDifficultyRules.cs" />
+    <Compile Include="../../Core/WeakBanditKitKeys.cs" Link="WeakBanditKitKeys.cs" />
+    <Compile Include="../../Core/WeakBanditMageRules.cs" Link="WeakBanditMageRules.cs" />
+    <Compile Include="../../Core/WeakBanditSpawnRules.cs" Link="WeakBanditSpawnRules.cs" />
+    <Compile Include="../../Core/BossItemRules.cs" Link="BossItemRules.cs" />
+    <Compile Include="../../Core/BossItemText.cs" Link="BossItemText.cs" />
+    <Compile Include="../../Core/BossEffectRules.cs" Link="BossEffectRules.cs" />
+    <Compile Include="../../Core/LatePatchRules.cs" Link="LatePatchRules.cs" />
+    <Compile Include="../../Core/TargetSortRules.cs" Link="TargetSortRules.cs" />
+    <Compile Include="../../Core/KitDropRules.cs" Link="KitDropRules.cs" />
+    <Compile Include="../../Core/CoreTextLayout.cs" Link="CoreTextLayout.cs" />
+    <Compile Include="../../Core/LifebloomRules.cs" Link="LifebloomRules.cs" />
+    <Compile Include="../../Core/EnemyAbilityRules.cs" Link="EnemyAbilityRules.cs" />
+    <Compile Include="../../Core/EnemyAbilityText.cs" Link="EnemyAbilityText.cs" />
+    <Compile Include="../../Core/FirstHintText.cs" Link="FirstHintText.cs" />
+    <Compile Include="../../Core/GroupAiRules.cs" Link="GroupAiRules.cs" />
+    <Compile Include="../../Core/GroupAiFocusRules.cs" Link="GroupAiFocusRules.cs" />
+    <Compile Include="../../Core/GroupAiBanditRules.cs" Link="GroupAiBanditRules.cs" />
+    <Compile Include="../../Core/GroupAiMoveRules.cs" Link="GroupAiMoveRules.cs" />
+    <Compile Include="../../Core/GroupAiStanceRules.cs" Link="GroupAiStanceRules.cs" />
+    <Compile Include="../../Core/GroupAiTauntRules.cs" Link="GroupAiTauntRules.cs" />
+    <Compile Include="../../Core/GroupAiHealerRules.cs" Link="GroupAiHealerRules.cs" />
+    <Compile Include="../../Core/GroupAiHealerSeedRules.cs" Link="GroupAiHealerSeedRules.cs" />
+    <Compile Include="../../Core/SeedStayRules.cs" Link="SeedStayRules.cs" />
+    <Compile Include="../../Core/GroupAiLogLines.cs" Link="GroupAiLogLines.cs" />
+    <Compile Include="../../Core/GroupAiExcluded.cs" Link="GroupAiExcluded.cs" />
+    <Compile Include="../../Core/BanditConeRules.cs" Link="BanditConeRules.cs" />
+    <Compile Include="../../Core/BanditAreaRules.cs" Link="BanditAreaRules.cs" />
+    <Compile Include="../../Core/GroupAiReachRules.cs" Link="GroupAiReachRules.cs" />
+    <Compile Include="../../Core/GroupAiBandageRules.cs" Link="GroupAiBandageRules.cs" />
+    <Compile Include="../../Core/GroupAiAftercareRules.cs" Link="GroupAiAftercareRules.cs" />
+    <Compile Include="../../Core/GroupAiFormationRules.cs" Link="GroupAiFormationRules.cs" />
+    <Compile Include="../../Core/GroupAiPriorityRules.cs" Link="GroupAiPriorityRules.cs" />
+    <Compile Include="../../Core/GroupAiBandageSlotReader.cs" Link="GroupAiBandageSlotReader.cs" />
+    <Compile Include="../../Core/GroupAiLockRules.cs" Link="GroupAiLockRules.cs" />
+    <Compile Include="../../Core/GroupAiText.cs" Link="GroupAiText.cs" />
+    <Compile Include="../../Core/GroupAiAreaProbeRules.cs" Link="GroupAiAreaProbeRules.cs" />
+    <Compile Include="../../Core/LifebloomSlotCooldownRules.cs" Link="LifebloomSlotCooldownRules.cs" />
+    <Compile Include="../../Core/LifebloomSoundRules.cs" Link="LifebloomSoundRules.cs" />
+    <Compile Include="../../Core/CoreSoundRules.cs" Link="CoreSoundRules.cs" />
+    <Compile Include="../../Core/EscapeRules.cs" Link="EscapeRules.cs" />
+    <Compile Include="../../Core/GameClockRules.cs" Link="GameClockRules.cs" />
+    <Compile Include="../../Core/SummonerRules.cs" Link="SummonerRules.cs" />
+    <Compile Include="../../Core/SummonOwnerRules.cs" Link="SummonOwnerRules.cs" />
+    <Compile Include="../../Core/CoreFactionRules.cs" Link="CoreFactionRules.cs" />
+    <Compile Include="../../Core/BanditPassiveRules.cs" Link="BanditPassiveRules.cs" />
+    <Compile Include="../../Core/BanditEffectRules.cs" Link="BanditEffectRules.cs" />
+    <Compile Include="../../Core/SummonSideRules.cs" Link="SummonSideRules.cs" />
+    <Compile Include="../../Core/SeedUpgradeRules.cs" Link="SeedUpgradeRules.cs" />
+    <Compile Include="../../Core/ShiftTwinRules.cs" Link="ShiftTwinRules.cs" />
+    <Compile Include="../../Core/SummonFollowRules.cs" Link="SummonFollowRules.cs" />
+    <Compile Include="../../Core/LineRules.cs" Link="LineRules.cs" />
+    <Compile Include="../../Core/CorpseRules.cs" Link="CorpseRules.cs" />
+    <Compile Include="../../Core/CorpseText.cs" Link="CorpseText.cs" />
+    <Compile Include="../../Core/BanditCampBuildRules.cs" Link="BanditCampBuildRules.cs" />
+    <Compile Include="../../Core/BanditCampChoice.cs" Link="BanditCampChoice.cs" />
+    <Compile Include="../../Core/BanditCampRoomFiles.cs" Link="BanditCampRoomFiles.cs" />
+    <Compile Include="../../Core/BanditCampRules.cs" Link="BanditCampRules.cs" />
+    <Compile Include="../../Core/BanditCampWakeRules.cs" Link="BanditCampWakeRules.cs" />
+    <Compile Include="../../Core/CampGuardianStoneRules.cs" Link="CampGuardianStoneRules.cs" />
+    <Compile Include="../../Core/ApocalypseSlowRules.cs" Link="ApocalypseSlowRules.cs" />
+    <Compile Include="../../Core/PatchPlanRules.cs" Link="PatchPlanRules.cs" />
+    <Compile Include="../../Core/CoreProbeRules.cs" Link="CoreProbeRules.cs" />
+    <Compile Include="../../Core/TacticalFormationRules.cs" Link="TacticalFormationRules.cs" />
+    <Compile Include="../../Core/TacticalFormationGrid.cs" Link="TacticalFormationGrid.cs" />
+    <Compile Include="../../Core/TacticalFormationText.cs" Link="TacticalFormationText.cs" />
+    <Compile Include="../../Core/TacticalFormationBook.cs" Link="TacticalFormationBook.cs" />
+    <Compile Include="../../Core/TacticalFormationSleepRules.cs" Link="TacticalFormationSleepRules.cs" />
   </ItemGroup>
 </Project>

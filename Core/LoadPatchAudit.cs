@@ -74,7 +74,7 @@ internal static class LoadPatchAudit
         var count = 0;
         foreach (var patch in patches)
         {
-            if (string.Equals(patch.owner, coreOwner, StringComparison.Ordinal)) continue;
+            if (LoadPatchCompatibilityRules.IsCoreOwner(patch.owner, coreOwner)) continue;
             var patchMethod = patch.PatchMethod;
             var declaringType = patchMethod?.DeclaringType;
             var assembly = declaringType?.Assembly.GetName();

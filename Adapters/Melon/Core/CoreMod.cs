@@ -2,7 +2,7 @@ using HarmonyLib;
 using MelonLoader;
 
 [assembly: MelonInfo(typeof(DungeonSettlersDelvers.Core.MelonLoader.CoreMod),
-    "Dungeon Settlers Delvers: Core", "0.4.1", "Fre-yin")]
+    "Dungeon Settlers Delvers: Core", "0.5.0", "Fre-yin")]
 [assembly: MelonGame(null, "DungeonSettlers")]
 [assembly: HarmonyDontPatchAll]
 
@@ -27,9 +27,16 @@ public sealed class CoreMod : MelonMod
         {
             DelversHost.Unbind(host);
             host = null;
-            LoggerInstance.Error("Core initialization failed before it became ready: " + ex);
-            throw;
+            // Masked twice: our line, and the rethrow the loader prints without our host.
+            LoggerInstance.Error(DelversLogPrivacy.Mask("Core initialization failed before it became ready: " + ex));
+            throw new InvalidOperationException(DelversLogPrivacy.Mask("Core initialization failed: " + ex.Message));
         }
+    }
+
+    // After the game's animations, before drawing (the bandits' orange seeds, BanditTint).
+    public override void OnLateUpdate()
+    {
+        if (ownsRuntime) DelversCoreRuntime.LateFrame();
     }
 
     public override void OnDeinitializeMelon()

@@ -40,14 +40,17 @@ internal static class LoadIntegrityGuard
     internal static void Begin(CampaignDataContainer campaign, CampaignSaveData saveData)
     {
         var campaignId = DescribeCampaign(saveData);
+        var readFailure = ReadFailureOf(saveData);
         int sequence;
+        bool carried;
         lock (Gate)
         {
-            State.Begin(campaignId);
+            carried = State.Begin(campaignId, readFailure != null);
             sequence = State.LoadSequence;
             campaignContext = campaign;
         }
         DelversHost.Info("CORE_LOAD_INTEGRITY_BEGIN campaign=" + Safe(campaignId));
+        if (carried) LogFailure(LoadFailureSources.CoreRead, campaignId, readFailure);
         StartWatchdog(sequence);
     }
 
@@ -239,6 +242,13 @@ internal static class LoadIntegrityGuard
         catch (Exception ex) { DelversHost.Warning("CORE_LOAD_WATCHDOG_STOP_FAILED: " + ex.Message); }
     }
 
+    // The failure of Core's read of exactly the file being loaded (CoreSaveStore.RememberFailed).
+    private static Exception ReadFailureOf(CampaignSaveData saveData)
+    {
+        try { return saveData == null ? null : CoreSaveStore.ReadFailureOf(CoreSavePaths.SavePathOf(saveData)); }
+        catch (Exception) { return null; }   // the load must begin even if the lookup fails
+    }
+
     private static string DescribeCampaign(CampaignSaveData saveData)
     {
         try
@@ -260,10 +270,13 @@ internal static class LoadIntegrityGuard
     new[] { typeof(CampaignSaveData) })]
 internal static class DelversCampaignDeserializeGuardPatch
 {
-    private static void Prefix(CampaignDataContainer __instance, CampaignSaveData __0)
+    // Before CoreSaveDataLoadPatch and ApocalypseLoadPatch: their failures need the begun load.
+    [HarmonyPriority(Priority.First)]
+    private static void Prefix(CampaignDataContainer __instance, CampaignSaveData data)
     {
-        LoadIntegrityGuard.Begin(__instance, __0);
+        LoadIntegrityGuard.Begin(__instance, data);
         DelversCoreRuntime.AuditLoadPatches();
+        LatePatches.TryAll("load");
     }
 
     private static Exception Finalizer(Exception __exception)
@@ -308,9 +321,28 @@ internal static class DelversCampaignLoadFailedPatch
     new[] { typeof(string), typeof(bool), typeof(string) })]
 internal static class DelversCampaignSaveGuardPatch
 {
-    private static bool Prefix(bool __1, ref bool __result)
+    // An exception here would make the native Save fail without a word. If the guard itself
+    // fails, only the stored state decides: a known load failure still blocks, otherwise the
+    // native save runs. Either way the reason is logged (review).
+    private static bool Prefix(bool isAutoSave, ref bool __result)
     {
-        if (!LoadIntegrityGuard.TryBlockSave(__1, out _)) return true;
+        // A combat difficulty a test set is put back first, so no save holds it (CombatDifficultyTest).
+        try { CombatDifficultyTest.BeforeSave(); }
+        catch (Exception ex)
+        {
+            try { DelversHost.Error("CORE_TEST_COMBAT_DIFFICULTY_FAILED at=save: " + ex.Message); }
+            catch { /* Logging must not decide the save. */ }
+        }
+        bool block;
+        try { block = LoadIntegrityGuard.TryBlockSave(isAutoSave, out _); }
+        catch (Exception ex)
+        {
+            try { block = !LoadIntegrityGuard.IsSaveAllowed; }
+            catch { block = false; }
+            try { DelversHost.Error("CORE_SAVE_GUARD_FAILED blocked=" + block.ToString().ToLowerInvariant() + ": " + ex); }
+            catch { /* Logging must not decide the save. */ }
+        }
+        if (!block) return true;
         __result = false;
         return false;
     }

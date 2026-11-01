@@ -4,7 +4,7 @@
 
 ### Geltungsbereich
 
-Diese Richtlinie gilt für Dungeon Settlers Delvers: Core und seine MelonLoader- und BepInEx-Pakete.
+Diese Richtlinie gilt für Dungeon Settlers Delvers: Core und sein BepInEx-Paket.
 
 Das Projekt befindet sich in der Vorabphase. Sicherheitskorrekturen sind für die jeweils aktuelle veröffentlichte Version vorgesehen. Für ältere Versionen werden keine separaten Sicherheitsupdates zugesichert.
 
@@ -32,7 +32,7 @@ Allgemeine Fehler und Funktionswünsche ohne Sicherheitsbezug können über die 
 
 ### Scope
 
-This policy applies to Dungeon Settlers Delvers: Core and its MelonLoader and BepInEx packages.
+This policy applies to Dungeon Settlers Delvers: Core and its BepInEx package.
 
 The project is in prerelease development. Security fixes are intended for the latest published version. Separate security updates for older versions are not guaranteed.
 
