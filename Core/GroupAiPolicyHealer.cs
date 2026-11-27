@@ -94,10 +94,15 @@ internal static partial class GroupAiPolicy
             if (check.Distance == null || distance < check.Distance) check.Distance = distance;
             if (!InReach(s, distance, upgrade.Data.Range)) continue;
             check.Reach(3);
+            // The shares with look ahead and buffer on the emergency line (GroupAiLow).
             float? lowest = null;
-            if (GroupAiRules.NextToSeed(at.x, at.y, s.Self.Position.x, s.Self.Position.y)) lowest = s.Self.Share;
+            if (GroupAiRules.NextToSeed(at.x, at.y, s.Self.Position.x, s.Self.Position.y)) lowest = GroupAiLow.Share(s.Self.Unit, s.Self.Share, LowLine.Emergency);
             foreach (var ally in s.Allies)
-                if (GroupAiRules.NextToSeed(at.x, at.y, ally.Position.x, ally.Position.y) && (lowest == null || ally.Share < lowest)) lowest = ally.Share;
+            {
+                if (!GroupAiRules.NextToSeed(at.x, at.y, ally.Position.x, ally.Position.y)) continue;
+                var share = GroupAiLow.Share(ally.Unit, ally.Share, LowLine.Emergency);
+                if (lowest == null || share < lowest) lowest = share;
+            }
             if (lowest == null) continue;
             check.Reach(4);
             if (check.Lowest == null || lowest < check.Lowest) check.Lowest = lowest;
@@ -124,14 +129,26 @@ internal static partial class GroupAiPolicy
         return choice;
     }
 
-    // The lowest party member below EmergencyShare, the healer herself included (GroupAiRules.EmergencyPick).
+    // The lowest party member below EmergencyShare, the healer herself included (GroupAiRules.EmergencyPick), with look ahead and
+    // buffer on the emergency line (GroupAiLow).
     private static GroupAiSituation.Figure EmergencyTarget(GroupAiSituation s)
-        => GroupAiRules.EmergencyPick(s.LowestAlly?.Share, s.Self.Share) switch
+    {
+        GroupAiSituation.Figure lowest = null;
+        var lowestShare = float.MaxValue;
+        foreach (var ally in s.Allies)
+        {
+            var share = GroupAiLow.Share(ally.Unit, ally.Share, LowLine.Emergency);
+            if (share >= lowestShare) continue;
+            lowest = ally;
+            lowestShare = share;
+        }
+        return GroupAiRules.EmergencyPick(lowest == null ? null : lowestShare, GroupAiLow.Share(s.Self.Unit, s.Self.Share, LowLine.Emergency)) switch
         {
             "self" => s.Self,
-            "ally" => s.LowestAlly,
+            "ally" => lowest,
             _ => null
         };
+    }
 
     // When each heal comes free: the game's cooldown of the slot, for Lifebloom also its two charges.
     private static List<double> HealSecondsUntilFree(GroupAiSituation s)
@@ -184,15 +201,27 @@ internal static partial class GroupAiPolicy
         var lowest = s.LowestAlly;
         Choice choice = null;
         var urgent = EmergencyTarget(s);
+        // The healer with the role tank: Lifebloom off the global cooldown only for the tanks and the critical (TankHeal).
+        if (TankHealer(s))
+        {
+            if (!TankHealAllows(s, urgent)) urgent = null;
+            lowest = LowestTank(s);
+        }
         if (urgent != null) choice = Bloom(s, urgent, "heal-emergency-lifebloom", emergency: true);
         if (choice == null && lowest != null && lowest.Share < GroupAiRules.HealShare) choice = Bloom(s, lowest, "heal-lifebloom", emergency: false);
-        if (choice == null) choice = Bloom(s, RefreshCandidate(s), "heal-lifebloom-refresh", emergency: false);
+        if (choice == null && (!TankHealer(s) || TankHealAllows(s, RefreshCandidate(s))))
+            choice = Bloom(s, RefreshCandidate(s), "heal-lifebloom-refresh", emergency: false);
         if (choice == null) return null;
         decisions++;
         ruleCounts[choice.Rule] = ruleCounts.TryGetValue(choice.Rule, out var count) ? count + 1 : 1;
         pending[s.Guid] = choice;
         Log(GroupAiRules.OffGcdRuleLine(s.Guid, choice.Rule, choice.Skill, choice.Target.Guid.ToString(), lowest?.Guid ?? "-"));
         DelversHost.Info(LifebloomRules.OgcdLine(s.Guid, Lifebloom.ChargesOf(CoreGame.GuidOf(s.Owner)), source));
+        // A support or tank healer's Lifebloom on a critical member is the role's burst too (GroupAiPolicy.RoleFirst).
+        var player = GroupAiRoles.PlayerOf(s.Guid);
+        if (player is TacticalRole.Support or TacticalRole.Tank && urgent != null && choice.Target.Guid.ToString() == urgent.Guid
+            && IsCritical(urgent))
+            Log(GroupAiRoleRules.HealLine(s.Guid, TacticalRoles.Word(player), "burst", choice.Skill, urgent.Guid, urgent.Share, 0, Tick()));
         return choice;
     }
 

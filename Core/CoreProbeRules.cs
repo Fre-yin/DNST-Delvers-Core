@@ -19,7 +19,7 @@ internal static class CoreProbeRules
     internal const string Text = "probes.text";
     internal const string OneShot = "probes.oneshot";
     internal const string Items = "probes.items";
-    // The effect log of the Toolkit's blocks (BanditEffectsForTest, SummonStatusForTest's hit count): a postfix on the game's
+    // The effect log of the tests (BanditEffectsForTest, SummonStatusForTest's hit count): a postfix on the game's
     // execution hook, patched only while this group is on.
     internal const string Effects = "probes.effects";
 

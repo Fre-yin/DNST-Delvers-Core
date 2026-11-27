@@ -40,9 +40,10 @@ internal static class SourceRules
     internal static readonly SourceRule[] All =
     {
         // A native list of IL2CPP structs is filled through DelversNativeList.AddValue; Add and Insert only for element types known not
-        // to be structs (NativeListRule.NotStructs). The pattern is the call after the list's name. The self-test file that shows the
+        // to be structs (NativeListRule.NotStructs). The pattern is the call after the list's name; an assignment through the list's
+        // indexer passes the boxed object the same way and is a hit too (NativeListRule.Indexer). The self-test file that shows the
         // wrapper's own Add on a struct list is the one file allowed to call it.
-        new("native-list", "native lists of IL2CPP structs are filled through DelversNativeList.AddValue, never List.Add",
+        new("native-list", "native lists of IL2CPP structs are filled through DelversNativeList.AddValue, never List.Add, Insert or the indexer",
             SourceRuleKind.NativeList, "(?:Add|Insert)", Everywhere, new[] { "NativeListChecks.cs" }, 1, 'M', "native list",
             "using ItemList = Il2CppSystem.Collections.Generic.List<Il2CppSystem.ValueTuple<string, int>>;\n"
             + "holder.Items ??= new ItemList();\nholder.Items.Add(new Il2CppSystem.ValueTuple<string, int>(key, 1));\n",
@@ -107,6 +108,14 @@ internal static class SourceRules
             SourceRuleKind.Line, @"\bnew\s+(Equipment|Inventory)Reader\b|\bAddEvents\s*\(", Everywhere, NoFiles, 0, '-', "inventory reader",
             "var reader = new InventoryReader(component);\n", "var count = inventory.Count;\n"),
         // A key Core shows through the game's common notice is one of Core's registered text rows (the probe registers Known.Key).
+        // Chance that changes the game comes from CoreRandom (one stream per function, the multiplayer bridge or the seed): a
+        // System.Random of its own, or the game's UnityEngine.Random driven from a mod, rolls other numbers on every player
+        // (Amfi's multiplayer docs). A seeded draw the game makes itself, kept on purpose, carries a trap-ok marker.
+        new("own-random", "trap: chance only through CoreRandom, no System.Random and no UnityEngine.Random of a mod",
+            SourceRuleKind.Line, @"\bnew\s+(System\s*\.\s*)?Random\s*\(|\b(System\s*\.\s*)?Random\s+\w+\s*=|UnityEngine\s*\.\s*Random\s*\.\s*(Range|value|InitState|state|insideUnitCircle|insideUnitSphere|onUnitSphere|rotation)\b",
+            new[] { SourceFolders.Core, SourceFolders.Frieren }, NoFiles, 12, 'E', "own random",
+            "private static readonly System.Random dice = new();\nvar r = new Random();\nvar v = UnityEngine.Random.value;\n",
+            "var roll = CoreRandom.Next01(CoreRandomRules.Wounds, unit);\n// System.Random dice = new();\nvar target = SetRandomTarget(unit);\n"),
         new("notice-key", "every key of a common notice is a registered Core text row",
             SourceRuleKind.NoticeKey, @"UpdateType\s*\.\s*CommonNotice_Show\w+\s*,\s*([A-Za-z_][\w.]*)", CoreOnly, NoFiles, 0, '-', "notice key",
             "Show(UpdateType.CommonNotice_ShowOk, Unknown.Key);\n", "Show(UpdateType.CommonNotice_ShowOk, Known.Key);\n"),
@@ -330,6 +339,11 @@ internal static class NativeListRule
         "string", "Sprite", "IExecutionData"
     };
 
+    // An assignment through the indexer, list[i] = value: Il2CppInterop's setter passes the boxed object like Add, and the list holds
+    // garbage (the game's own FormationOrder written back froze the game in the next tick). A read, list[i].X or
+    // a comparison list[i] == x, is no hit.
+    internal const string Indexer = @"\[[^\]\n]*\]\s*=(?![=>])";
+
     const string ListHead = @"(?:global::)?Il2CppSystem\s*\.\s*Collections\s*\.\s*Generic\s*\.\s*List\s*<";
     static readonly Regex Head = new(@"(?<![\w.])" + ListHead);
     static readonly Regex AliasHead = new("^" + ListHead);
@@ -347,7 +361,7 @@ internal static class NativeListRule
         {
             if (IsNotStruct(declaration.Element)) continue;
             var (start, end) = ScopeOf(file.Code, declaration);
-            var call = new Regex(@"\b" + Regex.Escape(declaration.Name) + @"\s*\.\s*" + rule.Pattern + @"\s*\(");
+            var call = new Regex(@"\b" + Regex.Escape(declaration.Name) + @"\s*(?:\.\s*" + rule.Pattern + @"\s*\(|" + Indexer + ")");
             foreach (Match match in call.Matches(file.Code.Substring(start, end - start)))
             {
                 var at = start + match.Index;

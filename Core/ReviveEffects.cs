@@ -91,6 +91,8 @@ internal static class ReviveEffectsSheetPatch
         catch (Exception ex) { DelversHost.Error("CORE_BOSS_ITEM_EFFECT_FAILED: " + ex); }
         try { BanditDifficulty.Register(__instance); }
         catch (Exception ex) { DelversHost.Error("CORE_BANDIT_DIFFICULTY_REGISTER_FAILED (bandits keep the game's rows): " + ex); }
+        try { TacticalFormationTempo.Register(__instance); }
+        catch (Exception ex) { DelversHost.Error("CORE_TACTICAL_TEMPO_REGISTER_FAILED: " + ex); }
     }
 }
 

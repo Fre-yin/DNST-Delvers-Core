@@ -37,10 +37,15 @@ internal static class CorpseKeep
     private static int probeLines;
     private static int leaveLines;
 
+    // Every Core bandit that died this campaign (unit.Guid.ToString()), also after its corpse left the map: its summons stay the
+    // bandits' (DelversSummons.IsCoreOwned).
+    private static readonly HashSet<string> diedBandits = new(StringComparer.Ordinal);
+
     internal static void ResetCampaign()
     {
         dying = IntPtr.Zero;
         deadBandits.Clear();
+        diedBandits.Clear();
         CoreUnits.ClearBodies();
         probed.Clear();
         probeLines = leaveLines = 0;
@@ -70,6 +75,7 @@ internal static class CorpseKeep
         if (unit == null || unit.Pointer != dying || !CoreUnitRules.TryGet(unit.Key, out var definition)) return;
         var guid = unit.Guid.ToString();
         deadBandits[guid] = (unit, map);
+        diedBandits.Add(guid);
         var partGone = BossItems.PartGone(definition);
         if (partGone) CoreUnits.DrawCorpse(guid, definition, false, true);
         DelversHost.Info(CorpseRules.BanditLine(guid, unit.Key, map.ToString(), CoreUnitRules.DropItems(definition, partGone).Count));
@@ -89,12 +95,16 @@ internal static class CorpseKeep
 
     internal static bool IsUndressed(Guid unit) => CoreSaveStore.Current?.IsUndressed(unit) == true;
 
+    // A Core bandit that died this campaign, its corpse still noted or already gone (the unit's GUID as unit.Guid.ToString()).
+    internal static bool IsDeadBandit(string guid) => guid != null && (diedBandits.Contains(guid) || deadBandits.ContainsKey(guid));
+
 
     // A bandit corpse of a loaded save: the game spawns its body on the shown map (CoreUnits.BeginSpawn).
     internal static void NoteLoadedCorpse(UnitEntity unit)
     {
         if (unit == null || !unit.IsDead || !CoreUnitRules.IsCoreUnit(unit.Key)) return;
         var guid = unit.Guid.ToString();
+        diedBandits.Add(guid);
         if (!deadBandits.ContainsKey(guid)) deadBandits[guid] = (unit, CoreGame.CurrentMap);
     }
 
@@ -111,7 +121,8 @@ internal static class CorpseKeep
         for (var i = 0; units != null && i < units.Count; i++)
         {
             var unit = units[i];
-            var dead = unit != null && unit.IsDead;
+            // A fallen member a comrade carries goes along with him and stays behind for nobody (as in Undressable).
+            var dead = unit != null && unit.IsDead && CoreGame.Component<CarryComponent>(unit.Cast<IEntity>())?.IsCarried() != true;
             members.Add((dead, dead ? EquippedKeys(unit.Cast<IEntity>()).Count : 0));
         }
         var corpses = new List<(bool OnMap, bool Undressed)>();

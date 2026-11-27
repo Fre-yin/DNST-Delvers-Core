@@ -33,6 +33,33 @@ internal static partial class GroupAiBandits
         }
     }
 
+    // The lowest of the band on a line, herself included, by the share with look ahead and buffer (GroupAiLow); share: that share.
+    // On a tie a comrade comes before herself, as with LowestAlly before; near ties among comrades turn by her trait (melee or ranged
+    // first, BanditTraitRules.TieBias).
+    private static Figure LowestOnLine(Situation s, LowLine line, out float share)
+    {
+        Figure lowest = null;
+        share = float.MaxValue;
+        var best = float.MaxValue;
+        var meleeFirst = TraitsOf(s).HealsMeleeFirst;
+        foreach (var ally in s.Allies)
+        {
+            var other = GroupAiLow.Share(ally.Unit, ally.Share, line);
+            var biased = CoreSettings.BanditsVary ? other + BanditTraitRules.TieBias(meleeFirst, KitOf(ally.Unit) is Kit.Blade or Kit.Guard) : other;
+            if (biased >= best) continue;
+            lowest = ally;
+            share = other;
+            best = biased;
+        }
+        var self = GroupAiLow.Share(s.Self.Unit, s.Self.Share, line);
+        if (lowest != null && self >= share) return lowest;
+        share = self;
+        return s.Self;
+    }
+
+    // Her kiting distance with her courage (BanditTraitRules).
+    private static int KiteOf(Situation s) => KiteDistance + TraitsOf(s).KiteDelta;
+
     private static Choice Healer(Situation s)
     {
         // Test tool first (DelversCoreRuntime.PlantBanditSeedForTest).
@@ -43,7 +70,7 @@ internal static partial class GroupAiBandits
         // (a): a hostile within KiteDistance: vines and a step away first, Lifebloom
         // on herself after that and one stack only; attacked from farther: the stack first, then away.
         var closest = s.ClosestHostile;
-        var near = closest != null && GroupAiRules.HealerKitesFirst(closest.Distance, KiteDistance);
+        var near = closest != null && GroupAiRules.HealerKitesFirst(closest.Distance, KiteOf(s));
         var first = near ? Kite(s) : Prebloom(s);
         var chosen = first ?? (near ? Prebloom(s) : Kite(s));
         if (chosen != null)
@@ -55,12 +82,12 @@ internal static partial class GroupAiBandits
         // Lifebloom only: the group stays alive through it and through keeping distance (the
         // healing touch works against that). The lowest of the group below EmergencyShare first,
         // herself included, then the lowest below heal-below (0.9); never on anyone above it, in exact range.
-        var lowest = s.LowestAlly;
-        if (lowest == null || s.Self.Share < lowest.Share) lowest = s.Self;
+        // With look ahead and buffer on the emergency line (GroupAiLow).
+        var lowest = LowestOnLine(s, LowLine.Emergency, out var lowestShare);
         // A comrade below EmergencyShare next to her own seed: the seed grows first (Life Burst).
         var burst = HealerSeedUpgrade(s, burstOnly: true);
         if (burst != null) return burst;
-        if (lowest.Share < EmergencyShare)
+        if (lowestShare < EmergencyShare)
         {
             var emergency = SingleAlly(s, LifebloomSkill, lowest, "healer-emergency-lifebloom", withRange: true, exact: true);
             if (emergency != null) return emergency;
@@ -69,6 +96,9 @@ internal static partial class GroupAiBandits
         {
             var heal = SingleAlly(s, LifebloomSkill, lowest, "healer-lifebloom", withRange: true, exact: true);
             if (heal != null) return heal;
+            // The support variant of the weak herbalist (WeakBanditRules): Healing Touch on a comrade next to her, never on herself.
+            var touch = lowest == s.Self ? null : SingleAlly(s, WeakBanditKitKeys.HealingTouch, lowest, "healer-touch", withRange: true, exact: true);
+            if (touch != null) return touch;
         }
         // Her own seed into the mucus sprayer shortly before it ends, then a seed next to comrades below 0.9.
         var seedUpgrade = HealerSeedUpgrade(s);

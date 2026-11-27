@@ -41,7 +41,6 @@ internal static class EnemyAbilities
     private static readonly Dictionary<string, float> lastSkipLog = new();
     private static readonly Dictionary<IntPtr, long> sleepers = new();
     private static readonly HashSet<IntPtr> waking = new();
-    private static readonly System.Random dice = new();
     private static bool unitsReported;
     private static int rollLines;
 
@@ -102,7 +101,7 @@ internal static class EnemyAbilities
         var serrated = EnemyAbilityRules.UsesSerrated(kind, attacker.Key == BanditSerratedRules.BladeUnitKey) ? BanditSerrated.Extra : null;
         if (serrated != null) BanditSerrated.ProbeUnit(attacker);
         var chance = EnemyAbilityRules.ChanceOf(setting?.Chance, serrated, trigger);
-        var roll = dice.NextDouble();
+        var roll = CoreRandom.Next01(CoreRandomRules.EnemyAbilities, CoreGame.GuidOf(attacker));
         hits[kind] = (hits.TryGetValue(kind, out var hitCount) ? hitCount : 0) + 1;
         var fires = EnemyAbilityRules.Fires(roll, chance, setting?.Forced);
         // Every bleeding roll, a miss too, so the quota is measured per hit, capped per session.

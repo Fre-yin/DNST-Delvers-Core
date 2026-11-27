@@ -9,10 +9,11 @@ using BlackSerumRoutine = Il2CppRefactor.Combat.SkillRelated.SKILL_BlackSerum._S
 
 namespace DungeonSettlersDelvers.Core;
 
-// The game's first aid kit and black serum close every wound of the unit they treat: once per use, when the skill's
-// routine starts (state 0), before the game's own effect.
+// The game's first aid kit and black serum close every wound of the unit they treat: once per use, when the skill's routine
+// starts (state 0), before the game's own effect.
 // Wounds.ClearAll also takes away the game's bleeding stacks. The game's routine runs on unchanged;
-// every hook catches its own failures (stage wound-aidkit, wound-serum).
+// every hook catches its own failures (stage wound-aidkit, wound-serum). An aid kit the group AI ordered counts as used here
+// (GroupAiBandageUse.OnUsed): it runs the game's own routine, never Core's bandage step.
 
 [HarmonyPatch(typeof(AidKitRoutine), "MoveNext")]
 internal static class WoundAidKitPatch
@@ -21,8 +22,10 @@ internal static class WoundAidKitPatch
     {
         try
         {
-            if (__instance != null && __instance.__1__state == 0)
-                Wounds.ClearAll(__instance.context?.TargetEntity?.TryCast<UnitEntity>(), "firstaid");
+            if (__instance == null || __instance.__1__state != 0) return;
+            var target = __instance.context?.TargetEntity?.TryCast<UnitEntity>();
+            Wounds.ClearAll(target, "firstaid");
+            if (target != null) GroupAiBandageUse.OnUsed(CoreGame.GuidOf(target).ToString("D"));
         }
         catch (Exception ex) { ApocalypseHooks.Report("wound-aidkit", ex); }
     }

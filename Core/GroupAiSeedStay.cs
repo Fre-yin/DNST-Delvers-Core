@@ -12,12 +12,17 @@ namespace DungeonSettlersDelvers.Core;
 //   none from where it stands is left out, its target is the nearest foe in reach, the game's walk toward one out of reach is
 //   cancelled (GroupAiFormation). So it strikes what is in reach and otherwise stays. Dodging still comes first; the formation
 //   does not send a staying member to its place.
-// CORE_AI_SEED_STAY side=party per step change.
+// CORE_AI_SEED_STAY side=party per step change. The entry asks the share with look ahead and buffer (GroupAiLow, seed line; the
+// exit stays at seeds.stay.until). Heal seeking: a member without a heal skill that finds no usable seed walks
+// once into the reach of the nearest party healer instead (SeedStayRules.HealerReach) and stays there the same way;
+// CORE_AI_HEAL_SEEK side=party.
 internal static class GroupAiSeedStay
 {
     private sealed class Stay
     {
+        // The seed's GUID, or the healer's while Healer.
         internal string Seed;
+        internal bool Healer;
         internal bool Ordered;
         internal bool Ended;
         internal bool InArea;
@@ -68,7 +73,9 @@ internal static class GroupAiSeedStay
         if (!stay.Ended && stay.Step != "leave" && lines++ < SeedStayRules.LogCap)
         {
             var at = CoreGame.Position(unit);
-            GroupAiPolicy.Log(SeedStayRules.StayLine("party", guid, stay.Seed, "leave", share, at.x, at.y, Tick()));
+            GroupAiPolicy.Log(stay.Healer
+                ? SeedStayRules.HealSeekLine("party", guid, stay.Seed, "leave", share, at.x, at.y, Tick())
+                : SeedStayRules.StayLine("party", guid, stay.Seed, "leave", share, at.x, at.y, Tick()));
         }
         return null;
     }
@@ -78,12 +85,16 @@ internal static class GroupAiSeedStay
     {
         if (s?.Owner == null || s.Self == null) return false;
         var staying = stays.TryGetValue(s.Guid, out var stay);
+        // The seed line with look ahead and buffer (GroupAiLow); the exit uses the real share.
+        var low = GroupAiLow.Share(s.Self.Unit, s.Self.Share, LowLine.SeedStay);
         if (staying && stay.Ended)
         {
-            if (s.Self.Share > below) stays.Remove(s.Guid);
+            // Freed only above the entry share, look ahead and buffer included (SeedStayRules.Freed).
+            if (SeedStayRules.Freed(low, below)) stays.Remove(s.Guid);
             return false;
         }
-        if (!SeedStayRules.Stays(staying, s.Self.Share, below, until))
+        var share = staying ? s.Self.Share : SeedStayRules.EntryShare(low, s.Self.Share, until);
+        if (!SeedStayRules.Stays(staying, share, below, until))
         {
             if (staying)
             {
@@ -93,8 +104,12 @@ internal static class GroupAiSeedStay
             return false;
         }
         (int Seeds, int Party, int Usable) count = default;
-        var seed = staying ? SeedByGuid(s, stay.Seed) : NearestSeed(s, out count);
-        if (seed == null)
+        IEntity seed = null;
+        GroupAiSituation.Figure healer = null;
+        if (staying && stay.Healer) healer = HealerToSeek(s, stay.Seed);
+        else seed = staying ? SeedByGuid(s, stay.Seed) : NearestSeed(s, out count);
+        if (!staying && seed == null && SeedStayRules.SeeksHealer(HasHealSkill(s), s.Role == GroupAiRole.Heal)) healer = HealerToSeek(s, null);
+        if (seed == null && healer == null)
         {
             if (staying) End(s, stay, "gone");
             else NoteNoSeed(s, count);
@@ -102,11 +117,16 @@ internal static class GroupAiSeedStay
         }
         if (!staying)
         {
-            stay = new Stay { Seed = seed.Guid.ToString() };
+            stay = healer != null ? new Stay { Seed = healer.Guid, Healer = true } : new Stay { Seed = seed.Guid.ToString() };
             stays[s.Guid] = stay;
         }
-        var at = s.PositionOf(seed);
-        var area = GroupAiHealerSeed.AuraCells(stay.Seed, at.x, at.y);
+        List<(int X, int Y)> area;
+        if (stay.Healer) area = SeedStayRules.ReachCells(healer.Position.x, healer.Position.y, SeedStayRules.HealerReach);
+        else
+        {
+            var at = s.PositionOf(seed);
+            area = GroupAiHealerSeed.AuraCells(stay.Seed, at.x, at.y);
+        }
         stay.InArea = SeedStayRules.InArea(area, s.Self.Position.x, s.Self.Position.y);
         var cell = stay.InArea || stay.Ordered ? null : FreeCell(s, area);
         var step = SeedStayRules.Step(stay.InArea, stay.Ordered, cell != null, false);
@@ -164,6 +184,27 @@ internal static class GroupAiSeedStay
         return best;
     }
 
+    // The nearest party healer to seek (GroupAiRoles: a heal role), alive and standing; guid: only that one (a stay under way).
+    private static GroupAiSituation.Figure HealerToSeek(GroupAiSituation s, string guid)
+    {
+        GroupAiSituation.Figure best = null;
+        foreach (var ally in s.Allies)
+        {
+            if (ally.Unit == null || ally.Unit.IsDead || TacticalFormation.IsDown(ally.Unit)) continue;
+            if (guid != null ? ally.Guid != guid : GroupAiRoles.Known(ally.Guid) != GroupAiRole.Heal) continue;
+            if (best == null || ally.Distance < best.Distance) best = ally;
+        }
+        return best;
+    }
+
+    // A heal skill of its own on the bar (GroupAiRules.HealSkills): it heals itself and seeks no healer.
+    private static bool HasHealSkill(GroupAiSituation s)
+    {
+        foreach (var slot in s.Slots)
+            if (slot != null && GroupAiRules.HealSkills.Contains(slot.Key)) return true;
+        return GroupAiRules.HealSkills.Contains(s.BasicAttack);
+    }
+
     private static IEntity SeedByGuid(GroupAiSituation s, string guid)
     {
         var buildings = s.InMap?.GetCombatableBuildingsOnMap();
@@ -213,7 +254,9 @@ internal static class GroupAiSeedStay
         if (stay.Step == step) return;
         stay.Step = step;
         if (lines++ < SeedStayRules.LogCap)
-            GroupAiPolicy.Log(SeedStayRules.StayLine("party", s.Guid, stay.Seed, step, s.Self.Share, at.x, at.y, Tick()));
+            GroupAiPolicy.Log(stay.Healer
+                ? SeedStayRules.HealSeekLine("party", s.Guid, stay.Seed, step, s.Self.Share, at.x, at.y, Tick())
+                : SeedStayRules.StayLine("party", s.Guid, stay.Seed, step, s.Self.Share, at.x, at.y, Tick()));
     }
 
     private static long Tick() => CoreGame.Flow?._campaignData?.TimeData?.Tick ?? 0;

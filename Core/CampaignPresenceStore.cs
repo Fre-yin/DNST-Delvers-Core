@@ -112,7 +112,7 @@ internal sealed class CampaignPresenceStore
     }
 
     // Test campaigns are named by GUID only, never by clan name: a player cannot loosen a real
-    // campaign by choosing a name (review, H8).
+    // campaign by choosing a name.
     internal string GetTestCampaignMarkerPath(Guid campaign)
     {
         ValidateCampaign(campaign);

@@ -18,18 +18,19 @@ internal static class LifebloomRules
         internal double Until { get; }
         internal double Power { get; }
         // Share of the power one stack heals per second, and per stack at the bloom; fixed at the cast
-        // (players: settings, Core's enemies: NpcHealPerStack/NpcBurstPerStack). 0 means the player default.
+        // (players: settings, Core's enemies: NpcHealPerStack/NpcBurstPerStack). Not given (negative) means the player default; 0 is
+        // a valid setting and heals nothing.
         internal double PerStack { get; }
         internal double BurstShare { get; }
         internal bool Active => Stacks > 0;
 
-        internal State(int stacks, double until, double power, double perStack = 0, double burstShare = 0)
+        internal State(int stacks, double until, double power, double perStack = -1, double burstShare = -1)
         {
             Stacks = stacks;
             Until = until;
             Power = power;
-            PerStack = perStack > 0 ? perStack : PlayerPerStackDefault;
-            BurstShare = burstShare > 0 ? burstShare : PlayerBurstDefault;
+            PerStack = perStack >= 0 ? perStack : PlayerPerStackDefault;
+            BurstShare = burstShare >= 0 ? burstShare : PlayerBurstDefault;
         }
     }
 
@@ -147,7 +148,7 @@ internal static class LifebloomRules
     // A cast on a target with the state before: one stack more, the duration renewed (never
     // shortened), the power of this cast. burstStacks are the old stacks that bloom first when the
     // buff was about to end.
-    internal static State Cast(State before, double now, double power, out int burstStacks, double perStack = 0, double burstShare = 0)
+    internal static State Cast(State before, double now, double power, out int burstStacks, double perStack = -1, double burstShare = -1)
     {
         burstStacks = 0;
         var running = before.Active && before.Until > now;

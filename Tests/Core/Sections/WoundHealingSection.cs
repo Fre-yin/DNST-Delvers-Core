@@ -118,6 +118,9 @@ internal static class WoundHealingSection
                 && BandageRules.TakesOnOther(light, true, 0) && !BandageRules.TakesOnOther(herbal, false, 0)
                 && BandageRules.TakesOnOther(BandageRules.KindOnOther("ITEM_Ointment"), false, 2) && !BandageRules.TakesOnOther(null, false, 0),
             "use on another: a target with only the game's bleeding takes the bandages of first aid and the kit, never a light or heavy bandage or raw herbs");
+        Check(!BandageRules.TakesOnOther(kit, true, 4, fallen: true) && BandageRules.TakesOnOther(kit, true, 4, fallen: false)
+                && BandageRules.TakesOnOther(salve, true, 4, fallen: true) && BandageRules.TakesOnOther(light, true, 0, fallen: true),
+            "use on another: the aid kit takes no fallen unit, which stays the game's own rescue; the bandages still go on a fallen one");
         Check(BandageRules.BufferAfter(WoundRules.Stage.Deep, light, 200, 700, false) == 130
                 && BandageRules.BufferAfter(WoundRules.Stage.Heavy, heavy, 300, 700, false) == 160
                 && BandageRules.BleedingCutShare(light) == 0 && BandageRules.BleedingCutShare(herbal) == WoundRules.HerbalBleedingCut,

@@ -26,6 +26,9 @@
     <Compile Include="../../Core/CoreSettingsFile.cs" Link="CoreSettingsFile.cs" />
     <Compile Include="../../Core/CoreSettingsCopyRules.cs" Link="CoreSettingsCopyRules.cs" />
     <Compile Include="../../Core/CoreStartup.cs" Link="CoreStartup.cs" />
+    <Compile Include="../../Core/ModLoaderRules.cs" Link="ModLoaderRules.cs" />
+    <Compile Include="../../Core/CoreRandomRules.cs" Link="CoreRandomRules.cs" />
+    <Compile Include="../../Core/SteamGuardText.cs" Link="SteamGuardText.cs" />
     <Compile Include="../../Core/EnemySkillTestRules.cs" Link="EnemySkillTestRules.cs" />
     <Compile Include="../../Core/GroupAiAreaRules.cs" Link="GroupAiAreaRules.cs" />
     <Compile Include="../../Core/GroupAiZoneRules.cs" Link="GroupAiZoneRules.cs" />
@@ -119,6 +122,14 @@
     <Compile Include="../../Core/GroupAiHealerRules.cs" Link="GroupAiHealerRules.cs" />
     <Compile Include="../../Core/GroupAiHealerSeedRules.cs" Link="GroupAiHealerSeedRules.cs" />
     <Compile Include="../../Core/SeedStayRules.cs" Link="SeedStayRules.cs" />
+    <Compile Include="../../Core/BanditSeedTallyRules.cs" Link="BanditSeedTallyRules.cs" />
+    <Compile Include="../../Core/GroupAiLowRules.cs" Link="GroupAiLowRules.cs" />
+    <Compile Include="../../Core/GroupAiChaseRules.cs" Link="GroupAiChaseRules.cs" />
+    <Compile Include="../../Core/BanditCampHomeRules.cs" Link="BanditCampHomeRules.cs" />
+    <Compile Include="../../Core/BanditTraitRules.cs" Link="BanditTraitRules.cs" />
+    <Compile Include="../../Core/BanditComboRules.cs" Link="BanditComboRules.cs" />
+    <Compile Include="../../Core/BanditSummonRules.cs" Link="BanditSummonRules.cs" />
+    <Compile Include="../../Core/BanditComboCallText.cs" Link="BanditComboCallText.cs" />
     <Compile Include="../../Core/GroupAiLogLines.cs" Link="GroupAiLogLines.cs" />
     <Compile Include="../../Core/GroupAiExcluded.cs" Link="GroupAiExcluded.cs" />
     <Compile Include="../../Core/BanditConeRules.cs" Link="BanditConeRules.cs" />
@@ -127,6 +138,9 @@
     <Compile Include="../../Core/GroupAiBandageRules.cs" Link="GroupAiBandageRules.cs" />
     <Compile Include="../../Core/GroupAiAftercareRules.cs" Link="GroupAiAftercareRules.cs" />
     <Compile Include="../../Core/GroupAiFormationRules.cs" Link="GroupAiFormationRules.cs" />
+    <Compile Include="../../Core/GroupAiRoleRules.cs" Link="GroupAiRoleRules.cs" />
+    <Compile Include="../../Core/GroupAiWaterRules.cs" Link="GroupAiWaterRules.cs" />
+    <Compile Include="../../Core/GroupAiFightStartRules.cs" Link="GroupAiFightStartRules.cs" />
     <Compile Include="../../Core/GroupAiPriorityRules.cs" Link="GroupAiPriorityRules.cs" />
     <Compile Include="../../Core/GroupAiBandageSlotReader.cs" Link="GroupAiBandageSlotReader.cs" />
     <Compile Include="../../Core/GroupAiLockRules.cs" Link="GroupAiLockRules.cs" />
@@ -163,5 +177,14 @@
     <Compile Include="../../Core/TacticalFormationText.cs" Link="TacticalFormationText.cs" />
     <Compile Include="../../Core/TacticalFormationBook.cs" Link="TacticalFormationBook.cs" />
     <Compile Include="../../Core/TacticalFormationSleepRules.cs" Link="TacticalFormationSleepRules.cs" />
+    <Compile Include="../../Core/TacticalFormationMoveRules.cs" Link="TacticalFormationMoveRules.cs" />
+    <Compile Include="../../Core/TacticalFormationTempoRules.cs" Link="TacticalFormationTempoRules.cs" />
+    <Compile Include="../../Core/TacticalFormationSummons.cs" Link="TacticalFormationSummons.cs" />
+    <Compile Include="../../Core/TacticalFormationListOrder.cs" Link="TacticalFormationListOrder.cs" />
+    <Compile Include="../../Core/TacticalFormationPathRules.cs" Link="TacticalFormationPathRules.cs" />
+    <Compile Include="../../Core/TacticalFormationFrameRead.cs" Link="TacticalFormationFrameRead.cs" />
+    <Compile Include="../../Core/TacticalFormationScreenRules.cs" Link="TacticalFormationScreenRules.cs" />
+    <Compile Include="../../Core/TacticalFormationSummonCatalog.cs" Link="TacticalFormationSummonCatalog.cs" />
+    <Compile Include="../../Core/TacticalFormationTooltipLift.cs" Link="TacticalFormationTooltipLift.cs" />
   </ItemGroup>
 </Project>

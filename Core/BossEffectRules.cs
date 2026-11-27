@@ -234,7 +234,7 @@ internal static class BossEffectRules
 
     internal static double FalconCritBonus(int distance) => distance > CritFrom ? CritPerCell * (distance - CritFrom) : 0.0;
 
-    // CORE_BOSS_EFFECT: one effect at work, for the toolkit's fight checks.
+    // CORE_BOSS_EFFECT: one effect at work, for the fight checks.
     internal static string Line(string name, string unit, string detail)
         => string.Format(CultureInfo.InvariantCulture, "CORE_BOSS_EFFECT name={0} unit={1} {2}", name, unit, detail);
 }

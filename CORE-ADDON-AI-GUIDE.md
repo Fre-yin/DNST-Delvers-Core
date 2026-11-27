@@ -14,7 +14,7 @@ Source review: 31 October 2026.
 
 | Source | Package version | Core API version | Status |
 | --- | --- | --- | --- |
-| Release reviewed for this guide | 0.5.0 | 1.11.0 | Current release |
+| Release reviewed for this guide | 0.5.2 | 1.12.0 | Current release |
 | Previous release | 0.4.1 | 1.4.0 | Baseline for users who have not updated |
 
 Package versions and API versions are different. Inspect the exact release used by the addon. Do not assume that an interface is available in the user's installed release because a newer one has it. Use `SupportsApi` for the compatibility decision, with the matching `MinimumApiVersionFor...` constant where one exists. `ApiVersion` is a readonly field from 0.5.0 on; in 0.4.1 it was a constant that the compiler copies into your addon, so it cannot identify the installed runtime there.

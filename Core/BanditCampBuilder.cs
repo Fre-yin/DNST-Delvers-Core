@@ -148,7 +148,7 @@ internal static class BanditCampBuilder
         }
 
         // The anchor's floor cells on the grid. The game's room cells count from the room's pivot, the pivot from the middle of
-        // the floor (the Toolkit's dev room, first test); a room whose cells do not land on floor that way is skipped.
+        // the floor (as in the Toolkit's dev room); a room whose cells do not land on floor that way is skipped.
         private List<(int X, int Y)> FloorCells(DungeonPreRoomData anchor)
         {
             var occupied = anchor?.RoomOccupiedPos;

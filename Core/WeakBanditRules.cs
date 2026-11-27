@@ -34,6 +34,16 @@ internal static class WeakBanditRules
         internal string Basic;
         internal string WeaponSkill;
         internal string[] TreeSkills;
+        // Other choices of the tree skills beside TreeSkills, rolled per bandit on the floor's seed
+        // (WeakBanditSpawnRules.VariantOf). Each has its own unit row, the key's class end unchanged, so a saved bandit keeps its kit.
+        internal string[][] Variants = Array.Empty<string[]>();
+        // Skills of row 1 from level 3 on, as the water mage's toad. Explosion for the fire mage stays out until
+        // Toolkit has shown its warning.
+        internal string[] Level3Skills = Array.Empty<string>();
+        // A variant's own level 3 skills by its number, where it does not take Level3Skills.
+        internal string[][] VariantLevel3Skills = Array.Empty<string[]>();
+        // The class's own row is no longer rolled, only its variants: it stays for saved bandits and the switch off (the water mage).
+        internal bool OnlyVariantsRolled;
         // The passives of row 0 of the side trees in the order the levels add them (like players by the wiki;
         // 5 side points each, 6 per level, so one on level 1, two on level 2, three on level 3). Dropped and taken back the same
         // evening ("bandits are Apocalypse content and a challenge in every form"); BanditPassives registers them in the game.
@@ -56,6 +66,8 @@ internal static class WeakBanditRules
             // bandit's, not the boss guard's CoreUnitRules.GuardDamageFactor on top.
             Suffix = "Guard", Role = "guard", Template = Brawler, Basic = "SKILL_BasicClubAttack", WeaponSkill = "SKILL_StunCharge",
             TreeSkills = new[] { "SKILL_ShieldUp", "SKILL_IronClad" }, Passives = new[] { "SKILL_Fortified", "SKILL_GuardBarrier", "SKILL_Bastion" },
+            Variants = new[] { new[] { WeakBanditKitKeys.Hammering, "SKILL_IronClad" } },
+            Level3Skills = new[] { WeakBanditKitKeys.VileInsult, WeakBanditKitKeys.GuardiansTaunt },
             KitByLevel = new[]
             {
                 new[] { (Body, "ITEM_ThickClothArmor"), (Head, "ITEM_WoodHelmet"), (Primary, "ITEM_WoodClub"), (Secondary, "ITEM_WoodShield") },
@@ -78,6 +90,7 @@ internal static class WeakBanditRules
         {
             Suffix = "Archer", Role = "archer", Template = Worker, Basic = "SKILL_BasicBowAttack", WeaponSkill = "SKILL_RapidFire",
             TreeSkills = new[] { "SKILL_SnipingShot", "SKILL_AnkleBreak" }, Passives = new[] { "SKILL_FastHand", "SKILL_SharpShooter", "SKILL_BulkShot" },
+            Variants = new[] { new[] { WeakBanditKitKeys.ArrowRain, "SKILL_AnkleBreak" } },
             KitByLevel = new[]
             {
                 new[] { (Body, "ITEM_ClothArmor"), (Primary, "ITEM_WoodBow") },
@@ -93,6 +106,8 @@ internal static class WeakBanditRules
             // next of the wiki's healers (48 %), and her seeds dying give her the cooldowns back.
             Suffix = "Healer", Role = "healer", Template = Worker, Basic = "SKILL_BasicMagicMissile", WeaponSkill = GroupAiHealerSeedRules.SeedSkill,
             TreeSkills = new[] { GroupAiHealerSeedRules.SprayerSkill, "SKILL_SolarBloom" }, Passives = new[] { GroupAiHealerSeedRules.LifeBurstSkill, "SKILL_InnerGrove", "SKILL_EbbAndFlow" },
+            // The vines (more damage and hold), or the support with Healing Touch.
+            Variants = new[] { new[] { GroupAiHealerSeedRules.SprayerSkill, WeakBanditKitKeys.GraspingVines }, new[] { WeakBanditKitKeys.HealingTouch, GroupAiHealerSeedRules.SprayerSkill } },
             KitByLevel = new[]
             {
                 new[] { (Body, "ITEM_ClothArmor"), (Primary, "ITEM_NatureWoodStaff") },
@@ -105,6 +120,8 @@ internal static class WeakBanditRules
         {
             Suffix = "Spear", Role = "spear", Template = Brawler, Basic = WeakBanditKitKeys.SpearBasic, WeaponSkill = WeakBanditKitKeys.PiercingThrust,
             TreeSkills = new[] { WeakBanditKitKeys.OpeningStrike, WeakBanditKitKeys.TwinThrust }, Passives = new[] { "SKILL_Initiative", "SKILL_RecklessAssault", "SKILL_FastHand" },
+            Variants = new[] { new[] { WeakBanditKitKeys.OpeningStrike, WeakBanditKitKeys.Anchor } },
+            Level3Skills = new[] { WeakBanditKitKeys.SpearBash },
             KitByLevel = new[]
             {
                 new[] { (Body, "ITEM_ClothArmor"), (Head, "ITEM_ClothCoif"), (Primary, "ITEM_WoodSpear") },
@@ -118,6 +135,11 @@ internal static class WeakBanditRules
             // bubble toad on level 3 as the one skill outside row 0 (a player gets it from level 4).
             Suffix = "WaterMage", Role = "watermage", Template = Worker, Basic = WeakBanditKitKeys.MagicBasic, WeaponSkill = WeakBanditKitKeys.SummonBubbling,
             TreeSkills = new[] { WeakBanditKitKeys.TidalMark, WeakBanditKitKeys.EmbracingWave, WeakBanditKitKeys.SummonBubbleToad }, Passives = new[] { "SKILL_ExtraBubble", "SKILL_EbbAndFlow", "SKILL_Ignition" },
+            // Two kinds, half and half: reserved (variant 1, today's kit without the toad) and aggressive (variant 2, the toad and the
+            // dive from level 3 on, row 1 like the other classes'). A mage saved before keeps its own row and counts as reserved.
+            Variants = new[] { new[] { WeakBanditKitKeys.TidalMark, WeakBanditKitKeys.EmbracingWave }, new[] { GroupAiWaterRules.GlacierDrop, WeakBanditKitKeys.TidalMark } },
+            VariantLevel3Skills = new[] { Array.Empty<string>(), new[] { WeakBanditKitKeys.SummonBubbleToad, GroupAiWaterRules.WaterDive } },
+            OnlyVariantsRolled = true,
             KitByLevel = new[]
             {
                 new[] { (Body, "ITEM_ClothArmor"), (Primary, "ITEM_WaterWoodStaff") },
@@ -131,6 +153,8 @@ internal static class WeakBanditRules
             // level 3.
             Suffix = "Sword", Role = "sword", Template = Brawler, Basic = WeakBanditKitKeys.SwordBasic, WeaponSkill = WeakBanditKitKeys.SweepingCleave,
             TreeSkills = new[] { WeakBanditKitKeys.ChargeAttack, WeakBanditKitKeys.SwordCounter }, Passives = new[] { "SKILL_SwordmansResolve", "SKILL_Fortified", "SKILL_GuardBarrier" },
+            Variants = new[] { new[] { WeakBanditKitKeys.ChargeAttack, WeakBanditKitKeys.VerticalSlash } },
+            Level3Skills = new[] { WeakBanditKitKeys.PommelStrike },
             KitByLevel = new[]
             {
                 new[] { (Body, "ITEM_ClothArmor"), (Head, "ITEM_ClothCoif"), (Primary, "ITEM_WoodSword") },
@@ -142,6 +166,7 @@ internal static class WeakBanditRules
         {
             Suffix = "FireMage", Role = "firemage", Template = Worker, Basic = WeakBanditKitKeys.MagicBasic, WeaponSkill = WeakBanditKitKeys.FireMissile,
             TreeSkills = new[] { WeakBanditKitKeys.Incinerate, WeakBanditKitKeys.BlazingEcho }, Passives = new[] { "SKILL_Ignition", "SKILL_LastCinder", "SKILL_SharpShooter" },
+            Variants = new[] { new[] { WeakBanditKitKeys.Incinerate, WeakBanditKitKeys.FireCloak } },
             KitByLevel = new[]
             {
                 new[] { (Body, "ITEM_ClothArmor"), (Primary, "ITEM_FireWoodStaff") },
@@ -164,12 +189,19 @@ internal static class WeakBanditRules
 
     internal static bool DropsCoin(bool weak, int livingWeakOfGroup) => weak && livingWeakOfGroup == 0;
 
+    // Bandits that fall in one blow all find no one left: the group's coins came from the first of them within this many seconds.
+    internal const float CoinSeconds = 1f;
+
+    internal static bool CoinsJustDropped(float now, float? droppedAt, int cellsApart)
+        => droppedAt is float at && now >= at && now - at < CoinSeconds && GroupAiRules.IsGroupAlly(cellsApart);
+
     // The active skills of a class on a level: basic attack, weapon skill, then one tree skill per level up to the class's count.
     internal static string[] ActivesOf(Class c, int level)
     {
         var skills = new List<string> { c.Basic };
         if (!string.IsNullOrEmpty(c.WeaponSkill)) skills.Add(c.WeaponSkill);
         for (var i = 0; i < c.TreeSkills.Length && i < level; i++) skills.Add(c.TreeSkills[i]);
+        if (level >= 3) skills.AddRange(c.Level3Skills);
         return skills.ToArray();
     }
 
@@ -209,15 +241,42 @@ internal static class WeakBanditRules
     {
         var all = new List<CoreUnitRules.Definition>();
         for (var level = 1; level <= Levels; level++)
-            foreach (var c in Classes) all.Add(DefinitionOf(c, level));
+            foreach (var c in Classes)
+            {
+                all.Add(DefinitionOf(c, level));
+                for (var i = 1; i <= c.Variants.Length; i++) all.Add(DefinitionOf(VariantOf(c, i), level));
+            }
         return all.ToArray();
     }
+
+    // Variant number (from 1) of a class: its tree skills replaced, its key with "Alt<number>" before the class's end, so KitOf still
+    // reads the class. 0 is the class itself.
+    internal static Class VariantOf(Class c, int number)
+    {
+        if (number <= 0 || number > c.Variants.Length) return c;
+        return new Class
+        {
+            Suffix = "Alt" + number + c.Suffix, Role = c.Role, Template = c.Template, Basic = c.Basic, WeaponSkill = c.WeaponSkill,
+            TreeSkills = c.Variants[number - 1], Level3Skills = number <= c.VariantLevel3Skills.Length ? c.VariantLevel3Skills[number - 1] : c.Level3Skills,
+            Passives = c.Passives, KitByLevel = c.KitByLevel
+        };
+    }
+
+    // The variant a roll picks: any row of the class, or only its variants.
+    internal static int VariantNumber(Class c, uint roll)
+        => c.OnlyVariantsRolled && c.Variants.Length > 0 ? 1 + (int)(roll % (uint)c.Variants.Length) : (int)(roll % (uint)(c.Variants.Length + 1));
+
+    // The reserved water mage's row; the aggressive one tells by its Glacier Drop.
+    internal static bool IsReservedMage(string key) => (key ?? "").EndsWith("Alt1WaterMage", StringComparison.Ordinal);
 
     internal static bool IsWeak(CoreUnitRules.Definition unit) => unit != null && unit.Level > 0;
 
     // The weak definition of a level and class, or null.
     internal static CoreUnitRules.Definition Find(int level, string suffix)
-        => Array.Find(Definitions, d => d.Level == level && d.Key.EndsWith(suffix, StringComparison.Ordinal));
+    {
+        var key = KeyPart + level + suffix;
+        return Array.Find(Definitions, d => d.Level == level && d.Key.EndsWith(key, StringComparison.Ordinal));
+    }
 
     // A plain "Forest Bandit" without the role; the kit shows the difference.
     internal static readonly UniqueCandidateTranslations Name = new(

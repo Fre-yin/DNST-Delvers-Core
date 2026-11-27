@@ -12,7 +12,7 @@ internal static class EnemySkillTestSection
 
     static void ParseAndOutcome()
     {
-        // Toolkit's area block: an enemy's next decision set to one skill at a unit or a cell.
+        // The area tests: an enemy's next decision set to one skill at a unit or a cell.
         Check(EnemySkillTestRules.TryParseTarget("3,4", out var noUnit, out var cellA) && noUnit == Guid.Empty && cellA == (3, 4)
                 && EnemySkillTestRules.TryParseTarget(" -2 , 7 ", out _, out var cellB) && cellB == (-2, 7)
                 && EnemySkillTestRules.TryParseTarget("6862ec60-a569-4547-a561-5bd6158d1cd4", out var unitA, out var cellC) && unitA != Guid.Empty && cellC == null

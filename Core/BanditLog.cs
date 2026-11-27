@@ -48,7 +48,7 @@ internal static partial class GroupAiBandits
         }
     }
 
-    // Toolkit's skill damage table: the hits of a bandit that are no skill of its row, a follow up its skill sets off or a
+    // For the skill damage table: the hits of a bandit that are no skill of its row, a follow up its skill sets off or a
     // summon's attack, and the affecters its plants and summons hit with.
     private static readonly string[] FollowUpSkills =
         { "SKILL_RapidFireAttack", "SKILL_FireMissileAttack", "SKILL_TwinThrustAttack", "SKILL_BubbleTackle", "SKILL_TongueThrust" };

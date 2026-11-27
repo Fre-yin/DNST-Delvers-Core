@@ -8,6 +8,7 @@ internal static class GroupAiBandagesSection
     {
         QuickSlotBandages();
         ShiftTwins();
+        KitOnOtherWatch();
         Aftercare();
         Formation();
         Priority();
@@ -55,12 +56,12 @@ internal static class GroupAiBandagesSection
         Check(GroupAiBandageRules.FromBagKey == "groupai.bandagesfrombag"
                 && GroupAiBandageRules.Want(true, 0.9f) == "salve" && GroupAiBandageRules.Want(false, 0.49f) == "salve"
                 && GroupAiBandageRules.Want(false, 0.5f) == "herbal" && GroupAiBandageRules.Want(false, 0.8f) == "herbal",
-            "C34 c: the kind follows the situation");
+            "bandages: the kind follows the situation");
         Check(GroupAiBandageRules.Ready("salve", salveOnQ, 1, false) && !GroupAiBandageRules.Ready("salve", salveOnQ, 0, false)
                 && !GroupAiBandageRules.Ready("herbal", salveOnQ, 3, false) && GroupAiBandageRules.Ready("herbal", salveOnQ, 3, true)
                 && GroupAiBandageRules.Ready("herbal", herbalOnExtra, 1, false) && !GroupAiBandageRules.Ready("salve", null, 2, false)
                 && GroupAiBandageRules.Ready("salve", null, 2, true),
-            "C34 c: a bandage is ready on a quick slot, from the bag only with the option");
+            "bandages: a bandage is ready on a quick slot, from the bag only with the option");
         Check(Pick("salve", true, "salve", "herbal") == "salve" && Pick("herbal", true, "salve", "herbal") == "herbal"
                 && Pick("salve", true, "herbal") == "herbal" && Pick("herbal", true, "salve") == "salve"
                 && Pick("salve", true) == null && Pick("herbal", true) == null
@@ -73,7 +74,7 @@ internal static class GroupAiBandagesSection
             && GroupAiBandageRules.KindOf("ITEM_AidKit") == "aidkit" && GroupAiBandageRules.KindOf(BandageText.SalveItemKey) == "salve"
             && GroupAiBandageRules.Line("u", "aidkit", "lethal", 0.2f, "lethal", false, 3, false, "use", "q", "q:aidkit", false,
                 new GroupAiBandageRules.BagCounts(1, 0, 0, 0, 2), 9, true).EndsWith(" tick=9 kits=2"),
-            "C34 c: the other kind stands in, both ways");
+            "bandages: the other kind stands in, both ways");
         // The heavy and light bandage stand in last, heavy first, and only on an open wound.
         Check(Pick("salve", true, "heavy", "light") == "heavy" && Pick("herbal", true, "light") == "light"
                 && Pick("aidkit", true, "heavy") == "heavy" && Pick("salve", true, "herbal", "heavy") == "herbal"
@@ -83,7 +84,7 @@ internal static class GroupAiBandagesSection
         // The last salve is used at a light wound when no herbal one is ready (no reserve).
         Check(GroupAiBandageRules.Pick(GroupAiBandageRules.Want(false, 0.8f),
                     kind => GroupAiBandageRules.Ready(kind, salveOnQ, kind == "salve" ? 1 : 2, false), true) == "salve",
-            "C34 c: no salve is kept back");
+            "bandages: no salve is kept back");
         Check(GroupAiBandageRules.From("salve", salveOnQ) == "q" && GroupAiBandageRules.From("herbal", herbalOnExtra) == "extra2"
                 && GroupAiBandageRules.From("salve", both) == "extra1" && GroupAiBandageRules.From("salve", none) == "bag"
                 && GroupAiBandageRules.From("herbal", null) == "bag"
@@ -94,7 +95,7 @@ internal static class GroupAiBandagesSection
                 && GroupAiBandageRules.KindOf("ITEM_Ointment") == null && GroupAiBandageRules.KindOf("") == null
                 && GroupAiBandageRules.KindOf(null) == null
                 && new GroupAiBandageRules.BagCounts(1, 2, 3, 4, 5).Bandages == 10,
-            "C34 c: where the bandage comes from, the slots in the log, why none");
+            "bandages: where the bandage comes from, the slots in the log, why none");
     }
 
     // Aftercare once the fight is over, the smallest bandage that covers the blood loss, the most urgent first.
@@ -145,8 +146,28 @@ internal static class GroupAiBandagesSection
                 && GroupAiFormationRules.Line("u", GroupAiFormationRules.Reason.Return, 4, 7, "north") == "CORE_AI_FORMATION unit=u reason=return cell=4,7 facing=north",
             "formation: one order per new place, again 2 s after an order that did not arrive; reach counts diagonal steps as one, at least 1");
         Check(GroupAiFormationRules.Keeps(true, true, false) && !GroupAiFormationRules.Keeps(true, false, false) && !GroupAiFormationRules.Keeps(false, true, false)
-                && GroupAiFormationRules.FreesCell(false, true) && !GroupAiFormationRules.FreesCell(false, false) && !GroupAiFormationRules.FreesCell(true, true),
+                && GroupAiFormationRules.FreesCell(false, true, false) && !GroupAiFormationRules.FreesCell(false, false, false)
+                && !GroupAiFormationRules.FreesCell(true, true, false) && !GroupAiFormationRules.FreesCell(false, false, true),
             "formation: a member switched off neither follows nor holds, and its cell stays taken like the leader's");
+        Check(GroupAiFormationRules.FreesCell(true, true, true) && GroupAiFormationRules.FreesCell(true, false, true),
+            "formation: the leader's cell counts as free while it walks to a group order's goal");
+        // The goal of a group's order: a leader that had stood long dropped its goal at once.
+        Check(GroupAiFormationRules.GoalDone((5, 5), (5, 5), (0, 0), 0, 0f) && GroupAiFormationRules.GoalDone((3, 3), (5, 5), (0, 0), 3, 0f)
+                && !GroupAiFormationRules.GoalDone((3, 3), (5, 5), (0, 0), 2, 9f) && !GroupAiFormationRules.GoalDone((0, 0), (5, 5), (0, 0), 9, 2f)
+                && GroupAiFormationRules.GoalDone((0, 0), (5, 5), (0, 0), 0, 2.1f),
+            "formation: the goal is done on it, after the leader moved and stood 3 looks, or after 2 s when it never moved");
+        // A member whose slot is taken kept jumping between two places aside.
+        var south = TacticalFormationRules.Facing.South;
+        var sent = ((10, 10), south, (11, 12));
+        Func<int, int, bool> open = (_, _) => true;
+        Check(GroupAiFormationRules.HoldAside((10, 12), (11, 11), (10, 10), south, sent, open) == (11, 12)
+                && GroupAiFormationRules.HoldAside((11, 12), (11, 11), (10, 10), south, sent, (_, _) => false) == (11, 12),
+            "formation: a member whose slot is taken keeps the place aside it was sent to");
+        Check(GroupAiFormationRules.HoldAside((11, 11), (11, 11), (10, 10), south, sent, open) == null
+                && GroupAiFormationRules.HoldAside((10, 12), (11, 11), (10, 9), south, sent, open) == null
+                && GroupAiFormationRules.HoldAside((10, 12), (11, 11), (10, 10), TacticalFormationRules.Facing.North, sent, open) == null
+                && GroupAiFormationRules.HoldAside((10, 12), (11, 11), (10, 10), south, sent, (_, _) => false) == null,
+            "formation: a free slot, a new anchor or direction, or a place aside no longer open lets the new place go");
         Check(SlowWalkTurns() && WiggleAndStepDoNot(),
             "formation: the walk counts from where the leader last stood, so a slow leader turns it; a wiggle or one step does not");
         Func<int, int, bool> freeButLeft = (x, y) => x >= 0;
@@ -162,8 +183,51 @@ internal static class GroupAiBandagesSection
         Check(GroupAiFormationRules.StaysStill(true, true) && !GroupAiFormationRules.StaysStill(true, false) && !GroupAiFormationRules.StaysStill(false, true)
                 && GroupAiFormationRules.IdleLine("u", 4, 7) == "CORE_AI_FORMATION_IDLE unit=u cell=4,7",
             "formation: an idle member of the formation does not wander, one switched off or outside it does");
-        Check(!GroupAiFormationRules.Keeps(true, true, true) && !GroupAiFormationRules.FreesCell(false, GroupAiFormationRules.Keeps(true, true, true)),
+        Check(!GroupAiFormationRules.Keeps(true, true, true) && !GroupAiFormationRules.FreesCell(false, GroupAiFormationRules.Keeps(true, true, true), false),
             "formation: a member lying at near-death gets no order and keeps its cell taken until it stands again");
+        // Auto attack off follows; only wait for orders stops the follow.
+        Check(GroupAiFormationRules.OpenToFollow(false) && !GroupAiFormationRules.OpenToFollow(true)
+                && GroupAiFormationRules.Keeps(GroupAiFormationRules.OpenToFollow(false), true, false)
+                && !GroupAiFormationRules.Keeps(GroupAiFormationRules.OpenToFollow(true), true, false),
+            "formation: a member with auto attack off follows the leader; one waiting for orders stays where it is");
+        // Auto attack off: the gate of the group AI is closed (GroupAiGate.OpenFor), the follow still open.
+        const bool autoAttackOff = false, notWaiting = false;
+        var kept = GroupAiFormationRules.Keeps(GroupAiFormationRules.OpenToFollow(notWaiting), true, false);
+        Check(kept && !GroupAiFormationRules.CoreActs(kept, autoAttackOff) && GroupAiFormationRules.CoreActs(kept, true)
+                && !GroupAiFormationRules.CoreActs(false, true),
+            "formation: a member with auto attack off follows, but Core neither sends it roaming nor summons again for it");
+        // The summons take their planned places out of a fight also without the group AI (locked on Apocalypse).
+        Check(GroupAiFormationRules.SummonStep(false, false) == GroupAiFormationRules.SummonDo.Place
+                && GroupAiFormationRules.SummonStep(false, true) == GroupAiFormationRules.SummonDo.Place
+                && GroupAiFormationRules.SummonStep(true, true) == GroupAiFormationRules.SummonDo.Guard
+                && GroupAiFormationRules.SummonStep(true, false) == GroupAiFormationRules.SummonDo.Game,
+            "formation: summons take their places out of a fight with or without the group AI; in a fight only the group AI steers them");
+        // A held summon that stopped short of its unchanged cell is sent again like a member, not on every look.
+        var again = GroupAiFormationRules.ReorderSeconds;
+        Check(GroupAiFormationRules.SummonSends(false, (447, 142), (450, 145), true, 0f)
+                && !GroupAiFormationRules.SummonSends(true, (450, 145), (450, 145), false, again)
+                && !GroupAiFormationRules.SummonSends(true, (447, 142), (450, 145), true, again)
+                && !GroupAiFormationRules.SummonSends(true, (447, 142), (450, 145), false, again - 0.5f)
+                && GroupAiFormationRules.SummonSends(true, (447, 142), (450, 145), false, again),
+            "formation: a summon short of its place is sent again once its order is over and the wait passed; a new cell at once");
+        // A member feeding a fallen one by the player's order is not fetched back before the feeding ends.
+        var plan = GroupAiFormationRules.PlanSeconds;
+        Check(GroupAiFormationRules.BusyWithOrder(true, 0, false) && GroupAiFormationRules.BusyWithOrder(true, plan, false)
+                && GroupAiFormationRules.BusyWithOrder(true, 30, true) && !GroupAiFormationRules.BusyWithOrder(true, plan + 1, false)
+                && !GroupAiFormationRules.BusyWithOrder(false, 0, true),
+            "formation: a member busy with the player's ordered task (feeding, an item, a cast) stays until it ends, then follows");
+        // The ordered feeding ended; a later task of the same kind (the game's own feeding, the fight's next attack) is another task.
+        Check(!GroupAiFormationRules.BusyWithOrder(true, plan + 1, GroupAiFormationRules.SameTask(false, true))
+                && !GroupAiFormationRules.BusyWithOrder(true, plan + 1, GroupAiFormationRules.SameTask(true, false))
+                && GroupAiFormationRules.BusyWithOrder(true, plan + 1, GroupAiFormationRules.SameTask(true, true)),
+            "formation: after the ordered feeding the member is free again, also while the game runs a later task of the same kind");
+        Check(!GroupAiFormationRules.BusyOrder(false, true) && !GroupAiFormationRules.BusyOrder(true, false)
+                && GroupAiFormationRules.BusyOrder(false, false),
+            "formation: an attack order on a foe makes nobody busy (it holds through the attack order); a walk neither");
+        Check(GroupAiFormationRules.SkipLine("u", "wait") == "CORE_AI_FORMATION_SKIP unit=u why=wait"
+                && GroupAiFormationRules.LogsSkip(null, "wait") && !GroupAiFormationRules.LogsSkip("wait", "wait")
+                && GroupAiFormationRules.LogsSkip("wait", "off") && !GroupAiFormationRules.LogsSkip("wait", null),
+            "formation: a skipped follower is written once per reason, again when the reason changes");
     }
 
     // The leader's cells one look (0.5 s) apart, read as GroupAiFormation does; the facing at the end.
@@ -252,7 +316,7 @@ internal static class GroupAiBandagesSection
                 && GroupAiBandageSlotReader.Read(method, "throw").SequenceEqual(new string[2])
                 && GroupAiBandageSlotReader.Read(null, "u1").SequenceEqual(new string[2])
                 && !GroupAiBandageSlotReader.Fits(typeof(TestHotbarSlots).GetMethod(nameof(TestHotbarSlots.ExtraItemCount))),
-            "C34 c: the hotbar's extra slots are read through a public method, softly, the string overload first");
+            "bandages: the hotbar's extra slots are read through a public method, softly, the string overload first");
     }
 
     static void GroupAiTexts()
@@ -270,5 +334,66 @@ internal static class GroupAiBandagesSection
                 && GroupAiText.Notice.German.Contains(GroupAiText.MenuBandagesFromBag.German) && GroupAiText.Notice.English.Contains(GroupAiText.MenuBandagesFromBag.English)
                 && GroupAiText.MenuHint.German.Contains("Barrierefreiheit") && GroupAiText.MenuHint.English.Contains("accessibility"),
             "Group AI: menu texts and notice");
+    }
+
+    // The aid kit put on a comrade is never lost and never doubled (BandageRules.KitLedger): an entry only for a kit Core's skill used
+    // up, closed by its own dressing, due once after RefundAfterSeconds; a kit leaving the bag any other way is no entry at all.
+    static void KitOnOtherWatch()
+    {
+        var a = Guid.NewGuid();
+        var b = Guid.NewGuid();
+        var wait = BandageRules.RefundAfterSeconds;
+
+        // Used up, then a kit thrown away (no entry of the ledger), no dressing: exactly one comes back, and only once.
+        var ledger = new BandageRules.KitLedger<int>();
+        ledger.UsedUp(a, 1, 10);
+        var early = ledger.Due(10 + wait - 0.1).Count;
+        var due = ledger.Due(10 + wait);
+        var again = ledger.Due(10 + wait * 10).Count;
+        Check(early == 0 && due.Count == 1 && due[0].Helper == a && due[0].Where == 1 && again == 0 && ledger.Count == 0,
+            "aid kit on a comrade: used up, then one thrown away, no dressing: exactly one kit comes back, once");
+
+        // Used up and dressed: nothing comes back.
+        ledger.UsedUp(a, 2, 20);
+        ledger.Dressed(a);
+        Check(ledger.Due(20 + wait * 10).Count == 0, "aid kit on a comrade: used up and dressed, it stays used");
+
+        // Two uses of one helper, the second dressed: the first still comes back; another helper's dressing closes nothing of a.
+        ledger.UsedUp(a, 3, 30);
+        ledger.UsedUp(a, 4, 31);
+        ledger.Dressed(a);
+        var closedByOther = ledger.Dressed(b);
+        var first = ledger.Due(31 + wait);
+        Check(!closedByOther && first.Count == 1 && first[0].Where == 3,
+            "aid kit on a comrade: two uses, the second dressed: the first kit still comes back; another helper's dressing closes nothing");
+
+        // A load or a new campaign clears the ledger: nothing comes back on the new clock.
+        ledger.UsedUp(a, 5, 40);
+        ledger.Clear();
+        Check(ledger.Count == 0 && ledger.Due(1000).Count == 0, "aid kit on a comrade: a load clears the open kits");
+
+        // The use broke off before the kit was used up: it goes back from the hand once the helper stopped using it; a kit used up
+        // never goes back this way too (the ledger alone gives it back).
+        var soon = BandageRules.HandBackAfterSeconds;
+        Check(BandageRules.HandBack(false, false, true, soon) == BandageRules.HandStep.Back
+                && BandageRules.HandBack(false, false, true, soon - 0.1) == BandageRules.HandStep.Wait
+                && BandageRules.HandBack(false, true, true, soon) == BandageRules.HandStep.Wait
+                && BandageRules.HandBack(false, true, true, BandageRules.HandWatchSeconds) == BandageRules.HandStep.Done
+                && BandageRules.HandBack(false, false, false, soon) == BandageRules.HandStep.Done,
+            "aid kit on a comrade: a use that broke off puts the kit from the hand back into the bag, once the helper stopped using it");
+        Check(BandageRules.HandBack(true, false, true, soon) == BandageRules.HandStep.Done
+                && BandageRules.HandBack(true, false, true, BandageRules.HandWatchSeconds) == BandageRules.HandStep.Done,
+            "aid kit on a comrade: a kit used up never comes back from the hand as well, so it is never doubled");
+        // A target several cells away: the helper walks there with the kit in hand under Core's kit skill (ActCombatBehaviourTask),
+        // long past HandBackAfterSeconds; the kit stays in the hand until the use ends.
+        var walking = BandageRules.StillUsing(BandageRules.AidKitOtherSkillKey, "ActCombatBehaviourTask");
+        Check(walking && BandageRules.HandBack(false, walking, true, soon * 4) == BandageRules.HandStep.Wait
+                && BandageRules.StillUsing(null, "UseItemToOther") && !BandageRules.StillUsing("SKILL_Ointment", "ActCombatBehaviourTask")
+                && !BandageRules.StillUsing(null, "IdleTask") && !BandageRules.StillUsing(null, null),
+            "aid kit on a comrade: on a long way to the target the kit stays in the hand; only another task or none ends the use");
+        Check(BandageRules.ClosesKitEntry(true, BandageRules.Kind.Kit) && !BandageRules.ClosesKitEntry(false, BandageRules.Kind.Kit)
+                && !BandageRules.ClosesKitEntry(true, BandageRules.Kind.Salve) && !BandageRules.ClosesKitEntry(false, BandageRules.Kind.Light)
+                && !BandageRules.ClosesKitEntry(true, BandageRules.Kind.Herbal),
+            "aid kit on a comrade: only the kit's own dressing closes its entry, a bandage or salve of the same helper leaves it open");
     }
 }

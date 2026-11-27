@@ -22,7 +22,7 @@ internal static class GuideTopicText
         return index < 0 ? null : Topics[index].Image;
     }
 
-    // A topic's own picture in the package folder (Toolkit's screenshots): Guide_<number>.png at the size of the
+    // A topic's own picture in the package folder (screenshots of the game): Guide_<number>.png at the size of the
     // guide's picture (Img_GuideImage, 796 x 284 at 1920 x 1080). Without the file the topic keeps the game's picture (ImageKey).
     internal const int ImageWidth = 796;
     internal const int ImageHeight = 284;
@@ -201,70 +201,70 @@ internal static class GuideTopicText
             + "Herbal bandage: stops a light, deep or heavy bleeding completely and takes a third of the bleeding stacks. On Lethal Bleeding it takes 30% of the whole health off the blood loss." + Paragraph
             + "Salve bandage: stops a light, deep or heavy bleeding completely, takes half of the bleeding stacks and keeps healing afterwards. On Lethal Bleeding it takes 40% of the whole health off the blood loss." + Paragraph
             + "Aid kit: stops every bleeding completely, a lethal one too, along with the bleeding stacks." + Paragraph
-            + "A standing, bleeding character applies the aid kit to itself with Q. With Shift+Q or the inventory option Use on another character, a bandage or the aid kit goes on another bleeding character, a fallen one too. Every item works there with its normal strength. Raw herbs work on another character like a light bandage. The game's ointment only heals." + Paragraph
+            + "A standing, bleeding character applies the aid kit to itself with Q. With Shift+Q or the inventory option Use on another character, a bandage goes on another bleeding character, a fallen one too, and the aid kit on a standing one. The aid kit rescues a fallen character when you click on them. Every item works there with its normal strength. Raw herbs work on another character like a light bandage. The game's ointment only heals." + Paragraph
             + "Merchants sell light and heavy bandages, and the workbench makes them. After the First Aid research, the alchemy table makes herbal and salve bandages.",
         "가벼운 붕대: 단계와 관계없이, 치명적인 출혈에서도 출혈량에서 전체 체력의 10%를 줄입니다. 출혈을 멈추지 않으며 출혈 중첩은 그대로 둡니다." + Paragraph
             + "무거운 붕대: 출혈량에서 전체 체력의 20%를 줄이며, 나머지는 가벼운 붕대와 같습니다." + Paragraph
             + "약초 붕대: 가벼운, 깊은, 심한 출혈을 완전히 멈추고 출혈 중첩의 3분의 1을 없앱니다. 치명적인 출혈에서는 출혈량에서 전체 체력의 30%를 줄입니다." + Paragraph
             + "연고 붕대: 가벼운, 깊은, 심한 출혈을 완전히 멈추고 출혈 중첩의 절반을 없애며 그 뒤에도 계속 회복합니다. 치명적인 출혈에서는 출혈량에서 전체 체력의 40%를 줄입니다." + Paragraph
             + "구급상자: 치명적인 출혈을 포함해 모든 출혈을 출혈 중첩과 함께 완전히 멈춥니다." + Paragraph
-            + "서 있는 상태로 피를 흘리는 캐릭터는 Q로 구급상자를 스스로 사용합니다. Shift+Q 또는 인벤토리의 다른 캐릭터에게 사용으로 붕대나 구급상자를 피를 흘리는 다른 캐릭터에게, 쓰러진 캐릭터에게도 쓸 수 있습니다. 모든 아이템은 그때도 원래 효과 그대로 작용합니다. 야생 약초는 다른 캐릭터에게 가벼운 붕대처럼 작용합니다. 게임의 연고는 회복만 합니다." + Paragraph
+            + "서 있는 상태로 피를 흘리는 캐릭터는 Q로 구급상자를 스스로 사용합니다. Shift+Q 또는 인벤토리의 다른 캐릭터에게 사용으로 붕대는 피를 흘리는 다른 캐릭터에게, 쓰러진 캐릭터에게도 쓸 수 있고, 구급상자는 서 있는 캐릭터에게 쓸 수 있습니다. 쓰러진 캐릭터는 클릭하면 구급상자로 구할 수 있습니다. 모든 아이템은 그때도 원래 효과 그대로 작용합니다. 야생 약초는 다른 캐릭터에게 가벼운 붕대처럼 작용합니다. 게임의 연고는 회복만 합니다." + Paragraph
             + "가벼운 붕대와 무거운 붕대는 상인이 판매하며 작업대에서 만들 수 있습니다. 응급처치 연구 후에는 연금술 작업대에서 약초 붕대와 연고 붕대를 만듭니다.",
         "Bandage léger : retire 10 % de la vie entière de la perte de sang, à chaque stade, en saignement mortel aussi. Il n'arrête pas le saignement et laisse les cumuls de saignement." + Paragraph
             + "Bandage lourd : retire 20 % de la vie entière de la perte de sang, sinon comme le léger." + Paragraph
             + "Bandage aux herbes : arrête entièrement un saignement léger, profond ou grave et retire un tiers des cumuls de saignement. En saignement mortel, il retire 30 % de la vie entière de la perte de sang." + Paragraph
             + "Bandage à l'onguent : arrête entièrement un saignement léger, profond ou grave, retire la moitié des cumuls de saignement et continue de soigner ensuite. En saignement mortel, il retire 40 % de la vie entière de la perte de sang." + Paragraph
             + "Trousse de soins : arrête entièrement tout saignement, même mortel, avec les cumuls de saignement." + Paragraph
-            + "Un personnage debout qui saigne s'applique la trousse de soins avec Q. Avec Maj+Q ou l'option d'inventaire Utiliser sur un autre personnage, un bandage ou la trousse de soins va sur un autre personnage qui saigne, même tombé. Chaque objet y agit avec sa force normale. Les herbes sauvages agissent sur un autre personnage comme un bandage léger. L'onguent du jeu ne fait que soigner." + Paragraph
+            + "Un personnage debout qui saigne s'applique la trousse de soins avec Q. Avec Maj+Q ou l'option d'inventaire Utiliser sur un autre personnage, un bandage va sur un autre personnage qui saigne, même tombé, et la trousse de soins sur un personnage debout. La trousse de soins sauve un personnage tombé quand on clique sur lui. Chaque objet y agit avec sa force normale. Les herbes sauvages agissent sur un autre personnage comme un bandage léger. L'onguent du jeu ne fait que soigner." + Paragraph
             + "Les marchands vendent les bandages légers et lourds, et l'établi les fabrique. Après la recherche Premiers secours, la table d'alchimie fabrique des bandages aux herbes et à l'onguent.",
         "Leichter Verband: nimmt 10 % des ganzen Lebens vom Blutverlust, auf jeder Stufe, auch bei tödlicher Blutung. Er stillt nicht und lässt die Blutungsstapel stehen." + Paragraph
             + "Schwerer Verband: nimmt 20 % des ganzen Lebens vom Blutverlust, sonst wie der leichte." + Paragraph
             + "Kräuterverband: stillt eine leichte, tiefe oder schwere Blutung ganz und nimmt ein Drittel der Blutungsstapel. Bei tödlicher Blutung nimmt er 30 % des ganzen Lebens vom Blutverlust." + Paragraph
             + "Salbenverband: stillt eine leichte, tiefe oder schwere Blutung ganz, nimmt die Hälfte der Blutungsstapel und heilt danach weiter. Bei tödlicher Blutung nimmt er 40 % des ganzen Lebens vom Blutverlust." + Paragraph
             + "Verbandskasten: stillt jede Blutung ganz, auch eine tödliche, samt den Blutungsstapeln." + Paragraph
-            + "Eine stehende, blutende Figur legt sich den Verbandskasten mit Q selbst an. Mit Shift+Q oder der Inventaroption Auf andere Figur anwenden geht ein Verband oder der Verbandskasten an eine andere blutende Figur, auch an eine gefallene. Jeder Gegenstand wirkt dort mit seiner normalen Stärke. Wildkräuter wirken auf eine andere Figur wie ein leichter Verband. Die Salbe des Spiels heilt nur." + Paragraph
+            + "Eine stehende, blutende Figur legt sich den Verbandskasten mit Q selbst an. Mit Shift+Q oder der Inventaroption Auf andere Figur anwenden geht ein Verband an eine andere blutende Figur, auch an eine gefallene, der Verbandskasten an eine stehende. Eine Gefallene rettet der Verbandskasten per Klick auf sie. Jeder Gegenstand wirkt dort mit seiner normalen Stärke. Wildkräuter wirken auf eine andere Figur wie ein leichter Verband. Die Salbe des Spiels heilt nur." + Paragraph
             + "Leichte und schwere Verbände führen Händler, die Werkbank stellt sie her. Nach der Forschung Erste Hilfe entstehen am Alchemietisch Kräuterverbände und Salbenverbände.",
         "Лёгкий бинт: снимает с потери крови 10% всего здоровья на любой стадии, в том числе при смертельном кровотечении. Он не останавливает кровотечение и оставляет стаки кровотечения." + Paragraph
             + "Тяжёлый бинт: снимает с потери крови 20% всего здоровья, в остальном как лёгкий." + Paragraph
             + "Травяной бинт: полностью останавливает лёгкое, глубокое или тяжёлое кровотечение и убирает треть стаков кровотечения. При смертельном кровотечении он снимает с потери крови 30% всего здоровья." + Paragraph
             + "Мазевый бинт: полностью останавливает лёгкое, глубокое или тяжёлое кровотечение, убирает половину стаков кровотечения и потом продолжает лечить. При смертельном кровотечении он снимает с потери крови 40% всего здоровья." + Paragraph
             + "Аптечка: полностью останавливает любое кровотечение, даже смертельное, вместе со стаками кровотечения." + Paragraph
-            + "Стоящий персонаж с кровотечением сам накладывает аптечку клавишей Q. Через Shift+Q или пункт инвентаря «Применить к другому персонажу» бинт или аптечка достаются другому персонажу с кровотечением, в том числе павшему. Каждый предмет действует там с обычной силой. Дикие травы действуют на другого персонажа как лёгкий бинт. Мазь из игры только лечит." + Paragraph
+            + "Стоящий персонаж с кровотечением сам накладывает аптечку клавишей Q. Через Shift+Q или пункт инвентаря «Применить к другому персонажу» бинт достаётся другому персонажу с кровотечением, в том числе павшему, а аптечка стоящему. Павшего персонажа аптечка спасает щелчком по нему. Каждый предмет действует там с обычной силой. Дикие травы действуют на другого персонажа как лёгкий бинт. Мазь из игры только лечит." + Paragraph
             + "Лёгкие и тяжёлые бинты продают торговцы, а делает верстак. После исследования «Первая помощь» алхимический стол делает травяные и мазевые бинты.",
         "轻绷带：在任何阶段，包括致命流血，都能减少相当于全部生命 10% 的失血量。它不会止住流血，也不会减少流血层数。" + Paragraph
             + "重绷带：减少相当于全部生命 20% 的失血量，其余与轻绷带相同。" + Paragraph
             + "草药绷带：彻底止住轻度、深度或重度流血，并减少三分之一的流血层数。在致命流血时，减少相当于全部生命 30% 的失血量。" + Paragraph
             + "药膏绷带：彻底止住轻度、深度或重度流血，减少一半的流血层数，之后还会继续治疗。在致命流血时，减少相当于全部生命 40% 的失血量。" + Paragraph
             + "急救箱：彻底止住任何流血，包括致命流血，并清除流血层数。" + Paragraph
-            + "站立且正在流血的角色按 Q 即可自己使用急救箱。通过 Shift+Q 或背包选项“对其他角色使用”，可以把绷带或急救箱用在其他流血的角色身上，倒下的角色也可以。每种物品在那里都以正常效果生效。野生草药对其他角色的效果与轻绷带相同。游戏的药膏只会治疗。" + Paragraph
+            + "站立且正在流血的角色按 Q 即可自己使用急救箱。通过 Shift+Q 或背包选项“对其他角色使用”，可以把绷带用在其他流血的角色身上，倒下的角色也可以；急救箱则用在站立的角色身上。点击倒下的角色即可用急救箱救起他。每种物品在那里都以正常效果生效。野生草药对其他角色的效果与轻绷带相同。游戏的药膏只会治疗。" + Paragraph
             + "商人出售轻绷带和重绷带，工作台也能制作。完成急救研究后，炼金台可以制作草药绷带和药膏绷带。",
         "輕繃帶：在任何階段，包括致命流血，都能減少相當於全部生命 10% 的失血量。它不會止住流血，也不會減少流血層數。" + Paragraph
             + "重繃帶：減少相當於全部生命 20% 的失血量，其餘與輕繃帶相同。" + Paragraph
             + "草藥繃帶：徹底止住輕度、深度或重度流血，並減少三分之一的流血層數。在致命流血時，減少相當於全部生命 30% 的失血量。" + Paragraph
             + "藥膏繃帶：徹底止住輕度、深度或重度流血，減少一半的流血層數，之後還會繼續治療。在致命流血時，減少相當於全部生命 40% 的失血量。" + Paragraph
             + "急救箱：徹底止住任何流血，包括致命流血，並清除流血層數。" + Paragraph
-            + "站立且正在流血的角色按 Q 即可自己使用急救箱。透過 Shift+Q 或背包選項「對其他角色使用」，可以把繃帶或急救箱用在其他流血的角色身上，倒下的角色也可以。每種物品在那裡都以正常效果生效。野生草藥對其他角色的效果與輕繃帶相同。遊戲的藥膏只會治療。" + Paragraph
+            + "站立且正在流血的角色按 Q 即可自己使用急救箱。透過 Shift+Q 或背包選項「對其他角色使用」，可以把繃帶用在其他流血的角色身上，倒下的角色也可以；急救箱則用在站立的角色身上。點擊倒下的角色即可用急救箱救起他。每種物品在那裡都以正常效果生效。野生草藥對其他角色的效果與輕繃帶相同。遊戲的藥膏只會治療。" + Paragraph
             + "商人出售輕繃帶和重繃帶，工作台也能製作。完成急救研究後，煉金台可以製作草藥繃帶和藥膏繃帶。",
         "軽い包帯：どの段階でも、致命的な出血でも、失血量から体力全体の10%を取り除きます。出血は止めず、出血スタックもそのままです。" + Paragraph
             + "重い包帯：失血量から体力全体の20%を取り除き、それ以外は軽い包帯と同じです。" + Paragraph
             + "薬草包帯：軽い、深い、重い出血を完全に止め、出血スタックの3分の1を取り除きます。致命的な出血では、失血量から体力全体の30%を取り除きます。" + Paragraph
             + "軟膏包帯：軽い、深い、重い出血を完全に止め、出血スタックの半分を取り除き、その後も回復を続けます。致命的な出血では、失血量から体力全体の40%を取り除きます。" + Paragraph
             + "救急箱：致命的な出血も含めてすべての出血を、出血スタックごと完全に止めます。" + Paragraph
-            + "立っていて出血しているキャラクターは、Q で救急箱を自分に使います。Shift+Q かインベントリの「他のキャラクターに使う」で、包帯や救急箱を出血している別のキャラクターに、倒れたキャラクターにも使えます。どのアイテムもそこで通常の効果で働きます。野草は別のキャラクターには軽い包帯と同じように働きます。ゲームの軟膏は回復するだけです。" + Paragraph
+            + "立っていて出血しているキャラクターは、Q で救急箱を自分に使います。Shift+Q かインベントリの「他のキャラクターに使う」で、包帯は出血している別のキャラクターに、倒れたキャラクターにも使え、救急箱は立っているキャラクターに使えます。倒れたキャラクターはクリックすると救急箱で助けられます。どのアイテムもそこで通常の効果で働きます。野草は別のキャラクターには軽い包帯と同じように働きます。ゲームの軟膏は回復するだけです。" + Paragraph
             + "軽い包帯と重い包帯は商人が扱っており、作業台で作れます。応急手当の研究後、錬金台で薬草包帯と軟膏包帯を作れます。",
         "Venda ligera: quita el 10 % de la vida total de la pérdida de sangre, en cualquier etapa, también con hemorragia mortal. No detiene la hemorragia y deja las acumulaciones de sangrado." + Paragraph
             + "Venda pesada: quita el 20 % de la vida total de la pérdida de sangre; por lo demás, como la ligera." + Paragraph
             + "Venda de hierbas: detiene por completo una hemorragia leve, profunda o grave y quita un tercio de las acumulaciones de sangrado. Con hemorragia mortal quita el 30 % de la vida total de la pérdida de sangre." + Paragraph
             + "Venda de ungüento: detiene por completo una hemorragia leve, profunda o grave, quita la mitad de las acumulaciones de sangrado y sigue curando después. Con hemorragia mortal quita el 40 % de la vida total de la pérdida de sangre." + Paragraph
             + "Botiquín: detiene por completo cualquier hemorragia, también una mortal, junto con las acumulaciones de sangrado." + Paragraph
-            + "Un personaje de pie que sangra se aplica el botiquín con Q. Con Mayús+Q o la opción de inventario Usar en otro personaje, una venda o el botiquín van a otro personaje que sangra, también a uno caído. Cada objeto actúa allí con su fuerza normal. Las hierbas silvestres actúan en otro personaje como una venda ligera. El ungüento del juego solo cura." + Paragraph
+            + "Un personaje de pie que sangra se aplica el botiquín con Q. Con Mayús+Q o la opción de inventario Usar en otro personaje, una venda va a otro personaje que sangra, también a uno caído, y el botiquín a uno de pie. El botiquín rescata a un personaje caído al hacer clic en él. Cada objeto actúa allí con su fuerza normal. Las hierbas silvestres actúan en otro personaje como una venda ligera. El ungüento del juego solo cura." + Paragraph
             + "Los comerciantes venden vendas ligeras y pesadas, y el banco de trabajo las fabrica. Tras la investigación Primeros auxilios, la mesa de alquimia fabrica vendas de hierbas y de ungüento.",
         "Bandagem leve: tira 10% da vida total da perda de sangue, em qualquer estágio, também no sangramento letal. Ela não estanca o sangramento e deixa os acúmulos de sangramento." + Paragraph
             + "Bandagem pesada: tira 20% da vida total da perda de sangue; no resto, como a leve." + Paragraph
             + "Bandagem de ervas: estanca por completo um sangramento leve, profundo ou grave e tira um terço dos acúmulos de sangramento. No sangramento letal, tira 30% da vida total da perda de sangue." + Paragraph
             + "Bandagem de pomada: estanca por completo um sangramento leve, profundo ou grave, tira metade dos acúmulos de sangramento e continua curando depois. No sangramento letal, tira 40% da vida total da perda de sangue." + Paragraph
             + "Kit de primeiros socorros: estanca por completo qualquer sangramento, também um letal, junto com os acúmulos de sangramento." + Paragraph
-            + "Um personagem de pé que está sangrando aplica em si o kit de primeiros socorros com Q. Com Shift+Q ou a opção de inventário Usar em outro personagem, uma bandagem ou o kit vão para outro personagem que está sangrando, também um caído. Cada item age ali com sua força normal. As ervas silvestres agem em outro personagem como uma bandagem leve. A pomada do jogo só cura." + Paragraph
+            + "Um personagem de pé que está sangrando aplica em si o kit de primeiros socorros com Q. Com Shift+Q ou a opção de inventário Usar em outro personagem, uma bandagem vai para outro personagem que está sangrando, também um caído, e o kit para um personagem de pé. O kit resgata um personagem caído quando você clica nele. Cada item age ali com sua força normal. As ervas silvestres agem em outro personagem como uma bandagem leve. A pomada do jogo só cura." + Paragraph
             + "Os mercadores vendem bandagens leves e pesadas, e a bancada de trabalho as fabrica. Após a pesquisa Primeiros Socorros, a mesa de alquimia fabrica bandagens de ervas e de pomada.");
 
     private static readonly UniqueCandidateTranslations ReviveTitle = FirstHintText.ReviveTitle;
@@ -428,60 +428,70 @@ internal static class GuideTopicText
         "The tactical formation is still experimental." + Paragraph
             + "The formation lines your group up around the group leader. Select a member of your group. The formation button then appears at the bottom, next to Auto Skill, Hold Position and Prioritize Sleep. Left click turns it on or off for that member, right click opens the window." + Paragraph
             + "The top member of the list is the group leader. Drag a member to the top to make them the leader. Drag members to their places in the grid, the top is the front. Use the arrows to switch between 8 formations, the one shown is used." + Paragraph
+            + "Roles are still experimental and will be expanded. They set a member's place in the formation. With the group AI from the Delvers menu, every member also acts by its role." + Paragraph
             + "Each member has 5 slots for skills. They prefer the first one that is ready. This only applies to members with Auto Skill." + Paragraph
             + "In a dungeon the group follows the leader in this formation. In combat they line up and attack whatever is in reach. Afterwards each member returns to their place." + Paragraph
             + "In the village, \"Test formation\" shows the formation for 20 seconds.",
         "전술 대형은 아직 실험적인 기능입니다." + Paragraph
             + "대형으로 그룹 리더를 중심으로 그룹을 배치합니다. 그룹의 대원을 선택하면 아래쪽 자동 스킬, 명령 대기, 휴식 우선 옆에 대형 버튼이 나타납니다. 왼쪽 클릭으로 그 대원의 대형을 켜거나 끄고, 오른쪽 클릭으로 창을 엽니다." + Paragraph
             + "목록 맨 위의 대원이 그룹 리더입니다. 대원을 맨 위로 끌어 리더로 만드세요. 격자에서 대원을 각자의 자리로 끌어 놓으세요. 위쪽이 앞쪽입니다. 화살표로 8개의 대형을 오갈 수 있으며, 표시된 대형이 적용됩니다." + Paragraph
+            + "역할은 아직 실험적인 기능이며 앞으로 확장됩니다. 역할은 대형에서 대원의 자리를 정합니다. Delvers 메뉴의 그룹 AI를 켜면 각 대원이 자기 역할에 따라서도 행동합니다." + Paragraph
             + "각 대원은 스킬 자리 5개를 가집니다. 그중 준비된 첫 번째 스킬을 우선 사용합니다. 자동 스킬이 켜진 대원에게만 적용됩니다." + Paragraph
             + "던전에서 그룹은 이 대형으로 리더를 따라갑니다. 전투에서는 자리를 잡고 사거리 안의 적을 공격합니다. 그 뒤 각 대원이 자기 자리로 돌아갑니다." + Paragraph
             + "마을에서는 \"대형 시험\"이 20초 동안 대형을 보여 줍니다.",
         "La formation tactique est encore expérimentale." + Paragraph
             + "La formation place le groupe autour du chef de groupe. Sélectionnez un membre du groupe. Le bouton de la formation apparaît alors en bas, à côté de Compétence auto, Rester sur place et Prioriser le sommeil. Clic gauche : l'active ou la désactive pour ce membre. Clic droit : ouvre la fenêtre." + Paragraph
             + "Le membre en haut de la liste est le chef de groupe. Faites glisser un membre en haut pour en faire le chef. Faites glisser les membres à leur place dans la grille, le haut est l'avant. Les flèches passent d'une formation à l'autre parmi 8, celle affichée s'applique." + Paragraph
+            + "Les rôles sont encore expérimentaux et seront étendus. Ils fixent la place d'un membre dans la formation. Avec l'IA de groupe du menu Delvers, chaque membre agit aussi selon son rôle." + Paragraph
             + "Chaque membre a 5 emplacements de compétences. Il utilise en priorité la première qui est prête. Cela ne vaut que pour les membres avec Compétence auto." + Paragraph
             + "Dans un donjon, le groupe suit le chef dans cette formation. En combat, il se met en place et attaque ce qui est à portée. Ensuite, chaque membre retourne à sa place." + Paragraph
             + "Au village, « Tester la formation » montre la formation pendant 20 secondes.",
         "Die taktische Formation ist noch experimentell." + Paragraph
             + "Mit der Formation stellst du deine Gruppe um den Gruppenanführer auf. Wähle eine Figur deiner Gruppe. Unten neben Autoskill, Position halten und Schlaf priorisieren erscheint dann der Knopf für die Formation. Linksklick schaltet sie für diese Figur an oder aus, Rechtsklick öffnet das Fenster." + Paragraph
             + "Die oberste Figur der Liste ist der Gruppenanführer. Ziehe eine Figur nach oben, um sie zum Anführer zu machen. Ziehe die Figuren im Raster an ihre Plätze, oben ist vorne. Mit den Pfeilen wechselst du zwischen 8 Formationen, die angezeigte gilt." + Paragraph
+            + "Die Rollen sind noch experimentell und werden ausgebaut. Sie bestimmen den Platz einer Figur in der Formation. Mit der Gruppen KI aus dem Delvers Menü handelt jede Figur zusätzlich nach ihrer Rolle." + Paragraph
             + "Jede Figur hat 5 Plätze für Fähigkeiten. Die erste bereite davon setzt sie bevorzugt ein. Das gilt nur für Figuren mit Autoskill." + Paragraph
             + "Im Dungeon folgt die Gruppe dem Anführer in dieser Aufstellung. Im Kampf stellt sie sich auf und greift an, was in Reichweite ist. Danach kehrt jede Figur an ihren Platz zurück." + Paragraph
             + "Im Dorf zeigt „Formation testen“ die Aufstellung für 20 Sekunden.",
         "Тактический строй пока экспериментальный." + Paragraph
             + "Строй расставляет отряд вокруг лидера группы. Выберите члена отряда. Внизу, рядом с «Автонавык», «Удерживать позицию» и «Отдавать приоритет сну», появится кнопка строя. Левый щелчок включает или выключает строй для этого члена отряда, правый щелчок открывает окно." + Paragraph
             + "Лидер группы стоит первым в списке. Перетащите члена отряда наверх, чтобы сделать его лидером. Расставьте членов отряда по местам в сетке, верх означает перед. Стрелками можно переключаться между 8 строями, действует показанный." + Paragraph
+            + "Роли пока экспериментальные и будут расширены. Они задают место члена отряда в строю. С ИИ отряда из меню Delvers каждый член отряда также действует по своей роли." + Paragraph
             + "У каждого члена отряда 5 мест для навыков. Он предпочитает первый готовый из них. Это действует только для тех, у кого включён «Автонавык»." + Paragraph
             + "В подземелье отряд следует за лидером в этом строю. В бою он занимает места и атакует всё, что в досягаемости. После боя каждый возвращается на своё место." + Paragraph
             + "В деревне «Проверить строй» показывает расстановку 20 секунд.",
         "战术队形目前仍是实验性功能。" + Paragraph
             + "队形让队伍围绕队长站位。选择队伍中的一名成员，下方的自动技能、原地停留和优先睡眠旁就会出现队形按钮。左键为该成员开启或关闭队形，右键打开窗口。" + Paragraph
             + "列表最上方的成员就是队长。把成员拖到最上方即可让其成为队长。在网格中把成员拖到各自的位置，上方为前方。用箭头可在 8 个队形之间切换，显示的队形即为生效的队形。" + Paragraph
+            + "角色目前仍是实验性功能，之后还会扩展。角色决定成员在队形中的位置。开启 Delvers 菜单中的队伍 AI 后，每名成员还会按自己的角色行动。" + Paragraph
             + "每名成员有 5 个技能位置，会优先使用其中第一个就绪的技能。这只适用于开启了自动技能的成员。" + Paragraph
             + "在地下城中，队伍按此队形跟随队长。战斗时队伍会站好位置，攻击射程内的敌人。战斗结束后，每名成员回到自己的位置。" + Paragraph
             + "在村庄里，“测试队形”会展示队形 20 秒。",
         "戰術隊形目前仍是實驗性功能。" + Paragraph
             + "隊形讓隊伍圍繞隊長站位。選擇隊伍中的一名成員，下方的自動技能、保持位置和優先睡眠旁就會出現隊形按鈕。左鍵為該成員開啟或關閉隊形，右鍵開啟視窗。" + Paragraph
             + "清單最上方的成員就是隊長。把成員拖到最上方即可讓其成為隊長。在網格中把成員拖到各自的位置，上方為前方。用箭頭可在 8 個隊形之間切換，顯示的隊形即為生效的隊形。" + Paragraph
+            + "角色目前仍是實驗性功能，之後還會擴充。角色決定成員在隊形中的位置。開啟 Delvers 選單中的隊伍 AI 後，每名成員還會按自己的角色行動。" + Paragraph
             + "每名成員有 5 個技能位置，會優先使用其中第一個就緒的技能。這只適用於開啟了自動技能的成員。" + Paragraph
             + "在地下城中，隊伍按此隊形跟隨隊長。戰鬥時隊伍會站好位置，攻擊射程內的敵人。戰鬥結束後，每名成員回到自己的位置。" + Paragraph
             + "在村莊裡，「測試隊形」會展示隊形 20 秒。",
         "戦術隊形はまだ試験的な機能です。" + Paragraph
             + "隊形では、グループリーダーを中心にグループを配置します。グループの仲間を選ぶと、下のオートスキル、その場で待機、睡眠優先の横に隊形のボタンが出ます。左クリックでその仲間の隊形をオンまたはオフにし、右クリックでウィンドウを開きます。" + Paragraph
             + "リストの一番上の仲間がグループリーダーです。仲間を一番上へドラッグするとリーダーになります。グリッドで仲間をそれぞれの位置へドラッグします。上が前です。矢印で 8 つの隊形を切り替えられ、表示中の隊形が使われます。" + Paragraph
+            + "役割はまだ試験的な機能で、今後拡張されます。役割は隊形での仲間の位置を決めます。Delvers メニューのグループAIを使うと、各仲間は自分の役割に沿っても行動します。" + Paragraph
             + "仲間ごとにスキルの枠が 5 つあります。その中で最初に準備できたスキルを優先して使います。オートスキルがオンの仲間だけに適用されます。" + Paragraph
             + "ダンジョンではグループがこの隊形でリーダーについて行きます。戦闘では位置につき、射程内の敵を攻撃します。その後、各仲間は自分の位置に戻ります。" + Paragraph
             + "村では「隊形を試す」で隊形を 20 秒間確認できます。",
         "La formación táctica todavía es experimental." + Paragraph
             + "La formación coloca al grupo alrededor del líder del grupo. Selecciona a un miembro del grupo. El botón de la formación aparece abajo, junto a Habilidad automática, Mantener posición y Priorizar el sueño. Clic izquierdo: la activa o la desactiva para ese miembro. Clic derecho: abre la ventana." + Paragraph
             + "El miembro de arriba de la lista es el líder del grupo. Arrastra a un miembro arriba para hacerlo líder. Arrastra a los miembros a sus puestos en la cuadrícula; arriba es el frente. Con las flechas cambias entre 8 formaciones; se usa la que se muestra." + Paragraph
+            + "Los roles todavía son experimentales y se ampliarán. Determinan el puesto de un miembro en la formación. Con la IA de grupo del menú Delvers, cada miembro actúa además según su rol." + Paragraph
             + "Cada miembro tiene 5 huecos para habilidades. Usa antes la primera que esté lista. Solo vale para miembros con Habilidad automática." + Paragraph
             + "En una mazmorra el grupo sigue al líder con esta formación. En combate se coloca y ataca lo que está a su alcance. Después, cada miembro vuelve a su puesto." + Paragraph
             + "En el pueblo, «Probar formación» muestra la formación durante 20 segundos.",
         "A formação tática ainda é experimental." + Paragraph
             + "A formação posiciona o grupo em volta do líder do grupo. Selecione um membro do grupo. O botão da formação aparece embaixo, ao lado de Habilidade automática, Manter posição e Priorizar sono. Clique esquerdo: ativa ou desativa para esse membro. Clique direito: abre a janela." + Paragraph
             + "O membro no topo da lista é o líder do grupo. Arraste um membro para o topo para que ele seja o líder. Arraste os membros para seus lugares na grade; o topo é a frente. Use as setas para alternar entre 8 formações; vale a que está sendo mostrada." + Paragraph
+            + "As funções ainda são experimentais e serão ampliadas. Elas definem o lugar de um membro na formação. Com a IA de grupo do menu Delvers, cada membro também age de acordo com sua função." + Paragraph
             + "Cada membro tem 5 espaços para habilidades. Ele usa primeiro a primeira que estiver pronta. Isso vale apenas para membros com Habilidade automática." + Paragraph
             + "Na masmorra, o grupo segue o líder nesta formação. Em combate, ele toma posição e ataca o que estiver ao alcance. Depois, cada membro volta ao seu lugar." + Paragraph
             + "Na vila, \"Testar formação\" mostra a formação por 20 segundos.");

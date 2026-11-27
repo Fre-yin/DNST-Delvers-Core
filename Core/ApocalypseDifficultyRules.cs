@@ -77,19 +77,39 @@ internal static class ApocalypseDifficultyRules
         internal State Created() => this with { CreatingFromScreen = false };
     }
 
+    // Hell, the step above Downfall that Amfi's mod hell-difficulty gives the game itself (its own value 5).
+    internal const int Hell = 5;
+
     // One arrow step on the campaign screen for one part. current is the game's value on the screen,
     // selected whether Apocalypse is selected for the part, available whether the screen may offer it
-    // (switch on, Downfall unlocked).
-    internal static StepResult Step(int current, bool selected, bool increase, bool available)
+    // (switch on, Downfall unlocked), hell whether Amfi's Hell is installed. With Hell the order is Downfall,
+    // Apocalypse, Hell; Core never writes the game's value, the game steps from 4 to 5
+    // and back itself (Handled false), Core only sets or drops the selection before it.
+    internal static StepResult Step(int current, bool selected, bool increase, bool available, bool hell = false)
     {
-        // Any native step away from Downfall drops a selection.
+        // Down from Hell lands on Apocalypse: the game steps to Downfall, the screen shows Apocalypse there.
+        if (current == Hell && hell && !increase && available) return new StepResult(false, true, true);
+        // Any other native step away from Downfall drops a selection.
         if (current != Downfall) return new StepResult(false, false, false);
         if (increase)
         {
-            if (selected) return new StepResult(true, true, false);   // already the top step
+            // Up from Apocalypse: the game's own step to Hell, or nothing above it without Hell.
+            if (selected) return hell ? new StepResult(false, false, true) : new StepResult(true, true, false);
             return available ? new StepResult(true, true, true) : new StepResult(false, false, false);
         }
         // Without a selection the game steps down from Downfall to VeryHard.
         return selected ? new StepResult(true, false, true) : new StepResult(false, false, false);
     }
+
+    // The mark of a loaded save for the game values it was saved with: a part counts only on the game's Downfall,
+    // so a world on Hell or below never loads as Apocalypse. game null (the save did not give its values): the mark as it is. A test
+    // campaign keeps its mark: the tools set Apocalypse on a test campaign of any difficulty (SetApocalypseForTest, on Normal).
+    internal static ApocalypseMark Checked(ApocalypseMark mark, (int Combat, int Management)? game, bool testCampaign = false)
+        => game is { } values && !testCampaign
+            ? new ApocalypseMark(mark.Combat && values.Combat == Downfall, mark.Management && values.Management == Downfall) : mark;
+
+    internal static string IgnoredLine(Guid campaign, ApocalypseMark mark, ApocalypseMark kept, (int Combat, int Management) game)
+        => "CORE_APOCALYPSE_MARK_IGNORED campaign=" + campaign.ToString("D")
+            + " combat=" + (mark.Combat && !kept.Combat ? game.Combat.ToString(System.Globalization.CultureInfo.InvariantCulture) : "-")
+            + " management=" + (mark.Management && !kept.Management ? game.Management.ToString(System.Globalization.CultureInfo.InvariantCulture) : "-");
 }

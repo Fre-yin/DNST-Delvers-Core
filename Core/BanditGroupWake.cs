@@ -31,7 +31,6 @@ internal static class BanditGroupWake
     private static readonly List<(UnitEntity Trigger, string Cause)> queued = new();
     private static readonly HashSet<string> triggered = new(StringComparer.Ordinal);
     private static readonly List<(Guid Unit, MapType Map, float Due)> delayed = new();
-    private static readonly Random random = new();
     private static bool waking;
     private static int lines;
 
@@ -43,11 +42,19 @@ internal static class BanditGroupWake
         lines = 0;
     }
 
+    // A bandit Core has woken and that waits for its delay: it belongs to the fight already (BanditBossBar).
+    internal static bool Waking(UnitEntity unit)
+    {
+        if (unit == null || delayed.Count == 0 || !Guid.TryParse(unit.Guid.ToString(), out var guid)) return false;
+        foreach (var entry in delayed) if (entry.Unit == guid) return true;
+        return false;
+    }
+
     // A bandit Core wakes enters combat after its own short delay of game time.
     internal static void WakeLater(UnitEntity unit, MapType map)
     {
         if (unit == null || !Guid.TryParse(unit.Guid.ToString(), out var guid)) return;
-        delayed.Add((guid, map, GameClock.Now + GroupAiRules.WakeDelay(random.NextDouble())));
+        delayed.Add((guid, map, GameClock.Now + GroupAiRules.WakeDelay(CoreRandom.Next01(CoreRandomRules.BanditWake, guid))));
     }
 
     // On the game tick: the delayed bandits whose time has come enter combat through the game's applier; one that died, fell or
@@ -64,7 +71,7 @@ internal static class BanditGroupWake
                 var (guid, map, due) = delayed[i];
                 if (!GroupAiRules.WakeDue(due, now)) continue;
                 delayed.RemoveAt(i);
-                var unit = CoreGame.FindUnit(guid);
+                var unit = CoreGame.FindUnit(map, guid);
                 if (unit == null || unit.IsDead || GroupAiBandits.IsDowned(unit)) continue;
                 var state = CoreGame.Component<CombatInfoComponent>(unit.Cast<IEntity>())?.GetCombatState() ?? CombatState.Unawared;
                 if (state == CombatState.InCombat) continue;
@@ -84,14 +91,25 @@ internal static class BanditGroupWake
         Queue(target, "hit");
     }
 
-    // After the game's applier: a Core bandit entering combat under a forced target (a player's taunt).
+    // After the game's applier: a Core bandit entering combat under a forced target (a player's taunt). A Core bandit leaving its
+    // fight (the game's combat state tick builds a CombatStateApplyData for that too, catalog 01-kampf, CombatState) ends what
+    // Core noted for that fight (GroupAiBandits.FightOver), so its next fight starts fresh.
     internal static void After(CombatStateApplyData data)
     {
-        if (waking || data == null || data.State != CombatState.InCombat) return;
+        if (data != null && data.State != CombatState.InCombat)
+        {
+            var left = data.Target?.TryCast<UnitEntity>();
+            if (left != null && CoreUnitRules.IsCoreUnit(left.Key)) GroupAiBandits.FightOver(left.Guid.ToString());
+            return;
+        }
+        if (waking || data == null) return;
         var trigger = data.Target?.TryCast<UnitEntity>();
         if (trigger == null || !CoreUnitRules.IsCoreUnit(trigger.Key)) return;
         if (CoreGame.Component<CombatInfoComponent>(trigger.Cast<IEntity>())?.GetForceAttackTarget() != null) Queue(trigger, "taunt");
     }
+
+    // A bandit's fight ended: its first hit or taunt in the next fight wakes its comrades again.
+    internal static void Forget(string guid) => triggered.Remove(guid);
 
     private static void Queue(UnitEntity trigger, string cause)
     {
@@ -115,8 +133,7 @@ internal static class BanditGroupWake
     private static void Wake(UnitEntity trigger, string cause)
     {
         if (trigger == null || trigger.IsDead || !CoreGame.TryMapOfUnit(trigger, out var map)) return;
-        var maps = CoreGame.Flow?._inMapDatas;
-        var inMap = maps != null && maps.ContainsKey(map) ? maps[map] : null;
+        var inMap = CoreGame.InMapOf(map);
         var alive = inMap?.GetAliveUnitsOnMap();
         if (alive == null) return;
         var from = inMap.GetLogicalPosition(trigger.Guid);

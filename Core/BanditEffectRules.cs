@@ -2,7 +2,7 @@ using System.Globalization;
 
 namespace DungeonSettlersDelvers.Core;
 
-// The bandits' effect log for the Toolkit's block of bandit skills (BanditEffectProbe), pure: every damage, heal or affecter whose
+// The bandits' effect log for the tests of bandit skills (BanditEffectProbe), pure: every damage, heal or affecter whose
 // user is a bandit or a bandit's summon (CoreFaction), with the side of its target. Test campaigns only, off until a test turns it
 // on, capped.
 internal static class BanditEffectRules

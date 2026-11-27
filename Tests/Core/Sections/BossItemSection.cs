@@ -86,6 +86,7 @@ internal static class BossItemSection
                 && CoreTextLayout.KeepUnits("healing done +20%.") == "healing done <nobr>+20%</nobr>."
                 && CoreTextLayout.KeepUnits("unter 35 % Leben, 12,5 % mehr") == "unter <nobr>35 %</nobr> Leben, <nobr>12,5 %</nobr> mehr"
                 && CoreTextLayout.KeepUnits("치유량 +20%.") == "치유량 <nobr>+20%</nobr>." && CoreTextLayout.KeepUnits("{0}%") == "{0}%"
+                && CoreTextLayout.KeepUnits("inflige {0} % de dégâts") == "inflige <nobr>{0} %</nobr> de dégâts"
                 && CoreTextLayout.KeepUnits("no number") == "no number" && CoreTextLayout.KeepUnits(null) == null,
             "texts: a number keeps its percent sign on the same line, with or without a space, in every language");
 

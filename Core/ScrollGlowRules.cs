@@ -22,12 +22,19 @@ internal static class ScrollGlowRules
     // The ring on the transparent pixels touching the scroll; none further out.
     internal static readonly (byte R, byte G, byte B, byte A) Ring = (255, 236, 140, 90);
 
+    // The nearest of the game's tones within the tolerance turns: two of them lie closer than it (the ribbon's light and middle), so
+    // the first match would give both the light one's tone.
     internal static (byte R, byte G, byte B) Turn(byte r, byte g, byte b)
     {
+        (byte R, byte G, byte B)? best = null;
+        var bestDistance = int.MaxValue;
         foreach (var (from, to) in Turns)
-            if (Near(r, from.R) && Near(g, from.G) && Near(b, from.B)) return to;
-        return (r, g, b);
+        {
+            var distance = Math.Max(Math.Abs(r - from.R), Math.Max(Math.Abs(g - from.G), Math.Abs(b - from.B)));
+            if (distance > Tolerance || distance >= bestDistance) continue;
+            best = to;
+            bestDistance = distance;
+        }
+        return best ?? (r, g, b);
     }
-
-    private static bool Near(byte value, byte wanted) => Math.Abs(value - wanted) <= Tolerance;
 }

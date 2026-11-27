@@ -24,6 +24,7 @@ internal static class CampaignPresenceBookSection
             NoMarkersKeepTheBlock();
             NewCampaignTakesNothing();
             MarkBeforeBindJoinsTheBlock();
+            ForgetClearsTheMarks();
             SavesAreStableAndTheGameKeepsItsPart();
         }
         finally
@@ -161,6 +162,24 @@ internal static class CampaignPresenceBookSection
         CoreSaveStore.BeginNewCampaign(campaign);
         Check(!asked && !CampaignPresenceBook.Seen(CoreSaveStore.Current, campaign, "frieren"),
             "presence: a new campaign takes over no old marker");
+    }
+
+    // The tools forget a test campaign (ForgetTestCampaign, API 1.6.0): its marks go, in the bound block and waiting in memory.
+    static void ForgetClearsTheMarks()
+    {
+        CoreSaveStore.ResetLifecycle();
+        var campaign = Guid.NewGuid();
+        var waiting = Guid.NewGuid();
+        CoreSaveStore.BeginNewCampaign(campaign);
+        CampaignPresenceBook.Mark(CoreSaveStore.Current, campaign, "frieren");
+        CampaignPresenceBook.Mark(CoreSaveStore.Current, campaign, "a-pack-unit");
+        CampaignPresenceBook.Mark(CoreSaveStore.Current, waiting, "lowell");
+        var bound = CampaignPresenceBook.Forget(CoreSaveStore.Current, campaign);
+        var other = CampaignPresenceBook.Forget(CoreSaveStore.Current, waiting);
+        Check(bound == 2 && other == 1 && !CampaignPresenceBook.Seen(CoreSaveStore.Current, campaign, "frieren")
+                && !CampaignPresenceBook.Seen(CoreSaveStore.Current, campaign, "a-pack-unit") && !CampaignPresenceBook.Seen(CoreSaveStore.Current, waiting, "lowell")
+                && CoreSaveStore.Current.HasPresence && CampaignPresenceBook.Mark(CoreSaveStore.Current, campaign, "frieren"),
+            "presence: forgetting a test campaign takes its marks out of the bound block and out of memory, and the unit can be marked again");
     }
 
     static void MarkBeforeBindJoinsTheBlock()

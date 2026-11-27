@@ -74,7 +74,9 @@ jobs:
           gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir release \
             --pattern "DelversCore-$VERSION-BepInEx.zip" --pattern SHA256SUMS.txt
           cd release
-          sha256sum --check SHA256SUMS.txt
+          # SHA256SUMS.txt also names the mod loader zip, which is not downloaded here: exactly the BepInEx zip's
+          # line is checked, and the run fails when that line is missing or its hash does not match.
+          grep -E "^[0-9a-f]{64} [ *]DelversCore-${VERSION//./\.}-BepInEx\.zip$" SHA256SUMS.txt | sha256sum --check --strict
 
       - name: Read changelog
         if: env.FILES != 'page'

@@ -6,7 +6,8 @@ using static TestKit;
 internal static class WeakBanditsSection
 {
     // Signature skills of the boss party that no weak bandit carries.
-    static readonly string[] Signature = { BanditChainRules.SkillKey, BanditSerratedRules.SkillKey, BanditFearRules.SkillKey, LifebloomRules.SkillKey, "SKILL_GuardiansTaunt", "SKILL_DeadlyFear" };
+    // Guardian's Taunt left this list the weak guard has it from level 3.
+    static readonly string[] Signature = { BanditChainRules.SkillKey, BanditSerratedRules.SkillKey, BanditFearRules.SkillKey, LifebloomRules.SkillKey, "SKILL_DeadlyFear" };
 
     internal static void Run()
     {
@@ -126,8 +127,8 @@ internal static class WeakBanditsSection
         Check(WeakBanditRules.ActivesOf(waterMage, 1).SequenceEqual(new[] { WeakBanditKitKeys.MagicBasic, WeakBanditKitKeys.SummonBubbling, WeakBanditKitKeys.TidalMark })
                 && WeakBanditRules.ActivesOf(waterMage, 2).SequenceEqual(new[] { WeakBanditKitKeys.MagicBasic, WeakBanditKitKeys.SummonBubbling, WeakBanditKitKeys.TidalMark, WeakBanditKitKeys.EmbracingWave })
                 && WeakBanditRules.ActivesOf(waterMage, 3).Last() == WeakBanditKitKeys.SummonBubbleToad
-                && WeakBanditRules.Definitions.Where(d => d.Skills.Contains(WeakBanditKitKeys.SummonBubbleToad)).Select(d => d.Key).SequenceEqual(new[] { WeakBanditRules.KeyOf(3, waterMage) })
-                && WeakBanditRules.Definitions.Count(d => d.Skills.Contains(WeakBanditKitKeys.SummonBubbling)) == WeakBanditRules.Levels
+                && WeakBanditRules.Definitions.Where(d => d.Skills.Contains(WeakBanditKitKeys.SummonBubbleToad)).Select(d => d.Key).SequenceEqual(new[] { WeakBanditRules.KeyOf(3, waterMage), WeakBanditRules.Find(3, "Alt2WaterMage").Key })
+                && WeakBanditRules.Definitions.Count(d => d.Skills.Contains(WeakBanditKitKeys.SummonBubbling)) == WeakBanditRules.Levels * (1 + waterMage.Variants.Length)
                 && WeakBanditRules.Classes.Where(c => c != waterMage).All(c => c.TreeSkills.Length == 2),
             "weak classes: the water mage's staff summons a bubbling on every level, the bubble toad joins on level 3 only, the other classes keep two tree skills");
         Check(WeakBanditRules.ActivesOf(waterMage, 1).SequenceEqual(new[] { WeakBanditKitKeys.MagicBasic, WeakBanditKitKeys.SummonBubbling, WeakBanditKitKeys.TidalMark })
@@ -196,15 +197,70 @@ internal static class WeakBanditsSection
             "weak spawn: the keys of a group on its level, unknown classes left out; the log lines");
     }
 
+    // The kit variants and level 3 skills.
+    static void Variants()
+    {
+        var byName = WeakBanditRules.Classes.ToDictionary(c => c.Suffix);
+        var guard = WeakBanditRules.ActivesOf(byName["Guard"], 3);
+        Check(guard.Contains(WeakBanditKitKeys.VileInsult) && guard.Contains(WeakBanditKitKeys.GuardiansTaunt) && !WeakBanditRules.ActivesOf(byName["Guard"], 2).Contains(WeakBanditKitKeys.VileInsult)
+                && guard.Length - 1 <= 8 && WeakBanditRules.Find(3, "Alt1Guard").Skills.Contains(WeakBanditKitKeys.Hammering)
+                && !WeakBanditRules.Find(3, "Alt1Guard").Skills.Contains("SKILL_ShieldUp") && WeakBanditRules.Find(3, "Alt1Guard").Skills.Contains(WeakBanditKitKeys.GuardiansTaunt),
+            "weak variants: the guard takes both taunts from level 3 on and fits the bar; its variant has Hammering for Shields Up");
+        Check(WeakBanditRules.ActivesOf(byName["Spear"], 3).Contains(WeakBanditKitKeys.SpearBash) && WeakBanditRules.ActivesOf(byName["Sword"], 3).Contains(WeakBanditKitKeys.PommelStrike)
+                && WeakBanditRules.Find(2, "Alt1Spear").Skills.Contains(WeakBanditKitKeys.Anchor) && WeakBanditRules.Find(2, "Alt1Sword").Skills.Contains(WeakBanditKitKeys.VerticalSlash)
+                && WeakBanditRules.Find(2, "Alt1FireMage").Skills.Contains(WeakBanditKitKeys.FireCloak) && WeakBanditRules.Find(1, "Alt1Archer").Skills.Contains(WeakBanditKitKeys.ArrowRain)
+                && WeakBanditRules.Find(2, "Alt1Healer").Skills.Contains(WeakBanditKitKeys.GraspingVines) && WeakBanditRules.Find(1, "Alt2Healer").Skills.Contains(WeakBanditKitKeys.HealingTouch),
+            "weak variants: each class's other choice stands in its own row");
+        Check(WeakBanditRules.Definitions.All(d => !d.Skills.Contains("SKILL_Explosion")), "weak variants: Explosion stays out of every kit until its warning is shown");
+        Check(WeakBanditRules.Classes.First(c => c.Suffix == "Blade").Variants.Length == 0 && WeakBanditRules.VariantOf(byName["Spear"], 0) == byName["Spear"] && WeakBanditRules.VariantOf(byName["Spear"], 9) == byName["Spear"],
+            "weak variants: the blade has no other row 0 choice");
+        var mage = byName["WaterMage"];
+        var reserved = WeakBanditRules.Find(3, "Alt1WaterMage");
+        var aggressive = WeakBanditRules.Find(3, "Alt2WaterMage");
+        Check(reserved.Skills.Contains(WeakBanditKitKeys.EmbracingWave) && !reserved.Skills.Contains(WeakBanditKitKeys.SummonBubbleToad) && WeakBanditRules.IsReservedMage(reserved.Key) && !WeakBanditRules.IsReservedMage(aggressive.Key) && !WeakBanditRules.IsReservedMage(WeakBanditRules.KeyOf(3, mage)),
+            "water mage kinds: reserved is today's kit without the toad");
+        Check(aggressive.Skills.Contains(WeakBanditKitKeys.SummonBubbleToad) && aggressive.Skills.Contains(GroupAiWaterRules.WaterDive) && aggressive.Skills.Contains(GroupAiWaterRules.GlacierDrop) && !aggressive.Skills.Contains(WeakBanditKitKeys.EmbracingWave)
+                && !WeakBanditRules.Find(2, "Alt2WaterMage").Skills.Contains(WeakBanditKitKeys.SummonBubbleToad) && !WeakBanditRules.Find(2, "Alt2WaterMage").Skills.Contains(GroupAiWaterRules.WaterDive),
+            "water mage kinds: aggressive has Glacier Drop and never the wave, the toad and the dive from level 3 on");
+        var kinds = new int[3];
+        for (uint roll = 0; roll < 1000; roll++) kinds[WeakBanditRules.VariantNumber(mage, roll)]++;
+        Check(kinds[0] == 0 && kinds[1] == 500 && kinds[2] == 500 && WeakBanditRules.VariantNumber(byName["Blade"], 7) == 0,
+            "water mage kinds: half and half, and the old row is never rolled again");
+        Check(WeakBanditRules.Find(3, "WaterMage").Skills.Contains(WeakBanditKitKeys.SummonBubbleToad) && WeakBanditSpawnRules.KeysOf(3, new[] { "WaterMage" }).Single() == WeakBanditRules.Find(3, "WaterMage").Key,
+            "water mage kinds: the old row stays for saved mages and the switch off");
+        Check(WeakBanditSpawnRules.PatrolLevelOf(0, 1) == 1 && WeakBanditSpawnRules.PatrolLevelOf(0, 3) == 3 && WeakBanditSpawnRules.PatrolLevelOf(0, 4) == 0 && WeakBanditSpawnRules.PatrolLevelOf(1, 2) == 0 && WeakBanditSpawnRules.PatrolLevelOf(0, 0) == 0
+                && WeakBanditSpawnRules.PatrolHit(0.24, 25) && !WeakBanditSpawnRules.PatrolHit(0.25, 25) && !WeakBanditSpawnRules.PatrolHit(0, 0)
+                && WeakBanditSpawnRules.PatrolPercent(null) == 25 && WeakBanditSpawnRules.PatrolPercent(500) == 100 && WeakBanditSpawnRules.PatrolPercent(-1) == 0,
+            "weak patrols: only in the forest on the levels 1 to 3, by their own chance");
+        Check(WeakBanditSpawnRules.PatrolLine(0, 2, new[] { "a", "b" }) == "CORE_WEAKBANDIT_PATROL region=0 phase=2 units=a,b", "weak patrols: the line names them");
+        Check(WeakBanditRules.CoinsJustDropped(10.5f, 10f, 3) && !WeakBanditRules.CoinsJustDropped(11f, 10f, 3) && !WeakBanditRules.CoinsJustDropped(10.5f, 10f, 40)
+                && !WeakBanditRules.CoinsJustDropped(10f, null, 0) && !WeakBanditRules.CoinsJustDropped(9f, 10f, 0),
+            "weak coins: bandits of a group falling in one blow leave one stack, another group its own");
+        Check(BanditSummonRules.IsMage(WeakBanditRules.Find(3, "Alt2WaterMage").Key) && BanditSummonRules.IsMage(WeakBanditRules.Find(1, "WaterMage").Key) && !BanditSummonRules.IsMage(WeakBanditRules.Find(1, "FireMage").Key)
+                && BanditSummonRules.IsSummon(WeakBanditKitKeys.Bubbling) && BanditSummonRules.IsSummon(WeakBanditKitKeys.BubbleToad) && !BanditSummonRules.IsSummon(null),
+            "bandit summons: the water mage's two summons, of every kind of mage");
+        Check(BanditSummonRules.Holds(false, false) && !BanditSummonRules.Holds(true, false) && !BanditSummonRules.Holds(false, true),
+            "bandit summons: held only with mage and summon out of a fight");
+        Check(BanditSummonRules.KeepsCell((5, 5), (6, 7)) && BanditSummonRules.KeepsCell((5, 5), (3, 3)) && !BanditSummonRules.KeepsCell((5, 5), (8, 5)),
+            "bandit summons: a place stays while the mage is near it, no new order for a small step");
+        var plain = WeakBanditSpawnRules.KeysOf(2, new[] { "Spear", "Guard" });
+        var seen = new HashSet<string>();
+        for (var i = 0; i < 200; i++) seen.UnionWith(WeakBanditSpawnRules.KeysOf(2, new[] { "Spear", "Guard" }, WeakBanditSpawnRules.VariantHash(i, 0, 1, "room")));
+        Check(plain.SequenceEqual(new[] { WeakBanditRules.Find(2, "Spear").Key, WeakBanditRules.Find(2, "Guard").Key })
+                && seen.Count == 4 && WeakBanditSpawnRules.KeysOf(2, new[] { "Spear" }, 7).Length == 1,
+            "weak variants: without the roll the plain kits, with it every class's kits come up, one key per class");
+    }
+
     static void KeysAndLookups()
     {
         var weak = WeakBanditRules.Definitions;
-        Check(weak.Length == WeakBanditRules.Levels * WeakBanditRules.Classes.Length
+        Check(weak.Length == WeakBanditRules.Levels * WeakBanditRules.Classes.Sum(c => 1 + c.Variants.Length)
                 && weak.Select(d => d.Key).Distinct().Count() == weak.Length
                 && weak.All(d => CoreUnitRules.IsCoreUnit(d.Key) && d.Key.Contains(WeakBanditRules.KeyPart))
                 && weak.All(d => CoreUnitRules.TryGet(d.Key, out var found) && ReferenceEquals(found, d))
-                && WeakBanditRules.Classes.All(c => weak.Count(d => d.Key.EndsWith(c.Suffix, StringComparison.Ordinal)) == WeakBanditRules.Levels),
-            "weak bandits: one key per level and class, each a Core unit that TryGet finds, the class as the key's end");
+                && WeakBanditRules.Classes.All(c => weak.Count(d => d.Key.EndsWith(c.Suffix, StringComparison.Ordinal)) == WeakBanditRules.Levels * (1 + c.Variants.Length)),
+            "weak bandits: one key per level, class and kit variant, each a Core unit that TryGet finds, the class as the key's end");
+        Variants();
         Check(CoreUnitRules.Units.Length == 4 && CoreUnitRules.Units.All(u => u.Level == 0 && !WeakBanditRules.IsWeak(u))
                 && CoreUnitRules.All.Length == CoreUnitRules.Units.Length + weak.Length
                 && CoreUnitRules.All.Take(4).SequenceEqual(CoreUnitRules.Units)
@@ -230,8 +286,8 @@ internal static class WeakBanditsSection
             var lead = string.IsNullOrEmpty(c.WeaponSkill) ? new[] { c.Basic } : new[] { c.Basic, c.WeaponSkill };
             Check(one.SequenceEqual(lead.Append(c.TreeSkills[0]))
                     && two.SequenceEqual(lead.Append(c.TreeSkills[0]).Append(c.TreeSkills[1]))
-                    && three.SequenceEqual(c.TreeSkills.Length > 2 ? two.Append(c.TreeSkills[2]) : two),
-                "weak bandits " + c.Suffix + ": basic attack, weapon skill and the first tree skill on level 1, the second from level 2 on, level 3 like level 2 (with a third tree skill only where the table gives one)");
+                    && three.SequenceEqual((c.TreeSkills.Length > 2 ? two.Append(c.TreeSkills[2]) : two).Concat(c.Level3Skills)),
+                "weak bandits " + c.Suffix + ": basic attack, weapon skill and the first tree skill on level 1, the second from level 2 on, level 3 like level 2 with its third tree skill and level 3 skills");
         }
         Check(WeakBanditRules.Definitions.All(d => !d.Skills.Intersect(Signature).Any() && !d.Lifebloom),
             "weak bandits: no signature skill of the boss party and no Lifebloom");

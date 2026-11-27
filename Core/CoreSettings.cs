@@ -83,6 +83,19 @@ internal static class CoreSettings
     // One bandit fighting wakes the band; on by default, switchable without a build.
     internal static bool GroupWake => Get(GroupAiRules.GroupWakeKey, true);
 
+    // Bandits vary: their hidden tactics (BanditTraitRules), their kits and combos; off, all as before, for the balance measurement.
+    internal static bool BanditsVary => Get(BanditTraitRules.SwitchKey, true);
+
+    // The combos' calls: off until their texts are final (BanditComboCallText).
+    internal static bool ComboCalls => Get(BanditComboRules.CallsKey, false);
+    // The combos' grace (BanditComboRules.Grace, 3 s): the seconds in which a starter waits for a partner's
+    // follow-up and both keep their combo skills for it; 0 turns it off, all as before, at most 10.
+    internal static double ComboGrace => BanditComboRules.Grace(Number(BanditComboRules.GraceKey));
+
+    // The look ahead of the AI's health lines counts the heals in the window too, the bar's own course (GroupAiLowRules; net by
+    // default, off counts damage only).
+    internal static bool LowNet => Get(GroupAiLowRules.NetKey, true);
+
     // The display of Apocalypse's slow motion (ApocalypseSlowDisplay, read once per campaign): bar and
     // effects on by default; the rim's strength from 0 (off) to 1, 0.42 by default (B2).
     internal static bool SlowBarEnabled => Get(ApocalypseSlowRules.BarKey, true);
@@ -252,10 +265,12 @@ internal static class CoreSettings
             var game = GameFolder();
             try
             {
-                var (path, id, migrated) = CoreSettingsCopyRules.Prepare(root, game);
+                var outside = CoreSettingsCopyRules.OutsideRoot(Environment.GetEnvironmentVariable(CoreSettingsCopyRules.GameSavesVariable), root);
+                var (path, id, source) = CoreSettingsCopyRules.Prepare(root, game, outside);
+                var migrated = source != null;
                 copyPath = path;
                 copyId = id;
-                DelversHost.Info(CoreSettingsCopyRules.Line(id, game, migrated));
+                DelversHost.Info(CoreSettingsCopyRules.Line(id, game, migrated, source));
             }
             catch (Exception ex)
             {

@@ -115,7 +115,7 @@ internal static class SummonSide
     {
         var unit = msg?.Target;
         if (handler == null || unit == null || unit.Faction == FactionType.Player || !CoreUnitRules.IsCoreUnit(unit.Key)) return;
-        var summons = DelversSummons.SummonsOf(unit.Guid.ToString());
+        var summons = DelversSummons.SummonsOf(unit.Guid.ToString(), msg.Map);
         if (summons.Count == 0) return;
         handler.KillSummonedUnits(msg.Map, unit);
         Log(SummonSideRules.DeathLine(unit.Guid.ToString(), summons.Count));

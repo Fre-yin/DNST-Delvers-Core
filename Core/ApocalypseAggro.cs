@@ -41,6 +41,7 @@ internal static class ApocalypseAggro
             var unit = data.Target?.TryCast<UnitEntity>();
             if (unit == null || unit.Faction != FactionType.Enemy) return;
             var coreUnit = CoreUnitRules.IsCoreUnit(unit.Key);
+            if (coreUnit) BanditTakeoverProbe.OnWake(unit);
             if (!instant && !coreUnit) return;
             // The property's setter is private and shares its body with other setters, so the
             // field is written directly (never hook either of them).

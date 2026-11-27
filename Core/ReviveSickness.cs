@@ -24,6 +24,9 @@ internal static class ReviveSickness
 
     private static readonly HashSet<Guid> fresh = new();
     private static readonly HashSet<Guid> known = new();
+    // The party as it came out of a save (Restore); each unit's first look after the load takes it out. Only these can carry the
+    // game's restored share of the full maximum; a unit rescued from near death later in the session is capped, not scaled.
+    private static readonly HashSet<Guid> fromSave = new();
     private static readonly HashSet<Guid> sickLastTick = new();
     private static int errors;
     private static float notBefore;
@@ -35,10 +38,13 @@ internal static class ReviveSickness
     {
         fresh.Clear();
         known.Clear();
+        fromSave.Clear();
         sickLastTick.Clear();
         capSteps.Clear();
         errors = 0;
         AnyCapped = false;
+        // The wait after a load belongs to that campaign's clock; a new campaign's clock starts lower and would wait for it.
+        notBefore = 0f;
     }
 
     internal static double DurationOf(double days) => days * ReviveRules.DurationUnitsPerDay;
@@ -65,7 +71,7 @@ internal static class ReviveSickness
     internal static void Restore()
     {
         // The game restores health and energy a moment after the map is ready; the caps wait.
-        notBefore = Time.unscaledTime + 3f;
+        notBefore = GameClock.Now + 3f;
         var data = CoreSaveStore.Current;
         var maps = CoreGame.Flow?._inMapDatas;
         if (data == null || maps == null) return;
@@ -79,6 +85,7 @@ internal static class ReviveSickness
                 var unit = units[i];
                 if (unit == null || unit.IsDead) continue;
                 var guid = CoreGame.GuidOf(unit);
+                fromSave.Add(guid);
                 if (!data.TryGetSickness(guid, out var remaining, out _)) continue;
                 var affecters = CoreGame.Affecters(unit);
                 if (affecters == null || affecters.Has(ReviveEffects.SicknessKey)) continue;
@@ -171,7 +178,7 @@ internal static class ReviveSickness
     // Once a second while a campaign runs.
     internal static void Tick()
     {
-        if (Time.unscaledTime < notBefore) return;
+        if (GameClock.Now < notBefore) return;
         var maps = CoreGame.Flow?._inMapDatas;
         if (maps == null) return;
         var capped = false;
@@ -199,6 +206,7 @@ internal static class ReviveSickness
     private static bool Process(UnitEntity unit, MapType map)
     {
         var guid = CoreGame.GuidOf(unit);
+        var firstAfterLoad = fromSave.Remove(guid);
         var affecters = CoreGame.Affecters(unit);
         if (affecters == null) return false;
         var sick = affecters.Has(ReviveEffects.SicknessKey);
@@ -232,9 +240,10 @@ internal static class ReviveSickness
             return false;
         }
 
-        // A capped unit without a share that was not just revived comes from a save: the game
-        // restored health and energy as a share of the full maximum, so scale them once.
-        var loaded = Math.Abs(ownHealth) < ReviveShareRules.MinShare && !fresh.Contains(guid) && !known.Contains(guid);
+        // A capped unit without a share at its first look after a load comes from the save: the game
+        // restored health and energy as a share of the full maximum, so scale them once. A rescue from near
+        // death later has no share either; its health is capped below (Clamp), never scaled.
+        var loaded = firstAfterLoad && Math.Abs(ownHealth) < ReviveShareRules.MinShare && !fresh.Contains(guid) && !known.Contains(guid);
         if (loaded)
         {
             Add(unit, map, StatType.HealthHead, CoreGame.Stat(unit, StatType.HealthHead) * (c - 1f));

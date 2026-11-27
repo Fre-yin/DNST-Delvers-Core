@@ -53,7 +53,14 @@ internal static class WoundBodyArt
     internal static void OnWound(UnitEntity unit, Guid guid, WoundRules.Stage stage, bool lying)
     {
         var index = WoundBodyArtRules.StageIndex(stage);
-        var current = overlays.TryGetValue(guid, out var overlay) ? overlay.Stage : -1;
+        // An overlay whose object the game destroyed, or that no longer hangs under the unit's view (the view rebuilt or pooled and
+        // another given, a map change), is no overlay any more: it goes, and the stage is shown anew on the view as it is now.
+        if (overlays.TryGetValue(guid, out var overlay) && !Attached(overlay, unit))
+        {
+            Remove(guid, "lost");
+            overlay = null;
+        }
+        var current = overlay?.Stage ?? -1;
         var action = WoundBodyArtRules.Decide(lying, index, current);
         switch (action)
         {
@@ -113,12 +120,22 @@ internal static class WoundBodyArt
         if (sprite) overlay.Renderer.sprite = sprite;
     }
 
+    private static Transform PivotOf(UnitEntity unit)
+        => unit == null ? null : CoreGame.EntityObjectOf(view?._objectContainer, unit.Guid)?.Graphic?.TryCast<UnitGraphic>()?._pivotTransform;
+
+    // Alive and under the unit's view as it is now; a unit whose view Core cannot read keeps an overlay that is alive.
+    private static bool Attached(Overlay overlay, UnitEntity unit)
+    {
+        if (!(overlay.Object != null && overlay.Object && overlay.Renderer != null && overlay.Renderer)) return false;
+        var pivot = PivotOf(unit);
+        return pivot == null || overlay.Object.transform.IsChildOf(pivot);
+    }
+
     private static void Show(UnitEntity unit, Guid guid, int stage)
     {
         try
         {
-            var entityObject = CoreGame.EntityObjectOf(view?._objectContainer, unit.Guid);
-            var pivot = entityObject?.Graphic?.TryCast<UnitGraphic>()?._pivotTransform;
+            var pivot = PivotOf(unit);
             var body = pivot != null ? pivot.Find(BodyName) : null;
             if (body == null)
             {

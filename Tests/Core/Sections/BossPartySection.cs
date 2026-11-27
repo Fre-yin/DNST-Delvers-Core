@@ -111,7 +111,7 @@ internal static class BossPartySection
                 && BanditBossBarRules.Name.AllLanguages.All(t => t.IndexOf('-') < 0)
                 && BanditBossBarRules.SegmentLine(1, "guard", "u", "dead") == "CORE_BANDIT_BOSSBAR at=segment index=1 role=guard unit=u reason=dead"
                 && BanditBossBarRules.Line("start", "") == "CORE_BANDIT_BOSSBAR at=start",
-            "bandit boss bar C26: the boss marker for the boss party only, one segment per bandit there at the start (1 to 4), slayer first, fill head plus body, effects in 2 rows");
+            "bandit boss bar: the boss marker for the boss party only, one segment per bandit there at the start (1 to 4), slayer first, fill head plus body, effects in 2 rows");
         // A member capped by the revival sickness (Core's share -90 of MaxHealthTotalPerModifier, 10 %)
         // gets the Blood Warden; the raise and its drop come in one flush of the game's queue, so Core's cap is the same after.
         var own = ReviveShareRules.ShareForCap(0.1f, 0f);

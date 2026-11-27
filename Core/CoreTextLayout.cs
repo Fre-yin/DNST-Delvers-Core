@@ -9,8 +9,9 @@ internal static class CoreTextLayout
 {
     private const string NoBreakSpace = " ";
 
-    // "+20 %", "20 %", "12,5 %": a number, one space, the percent sign.
-    private static readonly Regex SpacedPercent = new(@"([+\-]?\d+(?:[.,]\d+)?)[  ]%", RegexOptions.CultureInvariant);
+    // "+20 %", "20 %", "12,5 %": a number, one space, the percent sign. Also a placeholder ("{0} %"): the game puts the number
+    // in only after the table row is written, so the space must already be a fixed one.
+    private static readonly Regex SpacedPercent = new(@"([+\-]?\d+(?:[.,]\d+)?|\{\d+\})[  ]%", RegexOptions.CultureInvariant);
 
     // "+20%", "35%": a number right before the percent sign.
     private static readonly Regex TightPercent = new(@"([+\-]?\d+(?:[.,]\d+)?)%", RegexOptions.CultureInvariant);

@@ -40,7 +40,8 @@ internal static class BanditCampWake
             done = false;
         }
         if (done || box == null || CoreGame.CurrentMap != MapType.Dungeon || seed != BanditRoomFeatureView.FloorSeed()) return;
-        var now = UnityEngine.Time.time;
+        // Game time: the camp wakes after its lead in game seconds, pause and game speed included.
+        var now = GameClock.Now;
         if (enteredAt < 0f)
         {
             if (!PartyInside(box.Value, out trigger)) return;

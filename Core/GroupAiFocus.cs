@@ -16,15 +16,6 @@ internal static class GroupAiFocus
     private static readonly Dictionary<string, string> roles = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, (string Target, float Since)> held = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, long> fightStart = new(StringComparer.Ordinal);
-    // (a clicked target stays the focus until a new one is chosen): per unit the foe the player clicked.
-    private static readonly Dictionary<string, string> clicked = new(StringComparer.Ordinal);
-
-    internal static void SetClick(string unit, string target)
-    {
-        if (string.IsNullOrEmpty(target)) clicked.Remove(unit);
-        else clicked[unit] = target;
-    }
-
     // The held focus when it ranks 0 or 1 and stands in the skill's reach (GroupAiReachRules.RainOnFocus), else null.
     internal static IEntity RainTarget(GroupAiSituation s, int range)
     {
@@ -32,7 +23,8 @@ internal static class GroupAiFocus
         var focus = guid == null ? null : s.Enemies.Find(e => e.Guid == guid);
         if (focus == null) return null;
         var rank = GroupAiRules.FocusRank(RoleOf(focus.Unit), s.Role is GroupAiRole.Melee or GroupAiRole.Ranged);
-        return GroupAiReachRules.RainOnFocus(rank, GroupAiRules.InRange(focus.Distance, range)) ? focus.Unit.Cast<IEntity>() : null;
+        var reaches = GroupAiRules.InRange(focus.Distance, range) && !GroupAiChase.Blocks(s.Guid, focus.Guid, focus.Distance, range);
+        return GroupAiReachRules.RainOnFocus(rank, reaches) ? focus.Unit.Cast<IEntity>() : null;
     }
 
     // The foe the unit holds as its focus, else null (GroupAiRangedReach).
@@ -43,7 +35,6 @@ internal static class GroupAiFocus
         roles.Clear();
         held.Clear();
         fightStart.Clear();
-        clicked.Clear();
     }
 
     // The foe's part, cached per unit key: Core's bandits by kit; the game's units by pattern and default skills. The
@@ -92,16 +83,9 @@ internal static class GroupAiFocus
         var forced = CoreGame.Component<CombatInfoComponent>(s.Owner.Cast<IEntity>())?.GetForceAttackTarget();
         if (forced != null)
         {
-            // A player's forced target: nothing changes, and it holds on for 2 game seconds after the player lets go.
+            // A forced target (an enemy's taunt): nothing changes, and it holds on for 2 game seconds after it goes.
             held[s.Guid] = (forced.Guid.ToString(), now);
             return fallback;
-        }
-        // The clicked foe stays the focus while it stands among the enemies (any skill that reaches it).
-        if (clicked.TryGetValue(s.Guid, out var click))
-        {
-            var target = s.Enemies.Find(e => e.Guid == click);
-            if (target != null) return target.Unit.Cast<IEntity>();
-            clicked.Remove(s.Guid);
         }
         if (!fightStart.ContainsKey(s.Guid)) fightStart[s.Guid] = CoreGame.Flow?._campaignData?.TimeData?.Tick ?? 0;
         var melee = s.Role == GroupAiRole.Melee;
@@ -115,7 +99,8 @@ internal static class GroupAiFocus
         foreach (var enemy in s.Enemies)
         {
             var role = RoleOf(enemy.Unit);
-            var reachable = Reachable(s, melee, enemy.Distance, range, nearest, enemy.Guid == currentGuid || role == GroupAiRules.EnemyHeal);
+            var reachable = Reachable(s, melee, enemy.Distance, range, nearest, enemy.Guid == currentGuid || role == GroupAiRules.EnemyHeal)
+                && !GroupAiChase.Blocks(s.Guid, enemy.Guid, enemy.Distance, range);
             if (melee && enemy != current)
             {
                 var others = new List<(int X, int Y)>();
@@ -128,7 +113,8 @@ internal static class GroupAiFocus
             if (rank == 0 && reachable) healerReachable = true;
             candidates.Add(new GroupAiRules.FocusCandidate { Guid = enemy.Guid, Rank = rank, Share = enemy.Share, Distance = enemy.Distance, Reachable = reachable });
         }
-        var currentReachable = current != null && Reachable(s, melee, current.Distance, range, nearest, true);
+        var currentReachable = current != null && Reachable(s, melee, current.Distance, range, nearest, true)
+            && !GroupAiChase.Blocks(s.Guid, current.Guid, current.Distance, range);
         var healerNew = healerReachable && current != null && RoleOf(current.Unit) != GroupAiRules.EnemyHeal;
         if (current != null && hold.Target == current.Guid && GroupAiRules.FocusHolds(now, hold.Since, currentReachable, healerNew))
             return Shot(s, current, range, nearest);
@@ -168,6 +154,5 @@ internal static class GroupAiFocus
     {
         fightStart.Remove(guid);
         held.Remove(guid);
-        clicked.Remove(guid);
     }
 }

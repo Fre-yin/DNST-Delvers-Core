@@ -118,7 +118,7 @@ internal static class BanditCampBuildRules
         return faces;
     }
 
-    // CORE_BANDIT_CAMP_PLACED: once per floor with a camp, in the form the Toolkit's walk reads.
+    // CORE_BANDIT_CAMP_PLACED: once per floor with a camp, in the form the Toolkit reads.
     internal static string PlacedLine(int seed, int region, int floor, int variant, string campId, string corridorId, string anchorId,
         BanditCampPlan plan, int campWidth, int campHeight)
         => string.Format(CultureInfo.InvariantCulture,

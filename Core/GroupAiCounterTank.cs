@@ -12,7 +12,7 @@ namespace DungeonSettlersDelvers.Core;
 // taunt's reach, so with none left the shield turns its attack instead.
 internal static class GroupAiCounterTank
 {
-    private const string TauntSkill = "SKILL_GuardiansTaunt";
+    internal const string TauntSkill = "SKILL_GuardiansTaunt";
     // attacker guid -> game time of the last counter taunt; victim|attacker -> since when the attacker stands on it.
     private static readonly Dictionary<string, float> lastTaunt = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, float> onVictimSince = new(StringComparer.Ordinal);
@@ -53,7 +53,7 @@ internal static class GroupAiCounterTank
         if (victim == null || (healerFirst && victim != healer)) return null;
         var reason = victim == healer ? "healer" : "low";
         var taunt = s.Find(TauntSkill);
-        var reach = taunt?.Data != null ? Math.Max(1, taunt.Data.AreaRadius) : 0;
+        var reach = taunt?.Data != null ? GroupAiReachRules.TauntReach(taunt.Data.AreaRadius) : 0;
         var seconds = GroupAiReachRules.CounterSeconds(CoreSettings.Number(GroupAiReachRules.CounterSecondsKey));
         GroupAiSituation.Figure pick = null;
         var pickHeld = 0f;
@@ -87,17 +87,60 @@ internal static class GroupAiCounterTank
         return null;
     }
 
+    // A tank by the player's role taunts as soon as a foe attacks a member with the role damage or support
+    // (its combat target is that member, or it hit it within GroupAiPartyHits.WindowSeconds), before the player's priority casts and
+    // without the time limit per attacker; the taunt's own cooldown paces it. The lowest such member first. With no attacker of it
+    // in the taunt's reach, outOfReach is the nearest one, for the tank to gather (GroupAiRoleMoves).
+    internal static GroupAiPolicy.Choice Guard(GroupAiSituation s, out GroupAiSituation.Figure outOfReach, out string victim)
+    {
+        outOfReach = null;
+        victim = null;
+        if (s == null || s.Enemies.Count == 0 || GroupAiStance.PlayerQuiet(s.Guid)) return null;
+        var taunt = s.Find(TauntSkill);
+        if (taunt?.Data == null || !taunt.Free) return null;
+        var attackers = new Dictionary<string, List<GroupAiSituation.Figure>>(StringComparer.Ordinal);
+        var allies = new List<(string Guid, TacticalRole Role, float Share, int Attackers)>();
+        foreach (var ally in s.Allies)
+        {
+            var on = new List<GroupAiSituation.Figure>();
+            foreach (var enemy in s.Enemies)
+            {
+                var target = CoreGame.Component<CombatInfoComponent>(enemy.Unit.Cast<IEntity>())?.GetCombatTarget();
+                if ((target != null && target.Guid.ToString() == ally.Guid) || GroupAiPartyHits.HitWithin(ally.Guid, enemy.Guid)) on.Add(enemy);
+            }
+            attackers[ally.Guid] = on;
+            allies.Add((ally.Guid, GroupAiRoles.PlayerOf(ally.Guid), ally.Share, on.Count));
+        }
+        victim = GroupAiRoleRules.GuardVictim(allies);
+        if (victim == null) return null;
+        var reach = GroupAiReachRules.TauntReach(taunt.Data.AreaRadius);
+        GroupAiSituation.Figure inReach = null;
+        foreach (var attacker in attackers[victim])
+        {
+            if (GroupAiBandits.TauntWouldBreak(attacker.Unit)) continue;
+            var distance = Manhattan(s.Self.Position, attacker.Position);
+            if (distance <= reach) inReach ??= attacker;
+            else if (outOfReach == null || distance < Manhattan(s.Self.Position, outOfReach.Position)) outOfReach = attacker;
+        }
+        if (inReach == null) return null;
+        outOfReach = null;
+        var now = GameClock.Now;
+        foreach (var attacker in attackers[victim])
+            if (Manhattan(s.Self.Position, attacker.Position) <= reach) lastTaunt[attacker.Guid] = now;
+        GroupAiPolicy.Log(GroupAiRoleRules.TankLine(s.Guid, "taunt", victim, inReach.Guid, null, CoreGame.Flow?._campaignData?.TimeData?.Tick ?? 0));
+        return new GroupAiPolicy.Choice { Skill = taunt.Key, Target = null, Rule = "tank-guard-taunt" };
+    }
+
     // Guardian's Taunt from the damage path is skipped when every foe in its reach would
     // break it at once (GroupAiBandits.TauntWouldBreak); with no foe in reach the old rule stays.
     internal static bool TauntWasted(GroupAiSituation s, string skill, SkillTableData data)
     {
         if (skill != TauntSkill || data == null) return false;
-        var reach = Math.Max(1, data.AreaRadius);
         var inReach = 0;
         var breaking = 0;
         foreach (var enemy in s.Enemies)
         {
-            if (Manhattan(s.Self.Position, enemy.Position) > reach) continue;
+            if (!Reaches(s, enemy.Position, data)) continue;
             inReach++;
             if (GroupAiBandits.TauntWouldBreak(enemy.Unit)) breaking++;
         }
@@ -122,6 +165,10 @@ internal static class GroupAiCounterTank
     }
 
     private static int Manhattan(Vector2Int a, Vector2Int b) => Math.Abs(a.x - b.x) + Math.Abs(a.y - b.y);
+
+    // Whether the shield's Guardian's Taunt reaches the cell (GroupAiReachRules.InTauntReach).
+    internal static bool Reaches(GroupAiSituation s, Vector2Int at, SkillTableData data)
+        => data != null && GroupAiReachRules.InTauntReach(Manhattan(s.Self.Position, at), data.AreaRadius);
 
     // One line per change of victim, attacker or action.
     private static void Note(GroupAiSituation s, string victim, string attacker, string action, string reason, string why)

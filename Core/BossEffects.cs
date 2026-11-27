@@ -9,7 +9,6 @@ using Execution = global::Refactor.Combat.Execution;
 using DamageExecutionLog = global::Refactor.Combat.DamageExecutionLog;
 using IExecutionData = global::Refactor.Combat.IExecutionData;
 using IExecutionPublisher = global::Refactor.Combat.IExecutionPublisher;
-using SummonedBuildingResolver = global::Refactor.Combat.AffecterRelated.SummonedBuildingResolver;
 #else
 using HealSimulator = Il2CppRefactor.Combat.ExecutionProcess.HealSimulator;
 using HealExecutionData = Il2CppRefactor.Combat.HealExecutionData;
@@ -20,7 +19,6 @@ using Execution = Il2CppRefactor.Combat.Execution;
 using DamageExecutionLog = Il2CppRefactor.Combat.DamageExecutionLog;
 using IExecutionData = Il2CppRefactor.Combat.IExecutionData;
 using IExecutionPublisher = Il2CppRefactor.Combat.IExecutionPublisher;
-using SummonedBuildingResolver = Il2CppRefactor.Combat.AffecterRelated.SummonedBuildingResolver;
 #endif
 
 namespace DungeonSettlersDelvers.Core;
@@ -34,7 +32,7 @@ namespace DungeonSettlersDelvers.Core;
 // - Overgrowth: the health changes the game's heal execution makes for a heal of the staff's bearer (HealSimulator.
 //   Simulate; skills and Lifebloom go this way) heal 20 % more and are marked, so the bleeding wound eases its reduction
 //   for them (WoundHealPatch, Wounds.Heal). Her own heals and those of what she summons, as the Strange Seed (yes; the
-//   summoner through SummonedBuildingResolver).
+//   summoner through the field the game keeps on the building, DelversSummons).
 //   CalculateValue is not reached for these heals (ease 19 times, no bonus line).
 internal static class BossEffects
 {
@@ -251,9 +249,9 @@ internal static class BossEffects
         if (target.IsDead) bloodLedger.Forget(id);
         foreach (var (bearerId, heal) in heals)
         {
-            var bearer = Guid.TryParse(bearerId, out var guid) ? CoreGame.FindUnit(guid) : null;
+            var map = MapType.Base;
+            var bearer = Guid.TryParse(bearerId, out var guid) ? CoreGame.FindUnitOnAnyMap(guid, out map) : null;
             if (bearer == null || bearer.IsDead || !Wears(bearer.Cast<IEntity>(), BossItemRules.GreatSwordKey)) continue;
-            if (!CoreGame.TryMapOfPartyMember(bearer, out var map) && !CoreGame.TryMapOfUnit(bearer, out map)) continue;
             var granted = healBudget.Take(bearerId, (long)(GameTick() / WoundRules.TicksPerSecond), heal);
             if (!(granted > 0)) continue;
             var via = HealBearer(map, bearer, granted) ? "execution" : "direct";
@@ -323,12 +321,12 @@ internal static class BossEffects
         DelversHost.Info(BossEffectRules.Line(name, unit != null ? unit.Guid.ToString("D") : "-", detail));
     }
 
-    // The unit a heal comes from: the healer itself, or the unit that summoned the healing building (the Strange Seed).
+    // The unit a heal comes from: the healer itself, or the unit that summoned the healing building (the Strange Seed), on any
+    // loaded map (DelversSummons, the summoner field the game keeps on the building).
     private static IEntity HealerOf(IEntity user)
     {
         if (user == null || user.TryCast<BuildingEntity>() == null) return user;
-        var inMap = CoreGame.InMap;
-        return inMap == null ? null : SummonedBuildingResolver.GetSummonerUnit(inMap, user)?.Cast<IEntity>();
+        return DelversSummons.OwnerUnitOf(user)?.Cast<IEntity>();
     }
 
     // The bearer's heal, or her summon's: each health change 20 % more, and marked for the wound (TakeStaffHeal).

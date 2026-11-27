@@ -48,6 +48,8 @@ internal static class ReviveService
     private static List<TraitStack> restoreStay = new();
     private static float beforeHead, beforeBody;
     private static bool viewDisposed;
+    // The unit went back into the map alive (Reinsert); from then on a failure of the rest leaves it standing.
+    private static bool inserted;
     private static string injectedFailure;
     private static readonly Dictionary<Guid, int> testRevivesLeft = new();
 
@@ -127,6 +129,7 @@ internal static class ReviveService
         beforeHead = CoreGame.Stat(unit, StatType.HealthHead);
         beforeBody = CoreGame.Stat(unit, StatType.HealthBody);
         viewDisposed = false;
+        inserted = false;
         LastResult = "";
         DelversHost.Info($"CORE_REVIVE_REQUEST unit={guid:D} map={reviveMap} cell={reviveCell} body={corpseCell}"
             + $" revivedCell={ReviveRules.Describe(reviveCellKind)} traits={restoreTraits.Count}"
@@ -230,6 +233,7 @@ internal static class ReviveService
                 throw new InvalidOperationException("extracting returned another unit");
             component.SetDead(false);
             helper.InsertUnitTo(reviveMap, info, reviveCell);
+            inserted = true;
         }
         catch (Exception)
         {
@@ -284,17 +288,38 @@ internal static class ReviveService
         return null;
     }
 
+    // Never throws and always ends the run (phase Idle): it is also called from the run's catch, and a throw here left the run busy
+    // and could count a revive twice.
     private static void Finish(bool ok, string code, Exception error = null)
     {
+        try { Settle(ok, code, error); }
+        catch (Exception ex) { DelversHost.Error($"CORE_REVIVE_FINISH_FAILED unit={reviveGuid:D}: {ex.Message}"); }
+        finally { phase = Phase.Idle; }
+    }
+
+    private static void Settle(bool ok, string code, Exception error)
+    {
         var guid = reviveGuid;
+        // Inserted alive, then the read back or the rest of Reinsert failed: the unit stands, and the rollback cannot lay a living
+        // unit down again (RestoreCorpse). It is a revive and counts as one; the failed part goes to the log.
+        if (!ok && inserted && CoreGame.FindUnit(reviveMap, guid) is { IsDead: false })
+        {
+            DelversHost.Warning($"CORE_REVIVE_STANDS unit={guid:D} phase={phase} reason={code}{(error != null ? " " + error.Message : "")}");
+            ok = true;
+        }
         if (ok)
         {
             var data = CoreSaveStore.Current;
             if (data != null) data.SetRevivesUsed(guid, data.RevivesUsed(guid) + 1);
             if (testRevivesLeft.TryGetValue(guid, out var left) && left > 0) testRevivesLeft[guid] = left - 1;
             LastResult = "ok:" + guid.ToString("D");
-            Wounds.ClearAll(CoreGame.FindUnit(guid), "scroll");
-            Wounds.Close(guid, "revive");
+            // Counted above: what follows may fail on its own without turning the revive into a failure.
+            try
+            {
+                Wounds.ClearAll(CoreGame.FindUnit(reviveMap, guid), "scroll");
+                Wounds.Close(guid, "revive");
+            }
+            catch (Exception ex) { DelversHost.Warning($"CORE_REVIVE_WOUND_FAILED unit={guid:D}: {ex.Message}"); }
             DelversHost.Info($"CORE_REVIVE_RESULT unit={guid:D} ok=true cell={reviveCell} revivedCell={ReviveRules.Describe(reviveCellKind)}"
                 + $" traits={restoreTraits.Count} revivesLeft={RevivesLeft(guid)}");
         }
@@ -305,7 +330,6 @@ internal static class ReviveService
             catch (Exception ex) { DelversHost.Error($"CORE_REVIVE_ROLLBACK_FAILED unit={guid:D}: {ex.Message}"); }
             LastResult = "failed:" + guid.ToString("D") + ":" + code;
         }
-        phase = Phase.Idle;
     }
 
     // A failed revive leaves the corpse as it was: health back and the body visible again. The health is set on the status

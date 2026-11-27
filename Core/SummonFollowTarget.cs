@@ -3,10 +3,12 @@ using HarmonyLib;
 using CombatPattern = global::Refactor.Combat.CombatPattern;
 using DecideNonPlayerCombatBehaviour = global::Refactor.Task.DecideNonPlayerCombatBehaviour;
 using Pattern_WaterSummoned = global::Refactor.Combat.PatternRelated.Pattern_WaterSummoned;
+using TaskStatus = global::BehaviorDesigner.Runtime.Tasks.TaskStatus;
 #else
 using CombatPattern = Il2CppRefactor.Combat.CombatPattern;
 using DecideNonPlayerCombatBehaviour = Il2CppRefactor.Task.DecideNonPlayerCombatBehaviour;
 using Pattern_WaterSummoned = Il2CppRefactor.Combat.PatternRelated.Pattern_WaterSummoned;
+using TaskStatus = Il2CppBehaviorDesigner.Runtime.Tasks.TaskStatus;
 #endif
 
 namespace DungeonSettlersDelvers.Core;
@@ -16,11 +18,11 @@ namespace DungeonSettlersDelvers.Core;
 // circle, else the closest hostile, each as BasicAttackTo. A bandit's bubbleling is an NPC (SummonSide), and the game's
 // DecideNonPlayerCombatBehaviour asks the pattern but then takes the unit's forced target, else keeps its combat target while
 // that is in reach of a basic attack; the pattern's choice counts only after that. So a bandit's bubbleling stuck to its old foe
-// (and GB12 near 50 %, runs 20261031-222224 to -223655). Core therefore gives the summon its owner's target as the
+// (in about half of the tests). Core therefore gives the summon its owner's target as the
 // summon's forced target, the game's own way of an order, at the summon's next decision after the owner's target changed, and
 // clears it again when the owner has no usable target or the comfort option is off. A forced target Core did not set is an order
 // of the player's and is never touched (SummonFollowRules.Forced). The game asks a summon's pattern only every few seconds (2 to 4
-// times in 20 s, run 20261031-224607), so the owner's own decision (a postfix on DecideNonPlayerCombatBehaviour.OnUpdate) and
+// times in 20 s), so the owner's own decision (a postfix on DecideNonPlayerCombatBehaviour.OnUpdate) and
 // every place where Core sets a target (CoreTargets) hand the owner's target on to the summons that decided once; events, no
 // frame of Core's own. A target the game sets from outside (a taunt) reaches the summon at its next decision. The pattern also returns BasicAttackTo of the target, for a party's
 // summon that the game lets choose by its pattern. Without a target of the owner's the game's choice stays.
@@ -159,6 +161,9 @@ internal static class SummonFollowTarget
 [HarmonyPatch(typeof(DecideNonPlayerCombatBehaviour), "OnUpdate")]
 internal static class SummonFollowOwnerPatch
 {
+    // A summon Core holds decides nothing (SummonControl).
+    private static bool Prefix(DecideNonPlayerCombatBehaviour __instance, ref TaskStatus __result) => SummonControl.DecisionRuns(__instance, ref __result);
+
     private static void Postfix(DecideNonPlayerCombatBehaviour __instance)
     {
         try { SummonFollowTarget.OnOwnerTarget(__instance?.EntityBrain?.Value?.Owner?.TryCast<UnitEntity>()); }

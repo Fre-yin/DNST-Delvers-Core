@@ -32,6 +32,19 @@ internal static class WeakBanditKitKeys
     internal const string WhirlwindSlash = "SKILL_WhirlwindSlash";
     internal const string RapidFire = "SKILL_RapidFire";
 
+    // The kit variants and level 3 skills (WeakBanditRules.Variants, Level3Skills).
+    internal const string Anchor = "SKILL_Anchor";
+    internal const string SpearBash = "SKILL_SpearBash";
+    internal const string VerticalSlash = "SKILL_VerticalSlash";
+    internal const string PommelStrike = "SKILL_PommelStrike";
+    internal const string FireCloak = "SKILL_FireCloak";
+    internal const string VileInsult = "SKILL_VileInsult";
+    internal const string GuardiansTaunt = "SKILL_GuardiansTaunt";
+    internal const string Hammering = "SKILL_Hammering";
+    internal const string ArrowRain = "SKILL_ArrowRain";
+    internal const string GraspingVines = "SKILL_ClingingVines";
+    internal const string HealingTouch = "SKILL_HealingTouchAttack";
+
     // The keys each new class's rule looks up, and the weapon skills the old roles' rules gain for the weak ones.
     internal static readonly string[] Spear = { PiercingThrust, OpeningStrike, TwinThrust };
     internal static readonly string[] WaterMage = { SummonBubbling, TidalMark, EmbracingWave };

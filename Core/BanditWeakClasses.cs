@@ -19,7 +19,7 @@ internal static partial class GroupAiBandits
 
     private static Choice Spear(Situation s)
         => Protect(s, "spear") ?? Damage(s, s.Protecting ? "spear-protect" : "spear",
-            WeakBanditKitKeys.TwinThrust, WeakBanditKitKeys.OpeningStrike, WeakBanditKitKeys.PiercingThrust);
+            WeakBanditKitKeys.TwinThrust, WeakBanditKitKeys.Anchor, WeakBanditKitKeys.OpeningStrike, WeakBanditKitKeys.SpearBash, WeakBanditKitKeys.PiercingThrust);
 
     private static Choice Sword(Situation s)
     {
@@ -36,13 +36,15 @@ internal static partial class GroupAiBandits
         if (counter != null && counter.Free && !BuffRunning(s, counter) && meleeHitAt.TryGetValue(s.Guid, out var hit)
             && !GameClock.Elapsed(hit, CounterSeconds))
             return NewChoice(counter.Key, s.Self.Unit.Cast<IEntity>(), "sword-counter");
-        return Damage(s, s.Protecting ? "sword-protect" : "sword", WeakBanditKitKeys.SweepingCleave);
+        return Damage(s, s.Protecting ? "sword-protect" : "sword", WeakBanditKitKeys.PommelStrike, WeakBanditKitKeys.VerticalSlash, WeakBanditKitKeys.SweepingCleave);
     }
 
     private static Choice WaterMage(Situation s)
     {
         var formation = Formation(s, ArcherBehind);
         if (formation != null) return formation;
+        if (s.Find(GroupAiWaterRules.GlacierDrop) != null) return AggressiveMage(s);
+        if (WeakBanditRules.IsReservedMage(s.Self.Unit.Key)) return ReservedMage(s);
         var (bubblings, toads) = OwnSummons(s);
         // Level 3: the toad eats a bubbling and goes before the wave unless a bandit is critical (WeakBanditMageRules.ToadFirst);
         // the next decision replaces the bubbling, and the wave may spend that one.
@@ -67,6 +69,55 @@ internal static partial class GroupAiBandits
         if (toad != null) return toad;
         var bubbling = WeakBanditMageRules.WantsBubbling(bubblings) ? WaterMageSummon(s, WeakBanditKitKeys.SummonBubbling, "watermage-bubbling") : null;
         return bubbling ?? Damage(s, "watermage", WeakBanditKitKeys.TidalMark);
+    }
+
+    // The two kinds think like the party's support and damage mage (GroupAiWaterRules).
+    private static Choice ReservedMage(Situation s)
+    {
+        var (bubblings, _) = OwnSummons(s);
+        var wave = s.Find(WeakBanditKitKeys.EmbracingWave);
+        var low = wave?.Data != null ? LowestInWave(s, wave) : null;
+        var step = GroupAiWaterRules.Support(wave?.Free == true && wave.Data != null, low != null, bubblings, s.Find(WeakBanditKitKeys.SummonBubbling)?.Free == true);
+        if (step == GroupAiWaterRules.Step.Wave) return NewChoice(wave.Key, low.Unit.Cast<IEntity>(), "watermage-wave");
+        var bubbling = step == GroupAiWaterRules.Step.Bubbling ? WaterMageSummon(s, WeakBanditKitKeys.SummonBubbling, "watermage-bubbling") : null;
+        return bubbling ?? Damage(s, "watermage", WeakBanditKitKeys.TidalMark);
+    }
+
+    private static Figure LowestInWave(Situation s, Slot wave)
+    {
+        Figure low = GroupAiLow.Share(s.Self.Unit, s.Self.Share, LowLine.Sacrifice) < GroupAiWaterRules.SacrificeShare ? s.Self : null;
+        foreach (var ally in s.Allies)
+            if (GroupAiLow.Share(ally.Unit, ally.Share, LowLine.Sacrifice) < GroupAiWaterRules.SacrificeShare && (low == null || ally.Share < low.Share)
+                && GroupAiRules.InRange(GroupAiSituation.Distance(s.Self.Position, ally.Position), wave.Data.Range)) low = ally;
+        return low;
+    }
+
+    private static Choice AggressiveMage(Situation s)
+    {
+        var (bubblings, toads) = OwnSummons(s);
+        var toad = s.Find(WeakBanditKitKeys.SummonBubbleToad);
+        var glacier = s.Find(GroupAiWaterRules.GlacierDrop);
+        var dive = s.Find(GroupAiWaterRules.WaterDive);
+        var intended = s.Intended;
+        var at = intended != null ? s.PositionOf(intended) : s.Self.Position;
+        var reach = intended != null && glacier.Data != null && GroupAiRules.InRange(GroupAiSituation.Distance(s.Self.Position, at), glacier.Data.Range);
+        // The dive has no extra cell: from one cell further the game drops the order and the rule would ask again and again.
+        var diveFree = dive?.Free == true && dive.Data != null && intended != null && GroupAiRules.InRangeExact(GroupAiSituation.Distance(s.Self.Position, at), dive.Data.Range);
+        var foes = 0;
+        foreach (var hostile in s.Hostiles)
+            if (GroupAiSituation.Distance(at, hostile.Position) <= 1 && (s.Downed == null || !s.Downed.Contains(hostile))) foes++;
+        // Before level 3 no toad comes, so no bubbling is held back for one.
+        var step = GroupAiWaterRules.Damage(bubblings, toad == null ? WeakBanditMageRules.HeldToads : toads, toad?.Free == true, s.Find(WeakBanditKitKeys.SummonBubbling)?.Free == true,
+            glacier.Free, reach, diveFree, foes);
+        var summoned = step switch
+        {
+            GroupAiWaterRules.Step.Toad => WaterMageSummon(s, WeakBanditKitKeys.SummonBubbleToad, "watermage-toad"),
+            GroupAiWaterRules.Step.Bubbling => WaterMageSummon(s, WeakBanditKitKeys.SummonBubbling, "watermage-bubbling"),
+            _ => null
+        };
+        if (summoned != null) return summoned;
+        if (step == GroupAiWaterRules.Step.Dive) return Damage(s, "watermage", GroupAiWaterRules.WaterDive, WeakBanditKitKeys.TidalMark);
+        return Damage(s, "watermage", step == GroupAiWaterRules.Step.Glacier ? GroupAiWaterRules.GlacierDrop : WeakBanditKitKeys.TidalMark, WeakBanditKitKeys.TidalMark);
     }
 
     private static (int Bubblings, int Toads) OwnSummons(Situation s)
@@ -105,7 +156,7 @@ internal static partial class GroupAiBandits
     }
 
     private static Choice FireMage(Situation s)
-        => Formation(s, ArcherBehind) ?? Damage(s, "firemage", WeakBanditKitKeys.FireMissile, WeakBanditKitKeys.BlazingEcho, WeakBanditKitKeys.Incinerate);
+        => Formation(s, ArcherBehind) ?? BurnFinish(s) ?? Damage(s, "firemage", WeakBanditKitKeys.FireCloak, WeakBanditKitKeys.FireMissile, WeakBanditKitKeys.BlazingEcho, WeakBanditKitKeys.Incinerate);
 
     // A landed hit on a swordsman by a foe next to it (BanditProtect.OnDamage): its counter stance may answer.
     internal static void NoteMeleeHit(UnitEntity target, UnitEntity attacker)

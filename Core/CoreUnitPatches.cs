@@ -151,6 +151,22 @@ internal static class CoreUnitMovePatch
 {
     private static bool Prefix(SetMoveIfAvailable __instance, ref bool __result)
     {
+        // A summon Core holds walks Core's MoveTask the same way (SummonControl); not tied to a side, without a Core unit on the map too.
+        if (SummonControl.Any)
+        {
+            try
+            {
+                if (SummonControl.Holds(__instance._owner) && GroupAiMoveWatch.Stops(__instance._owner?.TryCast<UnitEntity>()))
+                {
+                    __result = true;
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                ApocalypseHooks.Report("unit-move", ex);
+            }
+        }
         if (!CoreUnits.Active) return true;
         try
         {
@@ -325,6 +341,7 @@ internal static class CoreUnitDespawnPatch
         {
             CoreUnits.ReportDespawn(map, entity);
             CorpseKeep.Forget(entity);
+            WeakBandits.Forget(entity);
         }
         catch (Exception ex) { ApocalypseHooks.Report("unit-despawn", ex); }
     }

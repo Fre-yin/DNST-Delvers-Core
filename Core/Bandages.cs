@@ -44,7 +44,7 @@ internal static class Bandages
     internal const string HerbalOtherSkillKey = "SKILL_DelversCoreHerbalBandageOther";
     internal const string SalveOtherSkillKey = "SKILL_DelversCoreSalveBandageOther";
     // The game's aid kit, ointment and raw herbs put on another unit (UseOnOther), the same way.
-    internal const string AidKitOtherSkillKey = "SKILL_DelversCoreAidKitOther";
+    internal const string AidKitOtherSkillKey = BandageRules.AidKitOtherSkillKey;
     internal const string OintmentOtherSkillKey = "SKILL_DelversCoreOintmentOther";
     internal const string WildHerbOtherSkillKey = "SKILL_DelversCoreWildHerbOther";
 
@@ -147,6 +147,9 @@ internal static class Bandages
         if (!leavesRunning) routine.__1__state = -1;
         // Put on another unit the wound dressed is the target's.
         var helper = context.User?.TryCast<UnitEntity>();
+        // Core dresses with the kit put on a comrade: its entry closes first, so a failure further down never gives the kit back as
+        // well. Any other bandage of the helper leaves the kit's entry alone.
+        if (BandageRules.ClosesKitEntry(onOther, kind)) BandageOtherWatch.OnDressed(helper);
         var user = context.TargetEntity?.TryCast<UnitEntity>() ?? helper;
         var guid = CoreGame.GuidOf(user);
         var before = Wounds.Buffer(guid);

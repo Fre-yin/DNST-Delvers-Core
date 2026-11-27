@@ -11,7 +11,6 @@ internal static class NativeFoundersGuild
     internal const float RollChancePerMatchingCandidate = 0.08f;
     // Own generator: drawing from UnityEngine.Random would shift every later
     // native roll that uses the shared Unity random state.
-    private static readonly System.Random Rolls = new();
 
     internal static bool Seen(Il2CppSystem.Guid campaign, NativeFounders.Entry entry)
         => entry != null && CampaignPresence.Seen(campaign.ToString(),
@@ -152,7 +151,7 @@ internal static class NativeFoundersGuild
                 || (strict && (Seen(campaign, entry) || HasLiveCollision(helper, entry)))
                 || CollidesWithOtherCandidates(candidates, index, entry)
                 || !NativeFounders.IsNativePresetAvailable(entry)
-                || (!forced && Rolls.NextDouble() >= RollChancePerMatchingCandidate)) continue;
+                || (!forced && CoreRandom.Next01(CoreRandomRules.Founders, Guid.Empty) >= RollChancePerMatchingCandidate)) continue;
             var preset = DataSheetManager.Instance.GetCandidatePresetData(entry.PresetKey);
             var nativeCandidate = helper.CreatePresetCandidate(preset);
             if (nativeCandidate == null || ExactMatch(nativeCandidate.UnitProfileKey,

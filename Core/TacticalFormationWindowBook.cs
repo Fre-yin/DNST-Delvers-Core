@@ -3,51 +3,39 @@ using UnityEngine.UI;
 
 namespace DungeonSettlersDelvers.Core;
 
-// The formation window's book (up to eight formations to keep, "‹ 3 of 8 ›"): a narrow pager at the
+// The formation window's book (up to eight formations to keep; a box per formation): a narrow pager at the
 // bottom between the window's buttons, with the arrows of the game's work plan counter. The shown set is the active one; turning the page keeps the shown set in the
 // book first. An empty set starts with the default places around the list's top member. Casts stay with the members.
 internal static partial class TacticalFormationWindow
 {
-    private const float ArrowWidth = 40f, ArrowHeight = 30f, PageWidth = 72f;
+    private const float ArrowWidth = 40f, ArrowHeight = 30f, PagerSpacing = 4f, PagerMargin = 8f;
 
     private static TacticalFormationBook book;
     private static int page;
     private static List<Guid> order;
-    private static TMP_Text pageText;
 
     private static void ClearBook()
     {
         book = null;
         page = 0;
         order = null;
-        pageText = null;
     }
 
-    // The grid of a set for the members in this order: the set where its leader is there, else the defaults.
-    private static TacticalFormationGrid GridFor(int index, IReadOnlyList<Guid> members, IReadOnlyDictionary<Guid, string[]> casts)
-    {
-        if (TacticalFormationBook.Apply(book.Sets[index], members, out var leader, out var slots))
-            return TacticalFormationGrid.Create(members, leader, slots, casts);
-        return TacticalFormationGrid.Create(members, Guid.Empty, null, casts);
-    }
-
-    // The shown set back into the book.
+    // The shown set back into the book: its rows as the window shows them (the fixed selection), none when every row went.
     private static void StorePage()
     {
-        if (book == null || grid == null || grid.Leader == Guid.Empty) return;
-        book.Sets[page] = TacticalFormationBook.Merge(book.Sets[page], grid.Leader, grid.Slots(), grid.Members);
+        if (book == null || grid == null) return;
+        KeepCasts();
+        book.Sets[page] = grid.Leader == Guid.Empty ? null : new TacticalFormationBook.Set(grid.Leader, grid.Slots(), SummonPlacesOf(grid), grid.AllRoles());
         book.Active = page;
     }
 
-    // Turns to another set (0 to 7); the list keeps its order where the set has no leader of its own.
+    // Turns to another set (0 to 7); a set without rows starts with the group the window opened for.
     internal static bool ShowPage(int index)
     {
         if (book == null || grid == null || index < 0 || index >= TacticalFormationBook.Size || index == page) return false;
         StorePage();
-        var members = new List<Guid>(grid.Members);
-        foreach (var unit in order)
-            if (!members.Contains(unit)) members.Add(unit);
-        grid = GridFor(index, members, grid.AllCasts());
+        grid = GridFor(index);
         page = index;
         book.Active = index;
         ClosePicker();
@@ -62,7 +50,7 @@ internal static partial class TacticalFormationWindow
     // Reset), at the height of the Close button. Read from the buttons' own anchors, never measured.
     private static void BuildPager(DelversMenuWindow.Parts parts, Transform panel)
     {
-        var pager = Layout<HorizontalLayoutGroup>(panel, "Pager", 4f, new RectOffset(0, 0, 0, 0));
+        var pager = Layout<HorizontalLayoutGroup>(panel, "Pager", PagerSpacing, new RectOffset(0, 0, 0, 0));
         pager.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
         var fitter = pager.AddComponent<ContentSizeFitter>();
         fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
@@ -78,25 +66,40 @@ internal static partial class TacticalFormationWindow
         var reset = panel.Find("Btn_ResetDefault")?.GetComponent<RectTransform>();
         var width = panel.GetComponent<RectTransform>().rect.width;
         var middle = 0f;
+        var room = -1f;
         if (test != null && reset != null && test.anchorMin.x == test.anchorMax.x && reset.anchorMin.x == reset.anchorMax.x)
         {
             var testRight = (test.anchorMin.x - 0.5f) * width + test.anchoredPosition.x + (1f - test.pivot.x) * test.sizeDelta.x;
             var resetLeft = (reset.anchorMin.x - 0.5f) * width + reset.anchoredPosition.x - reset.pivot.x * reset.sizeDelta.x;
-            if (resetLeft > testRight) middle = (testRight + resetLeft) / 2f;
+            if (resetLeft > testRight)
+            {
+                middle = (testRight + resetLeft) / 2f;
+                room = resetLeft - testRight;
+            }
         }
         rect.anchoredPosition = new Vector2(middle, height);
 
         // Narrow and in the game's style. The arrows are the single steps of the game's work plan counter
-        // (WorkPlanArrowUI minusOne, plusOne) at their own size; the number is written like the caption of the window's Close
-        // button. Without the counter the tab buttons of the options window stand in.
+        // (WorkPlanArrowUI minusOne, plusOne) at their own size. Without the counter the tab buttons of the options window stand in.
         var counter = FindCounter();
+        TakeFrontArrow(counter != null ? counter.plusOne : null);
         var previous = counter != null ? GameArrow(counter.minusOne, pager.transform, "Btn_PagePrevious", () => Turn(-1)) : null;
         previous ??= Arrow(parts, pager.transform, "Btn_PagePrevious", "<", () => Turn(-1));
-        pageText = Caption(parts, panel, pager.transform);
+        // A box per formation instead of the number, the shown one filled.
+        AddPageDots(pager.transform);
         var next = counter != null ? GameArrow(counter.plusOne, pager.transform, "Btn_PageNext", () => Turn(1)) : null;
         next ??= Arrow(parts, pager.transform, "Btn_PageNext", ">", () => Turn(1));
         var size = previous.GetComponent<RectTransform>().sizeDelta;
+        // The boxes narrow down to the gap between Test formation and Reset, so the arrows never lie over those buttons.
+        if (room > 0f) FitPageDots(room - LaidWidth(previous) - LaidWidth(next) - 2f * PagerSpacing - PagerMargin);
         DelversHost.Info($"CORE_TACTICAL_PAGER arrows={(counter != null ? "workplan" : "tabs")} size={size.x:0}x{size.y:0}");
+    }
+
+    // The width the pager's layout gives a part: its LayoutElement's (GameArrow and Arrow set it), else its own.
+    private static float LaidWidth(GameObject part)
+    {
+        var element = part.GetComponent<LayoutElement>();
+        return element != null && element.preferredWidth > 0f ? element.preferredWidth : part.GetComponent<RectTransform>().sizeDelta.x;
     }
 
     // The work plan's counter, found and never created: a prefab or a loaded view.
@@ -140,29 +143,6 @@ internal static partial class TacticalFormationWindow
         }
     }
 
-    // The number in the font of the window's buttons: a copy of the Close button's caption.
-    private static TMP_Text Caption(DelversMenuWindow.Parts parts, Transform panel, Transform parent)
-    {
-        var source = panel.Find("Btn_Confirm")?.GetComponentInChildren<TMP_Text>(true);
-        TMP_Text text;
-        if (source != null)
-        {
-            var copy = DelversMenuWindow.Clone(source.transform, parent, "Txt_Page");
-            text = copy.GetComponent<TMP_Text>();
-            Fixed(copy, PageWidth, ArrowHeight);
-            copy.SetActive(true);
-        }
-        else
-        {
-            Text(parts, parent, "", PageWidth);
-            text = parent.GetChild(parent.childCount - 1).GetComponent<TMP_Text>();
-        }
-        text.enableWordWrapping = false;
-        text.alignment = TextAlignmentOptions.Center;
-        text.raycastTarget = false;
-        return text;
-    }
-
     private static GameObject Arrow(DelversMenuWindow.Parts parts, Transform parent, string name, string caption, Action turn)
     {
         var arrow = DelversMenuWindow.Clone(parts.CategoryButton, parent, name);
@@ -183,9 +163,5 @@ internal static partial class TacticalFormationWindow
         return arrow;
     }
 
-    private static void RefreshPager()
-    {
-        if (pageText == null) return;
-        DelversMenuWindow.SetText(pageText, string.Format(MenuText.Pick(TacticalFormationText.PageOf), page + 1, TacticalFormationBook.Size));
-    }
+    private static void RefreshPager() => ShowPageDots();
 }

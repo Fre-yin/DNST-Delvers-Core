@@ -5,16 +5,16 @@ namespace DungeonSettlersDelvers.Core;
 // The passives of a Core bandit in the game's passive table (BanditPassives), pure. The game's spawn of a non-playable unit
 // (UnitSpawner.SetNonPlayableSkill) adds every skill of the row and asks to register it (RegisterPassiveActionRequested), but
 // PassiveActionContainer.Register leaves a unit it does not hold yet (it looks the unit up in its own table first), and a
-// bandit's skill keys arrive before the unit is held: -I3 saw 2 entries per bandit, its two affecters, none of its
-// skills. Once the unit is held, every listed passive that is missing is registered with the game's own Register, as Fix C did
+// bandit's skill keys arrive before the unit is held: a run saw 2 entries per bandit, its two affecters, none of its
+// skills. Once the unit is held, every listed passive that is missing is registered with the game's own Register, as is done
 // for the Life Burst alone (GroupAiHealerSeed.CheckLifeBurst).
 internal static class BanditPassiveRules
 {
     internal const int LogCap = 200;
 
     // Passives whose code reads the unit's equipment, which a bandit does not have (Core dresses it in its look only): the game's
-    // skills that touch the equipment at all. Passive_HealingTouch asks EquipmentReader for the weapon's sub type (-I2,
-    // NullReferenceException in its AddSkillRoutine), Passive_ShieldHandling threw in its OnInit (-I3,
+    // skills that touch the equipment at all. Passive_HealingTouch asks EquipmentReader for the weapon's sub type
+    // (NullReferenceException in its AddSkillRoutine), Passive_ShieldHandling threw in its OnInit (an exception
     // in Register itself); TwoHandGrip, FireBattleMage and NatureSpirit have equip routines as well. Never registered for a bandit.
     internal static readonly string[] NeedsEquipment =
         { "SKILL_HealingTouch", "SKILL_ShieldHandling", "SKILL_TwoHandGrip", "SKILL_FireBattleMage", "SKILL_NatureSpirit" };

@@ -48,26 +48,61 @@ internal static class CoreSettingsCopyRules
     // file yet. Throws on an IO failure; the caller then keeps the defaults for this session.
     internal static (string Path, string Id, bool Migrated) Prepare(string dataRoot, string gameFolder)
     {
+        var prepared = Prepare(dataRoot, gameFolder, null);
+        return (prepared.Path, prepared.Id, prepared.Source != null);
+    }
+
+    // The same, and when neither the copy nor this data folder has a file, the values of the normal game's data folder outsideRoot
+    // once, read only: its shared file, else its copy for this game folder. Source names where the values came from (shared,
+    // game-shared, game-copy), null for none. Nothing in outsideRoot is written.
+    internal static (string Path, string Id, string Source) Prepare(string dataRoot, string gameFolder, string outsideRoot)
+    {
         var id = CopyId(gameFolder);
         var path = CopyPath(dataRoot, gameFolder);
-        if (id == null) return (path, null, false);
+        if (id == null) return (path, null, null);
         var folder = System.IO.Path.GetDirectoryName(path);
         Directory.CreateDirectory(folder);
         var note = System.IO.Path.Combine(folder, NoteName);
         // One line: the game folder as a full path, UTF-8 without BOM, CRLF at its end. Written once, never changed.
         if (!File.Exists(note)) File.WriteAllText(note, NoteText(gameFolder), new UTF8Encoding(false));
+        if (File.Exists(path)) return (path, id, null);
+        var (from, source) = SourceFor(dataRoot, gameFolder, outsideRoot);
+        if (from == null) return (path, id, null);
+        File.Copy(from, path, false);
+        return (path, id, source);
+    }
+
+    private static (string From, string Source) SourceFor(string dataRoot, string gameFolder, string outsideRoot)
+    {
         var shared = SharedPath(dataRoot);
-        var migrated = false;
-        if (!File.Exists(path) && File.Exists(shared))
+        if (File.Exists(shared)) return (shared, "shared");
+        if (outsideRoot == null) return (null, null);
+        var outsideShared = SharedPath(outsideRoot);
+        if (File.Exists(outsideShared)) return (outsideShared, "game-shared");
+        var outsideCopy = CopyPath(outsideRoot, gameFolder);
+        return File.Exists(outsideCopy) ? (outsideCopy, "game-copy") : (null, null);
+    }
+
+    // Amfi's mod loader moves persistentDataPath into its own folder and names the normal game's saves folder in
+    // DSML_GAME_SAVES (...ocallowcanopenerdungeon settlerssaves): the normal game's data folder is its parent. null without
+    // the variable or when it is this data folder itself.
+    internal const string GameSavesVariable = "DSML_GAME_SAVES";
+
+    internal static string OutsideRoot(string gameSaves, string dataRoot)
+    {
+        if (string.IsNullOrWhiteSpace(gameSaves)) return null;
+        try
         {
-            File.Copy(shared, path, false);
-            migrated = true;
+            var parent = System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(gameSaves.Trim()).TrimEnd('\\', '/'));
+            if (string.IsNullOrEmpty(parent)) return null;
+            return dataRoot != null && string.Equals(Normalize(parent), Normalize(dataRoot), StringComparison.Ordinal) ? null : parent;
         }
-        return (path, id, migrated);
+        catch (Exception) { return null; }
     }
 
     internal static string NoteText(string gameFolder) => System.IO.Path.GetFullPath(gameFolder.Trim()) + "\r\n";
 
-    internal static string Line(string id, string gameFolder, bool migrated)
-        => "CORE_SETTINGS_COPY id=" + (id ?? "-") + " game=" + (string.IsNullOrWhiteSpace(gameFolder) ? "-" : gameFolder.Trim()) + " migrated=" + (migrated ? 1 : 0);
+    internal static string Line(string id, string gameFolder, bool migrated, string source = null)
+        => "CORE_SETTINGS_COPY id=" + (id ?? "-") + " game=" + (string.IsNullOrWhiteSpace(gameFolder) ? "-" : gameFolder.Trim()) + " migrated=" + (migrated ? 1 : 0)
+            + (source == null ? "" : " from=" + source);
 }

@@ -323,7 +323,7 @@ internal static class DelversCampaignSaveGuardPatch
 {
     // An exception here would make the native Save fail without a word. If the guard itself
     // fails, only the stored state decides: a known load failure still blocks, otherwise the
-    // native save runs. Either way the reason is logged (review).
+    // native save runs. Either way the reason is logged.
     private static bool Prefix(bool isAutoSave, ref bool __result)
     {
         // A combat difficulty a test set is put back first, so no save holds it (CombatDifficultyTest).

@@ -44,7 +44,7 @@ internal static class GroupAiAreaRules
         internal float WaveEvery;
     }
 
-    // F1 to F9 in Toolkit's order. The shape is the skill row's area (skills.tsv: area, radius); F9 has no skill row, its 3x3
+    // F1 to F9 as the tests number them. The shape is the skill row's area (skills.tsv: area, radius); F9 has no skill row, its 3x3
     // comes from probe 1b (10 of 12 hits at distance 0 to 1, 0 of 36 from 2). The times follow the catalog's query table
     // (from the skill's start after its start delay; F2 has no catalog value, its first hit is measured in game):
     // the charge of the elder gloth runs from 1.5 s at 8 cells a second over up to 12 cells, the earth crash hits at 2.5 s
@@ -202,8 +202,8 @@ internal static class GroupAiAreaRules
         return cells;
     }
 
-    // The cells a unit of this size may cover around its logical cell (the golem's Size 2x2 hit outside its one cell, Frieren
-    // slowed outside the zone). Which corner the logical cell is, is not known, so every covering is counted.
+    // The cells a unit of this size may cover around its logical cell (the golem's Size 2x2 hit outside its one cell:
+    // Frieren slowed outside the zone). Which corner the logical cell is, is not known, so every covering is counted.
     internal static List<(int X, int Y)> Footprint(int x, int y, int width, int height)
     {
         var cells = new List<(int X, int Y)>();

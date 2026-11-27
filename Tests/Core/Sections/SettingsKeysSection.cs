@@ -11,10 +11,10 @@ internal static class SettingsKeysSection
     static readonly (string Key, bool Default)[] Frozen =
     {
         ("apocalypse.no-pause", true), ("apocalypse.offered", false), ("apocalypse.slow.bar", true),
-        ("bandits.areaignoresdowned", true), ("bandits.basic-only", false), ("bandits.camp.probe", false),
-        ("bandits.finish-downed-always", false), ("bandits.groupWake", true), ("bandits.sparedownedincone", false),
+        ("bandits.areaignoresdowned", true), ("bandits.basic-only", false), ("bandits.camp.probe", false), ("bandits.combo.calls", false),
+        ("bandits.finish-downed-always", false), ("bandits.groupWake", true), ("bandits.sparedownedincone", false), ("bandits.vary", true),
         ("corpse.burial.warning", true), ("groupai.adds-first", true), ("groupai.bandagesfrombag", false),
-        ("groupai.enabled", false), ("groupai.focus.native-healers", true), ("hints.enabled", true),
+        ("groupai.enabled", false), ("groupai.focus.native-healers", true), ("groupai.low.net", true), ("hints.enabled", true),
         ("qol.shield-band", true), ("qol.summons-follow-target", true), ("qol.tactical", true),
         ("revive.scroll.offered", true), ("wounds.fatal.bandagecloses", false), ("wounds.fatal.fromheavyonly", true),
     };

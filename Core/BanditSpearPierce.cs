@@ -54,7 +54,8 @@ internal static class BanditSpearPierce
     internal static void Answer(IEntity target, ref bool removes)
     {
         if (caster == null || target == null) return;
-        var drops = !GroupAiRules.CoreVinesHits((int)target.Faction);
+        // The players' and their allies' units stay in the list, never a bandit's own (its summoned buildings carry the Ally row).
+        var drops = !GroupAiRules.CoreVinesHits((int)target.Faction) || CoreFaction.IsBandit(target);
         if (drops != removes) changed = true;
         removes = drops;
     }

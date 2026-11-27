@@ -5,7 +5,7 @@ namespace DungeonSettlersDelvers.Core;
 // The pack API, the registries and the state are in DelversCoreRuntime.cs.
 public static partial class DelversCoreRuntime
 {
-    // Test campaigns (review, H7 to H10). A campaign counts as a test campaign only by
+    // Test campaigns. A campaign counts as a test campaign only by
     // the GUID a test has marked through MarkTestCampaign, never by its clan name. Uniqueness is
     // strict everywhere else, also when a switch is left on. GUIDs are strings, so tools without
     // a reference to Core can call these methods through reflection.
@@ -51,9 +51,11 @@ public static partial class DelversCoreRuntime
             CoreSaveStore.ForgetArchive(campaign);
         }
         catch (Exception ex) { DelversHost.Warning("CORE_TEST_CAMPAIGN_ARCHIVE_FORGET_FAILED: " + ex.Message); }
+        // Since the presence lives in Core's block the marks go there too, not only the files.
+        var marks = CampaignPresenceBook.Forget(CoreSaveStore.Current, campaign);
         var removed = CampaignPresence.Forget(campaign);
         if (removed < 0) return false;
-        DelversHost.Info($"CORE_TEST_CAMPAIGN_FORGOTTEN campaign={campaign:D} files={removed}");
+        DelversHost.Info($"CORE_TEST_CAMPAIGN_FORGOTTEN campaign={campaign:D} files={removed} marks={marks}");
         return true;
     }
 

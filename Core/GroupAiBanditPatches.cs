@@ -19,6 +19,9 @@ internal static class GroupAiBanditDamagePatch
         // B: hits on party units, for the vines' threat (GroupAiPartyHits).
         try { GroupAiPartyHits.OnDamage(data); }
         catch (Exception ex) { ApocalypseHooks.Report("party-hits", ex); }
+        // The damage and heals of the window for the AI's health lines (GroupAiLow).
+        try { GroupAiLow.OnProcessed(data); }
+        catch (Exception ex) { ApocalypseHooks.Report("ai-low", ex); }
     }
 }
 
@@ -37,6 +40,17 @@ internal static class GroupAiBanditTickPatch
         catch (Exception ex)
         {
             if (++failures <= 3) DelversHost.Warning("CORE_AI_BANDIT_TICK_FAILED: " + ex.Message);
+        }
+        try { BanditSummons.OnGameTick(); }
+        catch (Exception ex)
+        {
+            if (++failures <= 3) DelversHost.Warning("CORE_BANDIT_SUMMONS_FAILED: " + ex.Message);
+        }
+        // The seed measurement (BanditSeedTally); without a known Core seed it returns at once.
+        try { BanditSeedTally.OnGameTick(); }
+        catch (Exception ex)
+        {
+            if (++failures <= 3) DelversHost.Warning("CORE_SEED_TALLY_FAILED: " + ex.Message);
         }
         try { GroupAiMoveWatch.OnGameTick(); }
         catch (Exception ex)
@@ -88,6 +102,7 @@ internal static class GroupAiBanditTickPatch
         {
             BanditCampFurnish.OnGameTick();
             BanditCampWake.OnGameTick();
+            BanditCampHome.OnGameTick();
             BanditGroupWake.FlushDelayed();
             CampGuardianStones.OnGameTick();
         }

@@ -57,14 +57,16 @@ internal static partial class GroupAiBandits
             var due = inRange && GroupAiHealerSeedRules.UpgradeDue(left);
             NoteSeedUpgrade(s.Guid, seed.Guid.ToString(), left, life, counter, GroupAiHealerSeedRules.UpgradeResult(inRange, life >= 0f, due));
             if (!inRange) continue;
-            if (due) return NewChoice(slot.Key, entity, "healer-seed-upgrade");
+            if (!due) continue;
+            BanditSeedTally.Upgrading(seed.Guid.ToString());
+            return NewChoice(slot.Key, entity, "healer-seed-upgrade");
         }
         return null;
     }
 
     // The bandits' Life Burst (SeedStayRules.BurstNow): a comrade on the seed's cell or next to it (the cells the burst heals)
-    // at or below seeds.stay.below, herself included; the seed grows at once with the skill SeedStayRules.BurstSkill names, in
-    // exact range. CORE_AI_BANDIT_SEED_BURST.
+    // at or below its own seed line (BanditSeedStay.SeedLineOf, the line it stays in the seed by), herself included; the seed grows
+    // at once with the skill SeedStayRules.BurstSkill names, in exact range. CORE_AI_BANDIT_SEED_BURST.
     private static Choice SeedBurst(Situation s, IEntity seed, Vector2Int at, int distance, bool sprayerFree, bool bloomFree)
     {
         float? lowest = null;
@@ -72,17 +74,21 @@ internal static partial class GroupAiBandits
         var figures = new List<Figure>(s.Allies) { s.Self };
         foreach (var figure in figures)
         {
-            if (GroupAiRules.Distance(at.x, at.y, figure.Position.x, figure.Position.y) > 1) continue;
-            if (lowest != null && figure.Share >= lowest) continue;
-            lowest = figure.Share;
+            if (figure.Unit == null || GroupAiRules.Distance(at.x, at.y, figure.Position.x, figure.Position.y) > 1) continue;
+            // With look ahead and buffer on the comrade's own seed line (GroupAiLow).
+            var line = SeedLineOf(figure.Unit, figure.Guid);
+            var share = GroupAiLow.Share(figure.Unit, figure.Share, LowLine.SeedStay, (float)line);
+            if (!SeedStayRules.BurstNow(share, line) || (lowest != null && share >= lowest)) continue;
+            lowest = share;
             comrade = figure.Guid == s.Guid ? "self" : figure.Guid;
         }
-        if (!SeedStayRules.BurstNow(lowest, stayBelow)) return null;
+        if (lowest == null) return null;
         var sprayerInRange = sprayerFree && distance <= s.Find(GroupAiHealerSeedRules.SprayerSkill).Data.Range;
         var bloomInRange = bloomFree && distance <= s.Find(SeedStayRules.BloomSkill).Data.Range;
         var skill = SeedStayRules.BurstSkill(sprayerInRange, bloomInRange);
         if (skill == null) return null;
         Log(SeedStayRules.BanditBurstLine(s.Guid, seed.Guid.ToString(), skill, lowest.Value, comrade, Tick()));
+        BanditSeedTally.Upgrading(seed.Guid.ToString());
         return NewChoice(skill, seed, "healer-seed-burst");
     }
 

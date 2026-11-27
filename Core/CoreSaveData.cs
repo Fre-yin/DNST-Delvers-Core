@@ -432,6 +432,37 @@ internal sealed class CoreSaveData
 
     internal bool CampWakes() => root["camp"] is JsonObject camp && camp["wake"] is JsonValue value && value.TryGetValue(out bool wakes) && wakes;
 
+    // The test hook's wake (DelversCoreRuntime.SetCampWakeForTest): only for a camp with its box; off leaves no "wake", as SetCamp does.
+    internal bool SetCampWake(bool wakes)
+    {
+        if (CampBox(out _) == null || root["camp"] is not JsonObject camp) return false;
+        if (wakes) camp["wake"] = true;
+        else camp.Remove("wake");
+        return true;
+    }
+
+    // The cells the camp's boss party was placed on, by unit key (BanditCampHome): "homes": [ { "key": "<unit>", "x": 1, "y": 2 } ], only
+    // for a camp with its box. Without it, as in every block written before, nobody walks home.
+    internal void SetCampHomes(IEnumerable<(string Key, int X, int Y)> homes)
+    {
+        if (root["camp"] is not JsonObject camp) return;
+        var list = new JsonArray();
+        foreach (var (key, x, y) in homes ?? Enumerable.Empty<(string, int, int)>())
+            list.Add(new JsonObject { ["key"] = key, ["x"] = x, ["y"] = y });
+        if (list.Count > 0) camp["homes"] = list;
+        else camp.Remove("homes");
+    }
+
+    internal Dictionary<string, (int X, int Y)> CampHomes()
+    {
+        var homes = new Dictionary<string, (int X, int Y)>(StringComparer.Ordinal);
+        if (root["camp"] is not JsonObject camp || camp["homes"] is not JsonArray list) return homes;
+        foreach (var node in list)
+            if (node is JsonObject entry && Text(entry, "key") is { Length: > 0 } key && Int(entry, "x", out var x) && Int(entry, "y", out var y))
+                homes[key] = (x, y);
+        return homes;
+    }
+
     internal bool CampWagon(out int seed, out Guid wagon)
     {
         seed = 0;
@@ -458,8 +489,9 @@ internal sealed class CoreSaveData
     }
 
     // ---- tactical formation (TacticalFormation): the campaign's formation book (TacticalFormationBook), "formations": {
-    // "active": 0, "sets": [ { "leader": "<guid>", "places": [ { "unit": "<guid>", "x": 1, "y": -1 } ] }, {} ] }, eight sets, an
-    // empty one {}; x to the leader's right and y to the front, each at most 4 cells. The first format, { "<leader>": [ places ] },
+    // "active": 0, "sets": [ { "leader": "<guid>", "places": [ { "unit": "<guid>", "x": 1, "y": -1 } ], "summons": [ { "of":
+    // "<summoner>", "kind": "UNIT_Bubbleling", "n": 1, "x": 0, "y": -2 } ], "roles": { "<unit>": "tank" } }, {} ] }, eight sets, an
+    // empty one {}, "summons" only with summon places, "roles" only with a role that is not neutral (TacticalRoles); x to the leader's right and y to the front, each at most 4 cells. The first format, { "<leader>": [ places ] },
     // is read as the first sets and written in the new one with the next save. ----
 
     private const string FormationsName = "formations";
@@ -473,7 +505,8 @@ internal sealed class CoreSaveData
             book.Active = Int(formations, "active", out var active) ? active : 0;
             for (var i = 0; i < TacticalFormationBook.Size && i < sets.Count; i++)
                 if (sets[i] is JsonObject set && Guid.TryParse(Text(set, "leader"), out var leader) && leader != Guid.Empty)
-                    book.Sets[i] = new TacticalFormationBook.Set(leader, Places(set["places"] as JsonArray, leader));
+                    book.Sets[i] = new TacticalFormationBook.Set(leader, Places(set["places"] as JsonArray, leader), SummonPlaces(set["summons"] as JsonArray),
+                        Roles(set["roles"] as JsonObject));
             return book;
         }
         // The first format: one list of places per leader.
@@ -505,7 +538,25 @@ internal sealed class CoreSaveData
             var places = new JsonArray();
             foreach (var place in set.Places)
                 places.Add(new JsonObject { ["unit"] = place.Unit.ToString("D"), ["x"] = place.X, ["y"] = place.Y });
-            sets.Add(new JsonObject { ["leader"] = set.Leader.ToString("D"), ["places"] = places });
+            var entry = new JsonObject { ["leader"] = set.Leader.ToString("D"), ["places"] = places };
+            if (set.Summons.Count > 0)
+            {
+                var summons = new JsonArray();
+                foreach (var summon in set.Summons)
+                    summons.Add(new JsonObject
+                    {
+                        ["of"] = summon.Summoner.ToString("D"), ["kind"] = summon.Kind, ["n"] = summon.Number, ["x"] = summon.X, ["y"] = summon.Y
+                    });
+                entry["summons"] = summons;
+            }
+            if (set.Roles.Count > 0)
+            {
+                var roles = new JsonObject();
+                foreach (var pair in set.Roles)
+                    if (TacticalRoles.Word(pair.Value) is { } word) roles[pair.Key.ToString("D")] = word;
+                entry["roles"] = roles;
+            }
+            sets.Add(entry);
         }
         root[FormationsName] = new JsonObject { ["active"] = book.Active, ["sets"] = sets };
     }
@@ -518,6 +569,29 @@ internal sealed class CoreSaveData
             if (node is not JsonObject entry || !Guid.TryParse(Text(entry, "unit"), out var unit) || unit == leader
                 || !Int(entry, "x", out var x) || !Int(entry, "y", out var y)) continue;
             places.Add(new TacticalFormationRules.Slot(unit, x, y));
+        }
+        return places;
+    }
+
+    // A set's roles: "<unit>": "tank" | "damage" | "support"; an unknown word reads as neutral and is left out.
+    private static Dictionary<Guid, TacticalRole> Roles(JsonObject list)
+    {
+        var roles = new Dictionary<Guid, TacticalRole>();
+        foreach (var pair in list ?? new JsonObject())
+            if (Guid.TryParse(pair.Key, out var unit) && pair.Value is JsonValue value && value.TryGetValue<string>(out var word)
+                && TacticalRoles.Parse(word) is var role && role != TacticalRole.Neutral) roles[unit] = role;
+        return roles;
+    }
+
+    // A set's summon places: summoner ("of"), kind (the unit key), number ("n", from 1) and the cell.
+    private static List<TacticalFormationSummons.Place> SummonPlaces(JsonArray list)
+    {
+        var places = new List<TacticalFormationSummons.Place>();
+        foreach (var node in list ?? new JsonArray())
+        {
+            if (node is not JsonObject entry || !Guid.TryParse(Text(entry, "of"), out var summoner) || Text(entry, "kind") is not { Length: > 0 } kind
+                || !Int(entry, "n", out var number) || !Int(entry, "x", out var x) || !Int(entry, "y", out var y)) continue;
+            places.Add(new TacticalFormationSummons.Place(summoner, kind, number, x, y));
         }
         return places;
     }
@@ -596,6 +670,18 @@ internal sealed class CoreSaveData
         return result;
     }
 
+    // The tempo button of the formation window (TacticalFormationTempo), "formationTempo": true; off without
+    // the field, as at first.
+    private const string FormationTempoName = "formationTempo";
+
+    internal bool FormationTempo => Flag(root, FormationTempoName);
+
+    internal void SetFormationTempo(bool on)
+    {
+        if (on) root[FormationTempoName] = true;
+        else root.Remove(FormationTempoName);
+    }
+
     private int DropGuids(string name, Func<Guid, bool> present)
     {
         var gone = 0;
@@ -663,6 +749,18 @@ internal sealed class CoreSaveData
         if (root["px"] is not JsonArray extra) root["px"] = extra = new JsonArray();
         extra.Add(id);
         return true;
+    }
+
+    // Every mark gone, for a test campaign the tools forget (ForgetTestCampaign); "pv" stays, so no old marker file is taken over
+    // again. Returns how many marks went.
+    internal int ClearPresence()
+    {
+        var count = 0;
+        for (var mask = PresenceMask(); mask != 0; mask &= mask - 1) count++;
+        if (root["px"] is JsonArray extra) count += extra.Count;
+        root.Remove("pr");
+        root.Remove("px");
+        return count;
     }
 
     private int PresenceMask() => CampaignPresenceRules.ParseMask(Text(root, "pr"));
@@ -749,16 +847,18 @@ internal sealed class CoreSaveData
         => Unit(unit, false)?["wound"] is JsonValue value && value.TryGetValue<double>(out var buffer)
             && buffer > 0 && !double.IsInfinity(buffer) ? buffer : 0;
 
+    // Checked as it is written, rounded: a rest that rounds to 0 closes the wound and ends its lethal mark with it.
     internal void SetWoundBuffer(Guid unit, double buffer)
     {
-        if (!(buffer > 0) || double.IsInfinity(buffer))
+        var written = double.IsInfinity(buffer) ? buffer : Math.Round(buffer, 3);
+        if (!(written > 0) || double.IsInfinity(written))
         {
             var entry = Unit(unit, false);
             entry?.Remove("wound");
             entry?.Remove("woundfatal");
             return;
         }
-        Unit(unit, true)["wound"] = Math.Round(buffer, 3);
+        Unit(unit, true)["wound"] = written;
     }
 
     // The lethal wound (WoundRules.Stage.Fatal): kept until the wound closes, which also removes it; missing means not lethal.

@@ -258,7 +258,8 @@ internal static class LifebloomSection
                 && Math.Abs(LifebloomRules.HealFor(player, 0, 1) - 0.08 * 50) < 1e-9 && Math.Abs(LifebloomRules.Burst(player, 1) - 0.15 * 50) < 1e-9
                 && LifebloomRules.PlayerPerStack(0.12) == 0.12 && LifebloomRules.PlayerPerStack(9) == LifebloomRules.PlayerPerStackMax
                 && LifebloomRules.PlayerPerStack(-1) == 0.08 && LifebloomRules.PlayerBurst(5) == LifebloomRules.PlayerBurstMax && LifebloomRules.PlayerBurst(null) == 0.15
-                && new LifebloomRules.State(1, 10, 10).PerStack == LifebloomRules.PlayerPerStackDefault,
+                && new LifebloomRules.State(1, 10, 10).PerStack == LifebloomRules.PlayerPerStackDefault
+                && LifebloomRules.Cast(default, 0, 50, out _, LifebloomRules.PlayerPerStack(0), LifebloomRules.PlayerBurst(0)) is { PerStack: 0, BurstShare: 0 },
             "Lifebloom: players heal 0.08 per stack and 0.15 at the bloom from the settings; Core's enemies heal exactly as before");
     }
 

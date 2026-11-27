@@ -66,7 +66,7 @@ internal static class SummonProbe
 
     // A summon's damage to itself (Bubble Tackle, Bubble Splash) is no effect on anyone. A Bubble Splash comes when a bubbleling
     // dies (Passive_BubbleSplash.OnDead); its line names the execution's user, which for a splash set off by a kill can be the
-    // killer, so a bandit's bubbleling may stand on the line of a party bubbleling's splash (runs 20261031-200645 to -201923).
+    // killer, so a bandit's bubbleling may stand on the line of a party bubbleling's splash.
     private static void Effect(IEntity user, IEntity target, string kind, float amount)
     {
         var id = user.Guid.ToString();
@@ -141,7 +141,7 @@ internal static class SummonProbe
 
     // What CombatDataHandler holds since the spawn: whether its hostile lists count the party unit and the owner as foes of the
     // summon (IsHostileTo), "party,owner" as 1/0; null when it cannot be read. They come from the pair registered at the spawn,
-    // so they must match relParty and relOwner. Run 20261031-180223: _unitFactions' ValueTuple did not read through the
+    // so they must match relParty and relOwner. In play, _unitFactions' ValueTuple did not read through the
     // interop (numbers like 1378417888), hence the handler's own answer.
     private static string Registered(IInMapDataSupplier inMap, UnitEntity unit, UnitEntity party, UnitEntity owner)
     {

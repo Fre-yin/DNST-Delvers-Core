@@ -52,6 +52,14 @@ internal static class CoreGame
         }
     }
 
+    // The data of a loaded map; null when that map is not loaded. A fight may run on a map the player does not look at (all loaded
+    // maps tick), so what concerns a unit asks its own map, not InMap.
+    internal static IInMapDataSupplier InMapOf(MapType map)
+    {
+        var maps = Flow?._inMapDatas;
+        return maps != null && maps.ContainsKey(map) ? maps[map] : null;
+    }
+
     internal static TickFlowHandler TickHandler(MapType map)
     {
         var handlers = Flow?._tickFlowHandlers;
@@ -70,21 +78,21 @@ internal static class CoreGame
     }
 
     // Living or dead party members of the shown map.
-    internal static List<UnitEntity> PlayerUnits(bool includeDead)
-    {
-        var result = new List<UnitEntity>();
-        var units = InMap?.GetAllPlayerUnits(includeDead);
-        for (var i = 0; units != null && i < units.Count; i++)
-            if (units[i] != null) result.Add(units[i]);
-        return result;
-    }
+    internal static List<UnitEntity> PlayerUnits(bool includeDead) => Units(InMap?.GetAllPlayerUnits(includeDead));
+
+    // Living or dead party members of a loaded map.
+    internal static List<UnitEntity> PlayerUnits(MapType map, bool includeDead) => Units(InMapOf(map)?.GetAllPlayerUnits(includeDead));
 
     // Every unit that still occupies a cell of the shown map; only the game's death handling
     // clears a dead unit from it.
-    internal static List<UnitEntity> MapUnits()
+    internal static List<UnitEntity> MapUnits() => Units(InMap?.GetAliveUnitsOnMap());
+
+    // The same for a loaded map.
+    internal static List<UnitEntity> MapUnits(MapType map) => Units(InMapOf(map)?.GetAliveUnitsOnMap());
+
+    private static List<UnitEntity> Units(Il2CppSystem.Collections.Generic.List<UnitEntity> units)
     {
         var result = new List<UnitEntity>();
-        var units = InMap?.GetAliveUnitsOnMap();
         for (var i = 0; units != null && i < units.Count; i++)
             if (units[i] != null) result.Add(units[i]);
         return result;
@@ -129,12 +137,41 @@ internal static class CoreGame
         return false;
     }
 
-    internal static UnitEntity FindUnit(Guid guid)
+    // A unit of the shown map or a party member there, living or dead.
+    internal static UnitEntity FindUnit(Guid guid) => FindIn(InMap, guid);
+
+    // The same on a loaded map.
+    internal static UnitEntity FindUnit(MapType map, Guid guid) => FindIn(InMapOf(map), guid);
+
+    // A unit on any loaded map, living or dead, with the map that holds it: the shown map first. Null when no map holds it.
+    internal static UnitEntity FindUnitOnAnyMap(Guid guid, out MapType map)
     {
-        if (guid == Guid.Empty) return null;
+        map = MapType.Base;
+        var flow = Flow;
+        var maps = flow?._inMapDatas;
+        if (guid == Guid.Empty || maps == null) return null;
+        var shown = flow.CurrentMap;
+        var unit = FindIn(InMapOf(shown), guid);
+        if (unit != null)
+        {
+            map = shown;
+            return unit;
+        }
+        foreach (var entry in maps)
+        {
+            if (entry.Key == shown || (unit = FindIn(entry.Value, guid)) == null) continue;
+            map = entry.Key;
+            return unit;
+        }
+        return null;
+    }
+
+    private static UnitEntity FindIn(IInMapDataSupplier inMap, Guid guid)
+    {
+        if (guid == Guid.Empty || inMap == null) return null;
         var text = guid.ToString("D");
-        foreach (var unit in MapUnits()) if (unit.Guid.ToString() == text) return unit;
-        foreach (var unit in PlayerUnits(true)) if (unit.Guid.ToString() == text) return unit;
+        foreach (var unit in Units(inMap.GetAliveUnitsOnMap())) if (unit.Guid.ToString() == text) return unit;
+        foreach (var unit in Units(inMap.GetAllPlayerUnits(true))) if (unit.Guid.ToString() == text) return unit;
         return null;
     }
 

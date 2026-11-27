@@ -73,6 +73,12 @@ internal static class GroupAiReachRules
     // A taunt is wasted when every foe in its reach would break it at once.
     internal static bool TauntWasted(int inReach, int breaking) => inReach > 0 && breaking >= inReach;
 
+    // Guardian's Taunt is a self target skill with an area (SkillTable: range 0, area 5): it reaches a foe whose Manhattan distance
+    // to the shield lies within the area, at least the next cell. One rule for every place that asks.
+    internal static int TauntReach(int areaRadius) => Math.Max(1, areaRadius);
+
+    internal static bool InTauntReach(int manhattan, int areaRadius) => manhattan <= TauntReach(areaRadius);
+
     // The bandits' healer steps away only while a capable hostile is left.
     internal static bool KiteAllowed(int capableHostiles) => capableHostiles > 0;
 

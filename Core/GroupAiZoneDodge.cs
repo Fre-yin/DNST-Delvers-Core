@@ -95,7 +95,8 @@ internal static partial class GroupAiZones
         }
         var record = dodges.TryGetValue(dodgeKey, out var r) ? r : (Done: 0, Left: false);
         if (!GroupAiAreaRules.DodgeAllowed(zone.Area != null, record.Done, record.Left)) return false;
-        dodges[dodgeKey] = (record.Done + 1, false);
+        // The one try per zone counts only once the unit is really sent out: a refusal for health, no free cell or a failed
+        // order uses nothing up, so a later call (health fell, a cell came free) may still send it. Their lines come once per zone.
         var again = record.Done;
         var probe = new CellProbe(inMap, side);
         var anchored = melee && anchor != null;
@@ -111,7 +112,7 @@ internal static partial class GroupAiZones
             var skip = GroupAiAreaRules.SkipReason(zone.Area, share, GameClock.Now - zone.StartedAt, zone.LastHit);
             if (skip != null)
             {
-                Log(GroupAiAreaRules.SkipLine(guid, zone.Flag, skip, share));
+                if (dodged.Add(dodgeKey + "|skip|" + skip)) Log(GroupAiAreaRules.SkipLine(guid, zone.Flag, skip, share));
                 return false;
             }
             var enemies = EnemyCells(inMap);
@@ -122,7 +123,8 @@ internal static partial class GroupAiZones
         else picked = GroupAiRules.PickDodgeCell(position.x, position.y, anchored, anchorAt.x, anchorAt.y, probe.Usable, GroupAiRules.MaxDodgeRing, out tx, out ty);
         if (!picked)
         {
-            Log($"CORE_AI_AUSWEICHEN unit={guid} from={position.x},{position.y} to=none zone={source} {zone.Flag}");
+            if (dodged.Add(dodgeKey + "|none"))
+                Log($"CORE_AI_AUSWEICHEN unit={guid} from={position.x},{position.y} to=none zone={source} {zone.Flag}");
             return false;
         }
         if (TryMapOf(inMap, out var map))
@@ -132,12 +134,13 @@ internal static partial class GroupAiZones
             var target = info?.GetCombatTarget();
             if (OrderMove(unit, map, new Vector2Int(tx, ty), "dodge"))
             {
+                dodges[dodgeKey] = (record.Done + 1, false);
                 Log($"CORE_AI_AUSWEICHEN unit={guid} from={position.x},{position.y} to={tx},{ty} zone={source} {zone.Flag} state={state} target={(target != null ? target.Guid.ToString() : "-")}"
                     + (again > 0 ? " again=" + again.ToString(CultureInfo.InvariantCulture) : ""));
                 return true;
             }
         }
-        Warn("CORE_AI_AUSWEICHEN_FAILED unit=" + guid + ": no tick handler for the unit's map");
+        if (dodged.Add(dodgeKey + "|failed")) Warn("CORE_AI_AUSWEICHEN_FAILED unit=" + guid + ": no tick handler for the unit's map");
         return false;
     }
 

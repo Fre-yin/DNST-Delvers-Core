@@ -94,6 +94,8 @@ internal static partial class GroupAiBandits
         // A player healer within FocusRadius.
         internal IEntity Focus;
         internal bool GlobalCooldown;
+        // What is left of a running global cooldown, read only while one runs (the game gives bandits none today).
+        internal float GlobalCooldownLeft;
         internal CombatState State;
         internal Figure Healer;
         internal Figure Guard;
@@ -258,6 +260,18 @@ internal static partial class GroupAiBandits
         decisions = holds = dodges = friendlyFireSkips = logLines = warnings = 0;
         announcedCast = announcedDropped = 0;
         ResetSeedStay();
+        ResetTraits();
+        ResetCombos();
+        BanditSummons.Reset();
+    }
+
+    // A bandit left its fight (BanditGroupWake.After): the start of that fight (formation window, healer's seed, the guard's
+    // offensive pull) and its wake trigger go, so a later fight of the same bandit is measured from its own start.
+    internal static void FightOver(string guid)
+    {
+        combatSince.Remove(guid);
+        offensiveFightStart.Remove(guid);
+        BanditGroupWake.Forget(guid);
     }
 
     // The skill (empty: basic attack) and target of a bandit's next action; the rule names why.
@@ -295,7 +309,9 @@ internal static partial class GroupAiBandits
             // The game gives bandits no global cooldown, so the kit's rules always decide; GlobalCooldown stays as the
             // signal in the log line (gcd=).
             // "Im Samen bleiben" before the kit: a staying bandit walks in, attacks in reach or holds (BanditSeedStay).
-            var choice = SeedStay(s) ?? (kit switch
+            ReportCombo(s);
+            var comboMoment = HoldCombo(s);
+            var choice = FollowCombo(s) ?? SeedStay(s) ?? (kit switch
             {
                 Kit.Blade => Blade(s),
                 Kit.Guard => Guard(s),
@@ -309,6 +325,9 @@ internal static partial class GroupAiBandits
             }) ?? Basic(s, "bandit-basic");
             if (spareDownedInCone) choice = SpareDownedInCone(s, choice);
             if (GroupAiRules.DropsSkill(BasicOnlyNow(), choice.Skill)) choice = Basic(s, GroupAiRules.BasicOnlyRule);
+            choice = HoldBackBasic(s, choice, comboMoment);
+            choice = StartCombo(s, choice);
+            NoteComboChoice(s, choice);
             ruleCounts[choice.Rule] = ruleCounts.TryGetValue(choice.Rule, out var count) ? count + 1 : 1;
             NoteFinishChoice(s, choice);
             var chosen = choice.Skill.Length > 0 ? s.Find(choice.Skill) : null;
@@ -532,23 +551,40 @@ internal static partial class GroupAiBandits
                 catch (Exception) { slot.CooldownLeft = 0f; }
                 return "cd";
             }
-            slot.Skill = CombatDataManager.Instance?.GetActiveSkillData(slot.Key);
-            if (slot.Skill == null) return "noactive";
-            var ally = slot.Data.AffectTarget is AffectTarget.SingleAlly or AffectTarget.MultipleAlly;
-            var context = SkillExecutionContext.Convert(
-                target: ally
-                    ? (s.LowestAlly ?? s.Self).Unit.Cast<IEntity>()
-                    : slot.Data.TargetType != TargetType.SelfTarget ? s.Intended : s.Self.Unit.Cast<IEntity>(),
-                publisher: slot.Skill.Cast<IExecutionPublisher>(),
-                user: s.Unit.Cast<IEntity>(),
-                useItem: null);
-            var result = slot.Skill.CheckForUseSkill(s.InMap, context, execeptCooldown: true);
-            return result == ExecutionCheckResult.Successed ? "free" : "check:" + result.ToString().Replace("Failed_", "");
+            return UseCheck(s, slot);
         }
         catch (Exception ex)
         {
             Warn("CORE_AI_BANDIT_SLOT_FAILED slot=" + slot.Key + ": " + ex.Message);
             return "err";
+        }
+    }
+
+    // The game's own check of a skill apart from its cooldown (energy, target): "free", or why not.
+    private static string UseCheck(Situation s, Slot slot)
+    {
+        slot.Skill = CombatDataManager.Instance?.GetActiveSkillData(slot.Key);
+        if (slot.Skill == null) return "noactive";
+        var ally = slot.Data.AffectTarget is AffectTarget.SingleAlly or AffectTarget.MultipleAlly;
+        var context = SkillExecutionContext.Convert(
+            target: ally
+                ? (s.LowestAlly ?? s.Self).Unit.Cast<IEntity>()
+                : slot.Data.TargetType != TargetType.SelfTarget ? s.Intended : s.Self.Unit.Cast<IEntity>(),
+            publisher: slot.Skill.Cast<IExecutionPublisher>(),
+            user: s.Unit.Cast<IEntity>(),
+            useItem: null);
+        var result = slot.Skill.CheckForUseSkill(s.InMap, context, execeptCooldown: true);
+        return result == ExecutionCheckResult.Successed ? "free" : "check:" + result.ToString().Replace("Failed_", "");
+    }
+
+    // A skill in its cooldown that the game would let go once the cooldown ends (UseCheck), for the combo report.
+    private static bool UsableAfterCooldown(Situation s, Slot slot)
+    {
+        try { return UseCheck(s, slot) == "free"; }
+        catch (Exception ex)
+        {
+            Warn("CORE_AI_BANDIT_SLOT_FAILED slot=" + slot.Key + ": " + ex.Message);
+            return false;
         }
     }
 

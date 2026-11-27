@@ -55,6 +55,7 @@ internal static class CoreUnitCombat
             hookReported = true;
             DelversHost.Info("CORE_AI_BANDIT_HOOK loader=" + DelversCoreRuntime.LoaderProfile + " unit=" + unit.Key);
         }
+        BanditTakeoverProbe.OnDecide(unit);
         var (skill, target, rule, aimCell) = GroupAiBandits.Decide(unit, inMap);
         // (every move order lost against this decision's basic attack): while
         // Core's own move order of the bandit runs (GroupAiMoveWatch.Holds), also in the decision that gave

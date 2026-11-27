@@ -24,6 +24,9 @@ internal static class TacticalFormationButton
 
     private static readonly Dictionary<IntPtr, GameObject> buttons = new();
     private static readonly Dictionary<IntPtr, Image> icons = new();
+    private static readonly Dictionary<IntPtr, TooltipFeedback> tooltips = new();
+    // The state the tooltip's title shows, written again after a change of language (TacticalFormationTitleStatePatch).
+    private static bool? titleState;
     private static readonly List<UnitEntity> selection = new();
     private static readonly HashSet<string> reported = new(StringComparer.Ordinal);
 
@@ -31,7 +34,9 @@ internal static class TacticalFormationButton
     {
         buttons.Clear();
         icons.Clear();
+        tooltips.Clear();
         selection.Clear();
+        titleState = null;
     }
 
     internal static void Hide(EntitySummaryOptionUI row)
@@ -63,19 +68,50 @@ internal static class TacticalFormationButton
     private static void ShowState(EntitySummaryOptionUI row)
     {
         if (icons.TryGetValue(row.Pointer, out var icon)) ShowState(icon);
+        // A row without its picture still names the state in the tooltip's title.
+        else ShowStateInTitle(TacticalFormation.AllOn(selection));
     }
 
     private static void ShowState(Image icon)
     {
         if (icon == null) return;
-        var sprite = TacticalFormation.AllOn(selection) ? CoreAssets.FormationButtonOn : CoreAssets.FormationButtonOff;
+        var on = TacticalFormation.AllOn(selection);
+        var sprite = on ? CoreAssets.FormationButtonOn : CoreAssets.FormationButtonOff;
         if (sprite != null) icon.sprite = sprite;
+        ShowStateInTitle(on);
     }
 
-    // The formation switched without the button (Prioritize Sleep, TacticalFormationSleep): every row shows it anew.
+    // The tooltip's title names the state beside the word: the game's tooltip reads it from the text table
+    // under NameKey when it opens, so the row holds the state of the selection last shown. A change of language writes the plain
+    // word back (UniqueCandidateLocalization); TacticalFormationTitleStatePatch puts the state back right after it.
+    private static void ShowStateInTitle(bool on)
+    {
+        titleState = on;
+        try
+        {
+            UniqueCandidateLocalization.EnsureCurrent();
+            var table = DataSheetManager.Instance?._text?._textTable;
+            if (table == null || !table.ContainsKey(TacticalFormationText.NameKey)) return;
+            table[TacticalFormationText.NameKey] = TacticalFormationText.TitleWithState(
+                MenuText.Pick(TacticalFormationText.Name), MenuText.Pick(on ? TacticalFormationText.StateOn : TacticalFormationText.StateOff), on);
+        }
+        catch (Exception ex) { ReportOnce("CORE_TACTICAL_TITLE_STATE_FAILED: " + ex.Message); }
+    }
+
+    // A change of language writes the plain title back (UniqueCandidateLocalization.Register); the state follows right after it.
+    internal static void TitleStateAgain()
+    {
+        if (titleState is { } on) ShowStateInTitle(on);
+    }
+
+    // The formation switched without the button (Prioritize Sleep, TacticalFormationSleep): every row shows it anew, the tooltip's
+    // title too when no row has its picture, and a tooltip open on a button reads the title again.
     internal static void RefreshAll()
     {
         foreach (var icon in icons.Values) ShowState(icon);
+        if (icons.Count == 0 && selection.Count > 0) ShowStateInTitle(TacticalFormation.AllOn(selection));
+        foreach (var tooltip in tooltips.Values)
+            if (tooltip != null) tooltip.SetTooltipKeyAndRefresh(TacticalFormationText.TooltipKey);
     }
 
     // The row's own copy, made on first use; null when the row has no button to copy.
@@ -88,6 +124,8 @@ internal static class TacticalFormationButton
         if (made == null) return null;
         buttons[row.Pointer] = made;
         if (icon != null) icons[row.Pointer] = icon;
+        var tooltip = made.GetComponentInChildren<TooltipFeedback>(true);
+        if (tooltip != null) tooltips[row.Pointer] = tooltip;
         return made;
     }
 
@@ -149,7 +187,10 @@ internal static class TacticalFormationButton
     {
         try
         {
-            if (TacticalFormation.Switch(selection, !TacticalFormation.AllOn(selection))) ShowState(row);
+            if (!TacticalFormation.Switch(selection, !TacticalFormation.AllOn(selection))) return;
+            ShowState(row);
+            // The pointer is on the button: a tooltip open there reads the title with the new state again.
+            if (row != null && tooltips.TryGetValue(row.Pointer, out var tooltip) && tooltip != null) tooltip.SetTooltipKeyAndRefresh(TacticalFormationText.TooltipKey);
         }
         catch (Exception ex) { ReportOnce("CORE_TACTICAL_SWITCH_FAILED: " + ex.Message); }
     }
@@ -217,5 +258,18 @@ internal static class TacticalFormationSelectionPatch
             TacticalFormationButton.Show(__instance._optionUI, units);
         }
         catch (Exception ex) { TacticalFormationButton.ReportOnce("CORE_TACTICAL_BUTTON_FAILED stage=selection: " + ex.Message); }
+    }
+}
+
+// After the game parses a language Core's rows are written anew (DelversLanguageRegistrationPatch, the plain title among them); this
+// postfix runs after that one and puts the state back into the tooltip's title.
+[HarmonyPatch(typeof(TextSheet), nameof(TextSheet.ParseMatchingLanguage))]
+[HarmonyPriority(Priority.Low)]
+internal static class TacticalFormationTitleStatePatch
+{
+    private static void Postfix()
+    {
+        try { TacticalFormationButton.TitleStateAgain(); }
+        catch (Exception ex) { TacticalFormationButton.ReportOnce("CORE_TACTICAL_TITLE_STATE_FAILED: " + ex.Message); }
     }
 }

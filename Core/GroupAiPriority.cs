@@ -51,7 +51,7 @@ internal static class GroupAiPriority
             learned ??= TacticalFormation.ActiveSkills(owner);
             var result = !learned.Contains(key) ? "notlearned"
                 : !TacticalFormation.CastTakesPart(owner, key) ? "autooff"
-                : GroupAiFormation.Holds(owner) && !InReach(owner, key) ? "noreach"
+                : (GroupAiFormation.Holds(owner) && !InReach(owner, key)) || GroupAiChase.SkillRefused(unit, key) ? "noreach"
                 : GroupAiSituation.NativeStateOf(decide, owner, key);
             var ready = result == "free";
             Note(unit, place, key, ready ? "cast" : result, emergency);

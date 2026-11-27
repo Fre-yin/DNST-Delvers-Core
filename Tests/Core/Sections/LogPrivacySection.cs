@@ -6,7 +6,7 @@ internal static class LogPrivacySection
 {
     internal static void Run()
     {
-        // Log privacy: players share logs, so no user folder may reach one (review, F6).
+        // Log privacy: players share logs, so no user folder may reach one.
         // Sample paths are joined at run time: the public export rejects any literal local path.
         string WinPath(params string[] parts) => string.Join('\\', parts);
         var maskedWindows = DelversLogPrivacy.Mask("CAMPAIGN_PRESENCE_READ_FAILED: "

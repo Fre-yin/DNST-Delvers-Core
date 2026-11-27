@@ -4,11 +4,11 @@
 
 Gemeinsamer Kern für Charakter-Mods in Dungeon Settlers. Core bringt die Story-Figuren **Lowell, Liana und Kragas** in die Rekrutierung und stellt Charakterpaketen eine kleine, stabile API bereit.
 
-**Version 0.5.0 für BepInEx. Core-API 1.11.0.**
+**Version 0.5.2 für BepInEx. Core-API 1.12.0.**
 
 ## Downloads
 
-Das Mod-Paket `DelversCore-0.5.0-BepInEx.zip` liegt unter [Releases](../../releases). Die automatisch erzeugten Quellcode-Archive sind keine Installationspakete. Ab 0.5.0 gibt es Delvers nur noch für BepInEx, MelonLoader wird nicht mehr unterstützt. Die MelonLoader-Fassungen bis 0.4.1 werden archiviert.
+Das Mod-Paket `DelversCore-0.5.2-BepInEx.zip` liegt unter [Releases](../../releases). Die automatisch erzeugten Quellcode-Archive sind keine Installationspakete. Ab 0.5.0 gibt es Delvers nur noch für BepInEx, MelonLoader wird nicht mehr unterstützt. Die MelonLoader-Fassungen bis 0.4.1 werden archiviert.
 
 ## Funktionen
 
@@ -50,7 +50,7 @@ Vor der ersten Nutzung Spielstände sichern. Core läuft allein; Charakterpakete
 
 ## Getestet
 
-Für 0.5.0 bestanden offline 1435 Prüfungen für Core und 129 für Frieren, ohne Buildwarnungen. Im Spiel lief Core unter BepInEx `6.0.0-be.788` auf DS_B.0.4.29 zusammen mit Frieren 0.5.0 und Extended Hotbar 1.0.2.
+Für 0.5.2 bestanden offline 1776 Prüfungen für Core und 133 für Frieren, ohne Buildwarnungen. Im Spiel lief Core unter BepInEx `6.0.0-be.788` auf DS_B.0.4.29 zusammen mit Frieren 0.5.1 und Extended Hotbar 1.0.4.
 
 Für 0.4.1 lief am 10.10.2026 auf DS_B.0.4.29 unter MelonLoader und BepInEx ein Selbsttest im Spiel, zusammen mit Frieren 0.4.1 und Extended Hotbar 1.0.2. Zwei Testkampagnen, eine mit umzubenennenden Keys und eine mit fehlenden festen Traits, wurden geladen, gespeichert und erneut geladen. Alle neun überwachten Lade-Methoden trugen den Schutz von Core, und jeder dieser Ladevorgänge galt als vertrauenswürdig. Ein Spielstand mit einem unbekannten Effekt wurde erkannt: Core sperrte das Speichern, zeigte den Hinweis und lehnte ein manuelles Speichern ab. Die Offline-Matrix bestand mit 168 Core-Prüfungen je Loader, ohne Buildwarnungen oder Fehler.
 

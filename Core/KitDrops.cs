@@ -11,7 +11,6 @@ internal static class KitDrops
     // Drops waiting for the game's spawn: key and cell. One undressed corpse at a time.
     private const int PendingCap = 16;
     private static readonly List<(string Key, int X, int Y)> pending = new();
-    private static readonly System.Random roll = new();
     private static int unmatchedLines;
 
     internal static void ResetCampaign() => pending.Clear();
@@ -44,7 +43,7 @@ internal static class KitDrops
         var reader = new StatusReader(status);
         var before = reader.GetValue(StatType.Durability);
         var max = reader.GetValue(StatType.MaxDurability);
-        var target = KitDropRules.DropDurability(max, roll.NextDouble(), boss);
+        var target = KitDropRules.DropDurability(max, CoreRandom.Next01(CoreRandomRules.KitDrops, Guid.TryParse(item.Guid.ToString(), out var dropped) ? dropped : Guid.Empty), boss);
         if (max > 0) status.AddValue(StatType.Durability, (float)(target - before));
         DelversHost.Info(KitDropRules.DropLine(item.Key, at.x, at.y, before, max, reader.GetValue(StatType.Durability)));
     }

@@ -12,7 +12,7 @@ internal static class TestCampaignsSection
 
     static void TestCampaignMarks()
     {
-        // Test campaigns by GUID, "recruitment free" and forgetting (review, H7 to H10).
+        // Test campaigns by GUID, "recruitment free" and forgetting.
         var testRoot = Path.Combine(Path.GetTempPath(), "delvers-testcampaign-test-" + Guid.NewGuid().ToString("N"));
         try
         {

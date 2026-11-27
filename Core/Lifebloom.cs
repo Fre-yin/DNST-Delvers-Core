@@ -197,6 +197,10 @@ internal static class Lifebloom
             Heal(target, caster, LifebloomRules.HealFor(before, buff.LastSeconds, now), null);
             Heal(target, caster, LifebloomRules.Burst(before, before.Stacks), "end");
         }
+        // Still running: the heal since its last tick first, so a recast loses none of it and the whole heal does not hang on the
+        // game's speed (the tick comes once a real second).
+        else if (buff != null && LifebloomRules.HealFor(before, buff.LastSeconds, now) is var since and > 0)
+            Heal(target, caster, since, null);
         var npc = CoreUnitRules.IsCoreUnit(caster.Key);
         var percent = npc ? LifebloomRules.NpcEffectivePercent(NpcPercent, CoreGame.Stat(caster, StatType.Intelligence), CoreGame.Stat(caster, StatType.WillPower), NpcStatFactor) : 0;
         var power = npc
@@ -278,14 +282,15 @@ internal static class Lifebloom
     private static void Advance(Guid guid, double now)
     {
         var buff = buffs[guid];
-        var unit = CoreGame.FindUnit(guid);
+        // On any loaded map: a buff runs on while the player looks at another map.
+        var unit = CoreGame.FindUnitOnAnyMap(guid, out _);
         if (unit == null || unit.IsDead)
         {
             buffs.Remove(guid);
             DelversHost.Info($"CORE_LIFEBLOOM_END target={guid:D} reason={(unit == null ? "gone" : "death")} burst=0");
             return;
         }
-        var caster = Guid.TryParse(buff.Caster, out var casterGuid) ? CoreGame.FindUnit(casterGuid) : null;
+        var caster = Guid.TryParse(buff.Caster, out var casterGuid) ? CoreGame.FindUnitOnAnyMap(casterGuid, out _) : null;
         var heal = LifebloomRules.HealFor(buff.State, buff.LastSeconds, now);
         buff.LastSeconds = now;
         if (heal > 0)

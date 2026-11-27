@@ -36,7 +36,7 @@ internal static class SummonsSection
         Check(order.Count == 0 && order.Sort(new[] { "z", "y" })[0] == "z", "summon owners: the order starts afresh with the campaign");
     }
 
-    // A Core owner's summon takes its side (SummonSideRules), and the probe's entry for the toolkit block.
+    // A Core owner's summon takes its side (SummonSideRules), and the probe's entry for the tests.
     static void Side()
     {
         Check(SummonSideRules.Applies(true, "UNIT_Bubbleling") && !SummonSideRules.Applies(false, "UNIT_Bubbleling")

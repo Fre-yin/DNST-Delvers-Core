@@ -22,7 +22,7 @@ internal static class GroupAiSeedSection
                 && GroupAiHealerSeedRules.Below(0.89f) && !GroupAiHealerSeedRules.Below(0.9f)
                 && GroupAiHealerSeedRules.UpgradeDue(5f) && GroupAiHealerSeedRules.UpgradeDue(0.5f) && !GroupAiHealerSeedRules.UpgradeDue(5.1f)
                 && !GroupAiHealerSeedRules.UpgradeDue(0f),
-            "C15a: the herbalist's seed, its upgrade and the bandits' Life Burst");
+            "seed: the herbalist's seed, its upgrade and the bandits' Life Burst");
         Check(GroupAiHealerSeedRules.SeedLine("h", "p", 2, "healer-seed", 5) == "CORE_AI_BANDIT_SEED unit=h target=p below=2 rule=healer-seed tick=5"
                 && GroupAiHealerSeedRules.UpgradeLine("h", "s", 4.2f, 15f, 10.8f, "upgrade", 6) == "CORE_AI_BANDIT_SEED_UPGRADE unit=h seed=s left=4.2 life=15 counter=10.8 result=upgrade tick=6"
                 && GroupAiHealerSeedRules.Left(15f, 11f) == 4f && GroupAiHealerSeedRules.Left(15f, 20f) == 0f && GroupAiHealerSeedRules.Left(-1f, -1f) == 0f
@@ -65,7 +65,7 @@ internal static class GroupAiSeedSection
                 && GroupAiHealerSeedRules.SideLine("s", null, false, "1", null) == "CORE_SEED_SIDE_PROBE seed=s summoner=- core=0 hostileToPlayer=1 hostileToBandit=-"
                 && GroupAiHealerSeedRules.FxLine("s", "building/Seed", "Transform+SpriteRenderer", "SpriteRenderer", "Sprites-Default", "1.00,1.00,1.00,1.00", 0)
                     == "CORE_SEED_FX_PROBE seed=s path=building/Seed components=Transform+SpriteRenderer renderer=SpriteRenderer material=Sprites-Default color=1.00,1.00,1.00,1.00 pooled=0",
-            "C15a/C22a: the seed's log lines");
+            "seed: the seed's log lines");
         SeedStay();
     }
 

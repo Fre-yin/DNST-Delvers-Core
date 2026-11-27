@@ -25,7 +25,8 @@ internal static class HealSources
     internal static void OnHealToUnit(float heal, UnitEntity to, Il2CppSystem.Collections.Generic.List<IApplyData> result)
     {
         if (!Wounds.AnyOpen || to == null || result == null || !Wounds.IsOpen(CoreGame.GuidOf(to))) return;
-        var now = Time.realtimeSinceStartup;
+        // Game time: a heal and its source meet within KeepSeconds of game time.
+        var now = GameClock.Now;
         Prune(now);
         var applied = 0f;
         for (var i = 0; i < result.Count; i++)

@@ -14,7 +14,7 @@ namespace DungeonSettlersDelvers.Core;
 // or light one as the last stand-in, from its bag. It goes the way UseSkillMode.UseSkill does: an ActCombatBehaviourTask with the
 // item, enqueued as DirectOrderRequested plus ForceTickCombatBehaviour (Core always sends it; the game only for some skills),
 // so neither the player's selection nor the control mode is touched.
-// Core's own task is known by its pointer (IsOwnTask): GroupAiDirectOrderPatch does not count it as a player's order;
+// Core's own task is known by its pointer (TakeOwnTask): GroupAiDirectOrderPatch does not count it as a player's order;
 // a bandage the player uses with Q stays a player's order (3 s quiet). At most one per unit every CooldownSeconds, never
 // while a player's order holds the unit, while it is provoked or held. CORE_AI_BANDAGE, waits too, once per change.
 // The bandages on the item quick slots (Q and the Extended Hotbar's two extra slots, GroupAiBandageSlots);
@@ -22,11 +22,12 @@ namespace DungeonSettlersDelvers.Core;
 // no AI for potions and the like, the player uses those.
 internal static class GroupAiBandageUse
 {
-    private const int OwnCap = 64;
-    private static readonly HashSet<IntPtr> own = new();
+    private const int PendingCap = 64;
+    private static readonly OwnTasks own = new();
     private static readonly Dictionary<string, float> lastUse = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, string> lastLogged = new(StringComparer.Ordinal);
-    // Orders that went out and wait for CORE_BANDAGE_USED (Bandages.Use calls OnUsed); LostSeconds later they count as lost.
+    // Orders that went out and wait for their use (Bandages.TakeOver, or the aid kit's own hook WoundAidKitPatch, call OnUsed);
+    // LostSecondsFor their item later they count as lost.
     private static readonly Dictionary<string, (UnitEntity Unit, string Item, float Since)> pending = new(StringComparer.Ordinal);
     // The skill each kind is put on with.
     private static readonly Dictionary<string, string> SkillOf = new(StringComparer.Ordinal)
@@ -59,7 +60,7 @@ internal static class GroupAiBandageUse
         var now = GameClock.Now;
         List<string> lost = null;
         foreach (var pair in pending)
-            if (GameClockRules.Elapsed(now, pair.Value.Since, GroupAiBandageRules.LostSeconds)) (lost ??= new List<string>()).Add(pair.Key);
+            if (GameClockRules.Elapsed(now, pair.Value.Since, GroupAiBandageRules.LostSecondsFor(pair.Value.Item))) (lost ??= new List<string>()).Add(pair.Key);
         if (lost == null) return;
         var tick = CoreGame.Flow?._campaignData?.TimeData?.Tick ?? 0;
         foreach (var guid in lost)
@@ -75,7 +76,8 @@ internal static class GroupAiBandageUse
         }
     }
 
-    internal static bool IsOwnTask(IntPtr task) => task != IntPtr.Zero && own.Contains(task);
+    // Whether a task passing the game's DirectOrder is Core's own; it is taken out (OwnTasks).
+    internal static bool TakeOwnTask(IntPtr task) => own.Take(task, GameClock.Now);
 
     // (lethal wound, only the kit on Q, a stunned foe next to it: no decision in 15 s): why the game's
     // decision did not reach the bandage, only for a heavy or lethal wound, once per unit and reason.
@@ -182,7 +184,7 @@ internal static class GroupAiBandageUse
         if (failed != null) return failed;
         var now = GameClock.Now;
         lastUse[guid] = now;
-        if (pending.Count >= OwnCap) pending.Clear();
+        if (pending.Count >= PendingCap) pending.Clear();
         pending[guid] = (unit, kind, now);
         lastLogged.Remove(guid);
         return null;
@@ -274,18 +276,14 @@ internal static class GroupAiBandageUse
     private static void Enqueue(TickFlowHandler handler, IEntity entity, ActiveSkill_Base skill, ItemEntity item, bool ownTask)
     {
         var task = new ActCombatBehaviourTask(skill, EntityTargetSelector.Self().Cast<ICombatTargetSelector>(), item, entity);
-        if (ownTask)
-        {
-            if (own.Count >= OwnCap) own.Clear();
-            own.Add(task.Pointer);
-        }
+        if (ownTask) own.Add(task.Pointer, GameClock.Now);
         handler.EnqueueEvent(new DirectOrderRequested(entity, task.Cast<TaskBase>()).Cast<IEventData>());
         handler.EnqueueEvent(new ForceTickCombatBehaviour(entity).Cast<IEventData>());
     }
 
     // The bag item as the game finds it (PlayerControlEventHandler.OnEvent(UseItemRequested) → EntityDataContainer.GetEntityOnMap):
-    // the map's entities first, then the entity container behind the map data (InMapDataInterface._entityContainer). Toolkit's
-    // short run on 0910B10D: InMap.GetEntity found no bag item (failed:item 6x).
+    // the map's entities first, then the entity container behind the map data (InMapDataInterface._entityContainer).
+    // InMap.GetEntity alone found no bag item (failed:item 6x).
     private static ItemEntity ItemOf(IInMapDataSupplier inMap, MapType map, ItemHolder holder)
     {
         var item = inMap?.GetEntity(holder.Guid)?.TryCast<ItemEntity>();

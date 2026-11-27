@@ -16,6 +16,7 @@ using SetSkillMoveTarget = global::Refactor.Task.SetSkillMoveTarget;
 using SetMoveIfAvailable = global::Refactor.Task.SetMoveIfAvailable;
 using MoveTaskHelper = global::Refactor.Task.MoveTaskHelper;
 using CheckCombatState = global::Refactor.Task.CheckCombatState;
+using TaskStatus = global::BehaviorDesigner.Runtime.Tasks.TaskStatus;
 using CheckInputPath = global::Refactor.Task.CheckInputPath;
 using CheckItemSkillAccessible = global::Refactor.Task.CheckItemSkillAccessible;
 using IsMeleeSkill = global::Refactor.Task.IsMeleeSkill;
@@ -38,6 +39,7 @@ using SetSkillMoveTarget = Il2CppRefactor.Task.SetSkillMoveTarget;
 using SetMoveIfAvailable = Il2CppRefactor.Task.SetMoveIfAvailable;
 using MoveTaskHelper = Il2CppRefactor.Task.MoveTaskHelper;
 using CheckCombatState = Il2CppRefactor.Task.CheckCombatState;
+using TaskStatus = Il2CppBehaviorDesigner.Runtime.Tasks.TaskStatus;
 using CheckInputPath = Il2CppRefactor.Task.CheckInputPath;
 using CheckItemSkillAccessible = Il2CppRefactor.Task.CheckItemSkillAccessible;
 using IsMeleeSkill = Il2CppRefactor.Task.IsMeleeSkill;
@@ -340,7 +342,12 @@ internal static class FalconOwnerSetMoveIfAvailable
 [HarmonyPatch(typeof(CheckCombatState), "OnUpdate")]
 internal static class FalconOwnerCheckCombatState
 {
-    private static void Prefix(CheckCombatState __instance) => FalconEyes.Push(FalconEyes.OwnerOf(__instance.EntityBrain));
+    // The owner for Falcon Eyes; a summon Core holds answers without the game's check (SummonControl). The finalizer pops either way.
+    private static bool Prefix(CheckCombatState __instance, ref TaskStatus __result)
+    {
+        FalconEyes.Push(FalconEyes.OwnerOf(__instance.EntityBrain));
+        return SummonControl.CheckRuns(__instance, ref __result);
+    }
 
     private static Exception Finalizer(Exception __exception)
     {

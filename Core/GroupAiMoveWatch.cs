@@ -52,8 +52,9 @@ internal static class GroupAiMoveWatch
     // Units whose last order ended without a single step (GroupAiRules.KiteAgainNow).
     private static readonly HashSet<string> lastUnmoved = new(StringComparer.Ordinal);
     // (all 9 quiet:task=MoveTask came right after Core's own stance order arrived): the
-    // MoveTask Core sent last per unit, kept after its order ends, while the brain may still hold it.
-    private static readonly Dictionary<string, IntPtr> lastOwnTask = new(StringComparer.Ordinal);
+    // MoveTasks Core sent, kept after their order ends until they pass the game's DirectOrder (OwnTasks), so two orders of Core
+    // in one tick are both known as Core's.
+    private static readonly OwnTasks ownTasks = new();
     private static long lastTick = -1;
     private static int logLines;
     private static int warnings;
@@ -62,7 +63,7 @@ internal static class GroupAiMoveWatch
     {
         orders.Clear();
         lastUnmoved.Clear();
-        lastOwnTask.Clear();
+        ownTasks.Clear();
         lastTick = -1;
         logLines = warnings = 0;
     }
@@ -70,13 +71,14 @@ internal static class GroupAiMoveWatch
     // A new order of the unit; its open one ends as replaced. task is the MoveTask Core sent.
     internal static void Start(UnitEntity unit, bool player, MapType map, Vector2Int to, string reason, string path, IntPtr task)
     {
-        var inMap = InMapOf(map);
+        var inMap = CoreGame.InMapOf(map);
         if (unit == null || inMap == null) return;
         var guid = unit.Guid.ToString();
         var from = inMap.GetLogicalPosition(unit.Guid);
         var tick = Tick();
         if (orders.TryGetValue(guid, out var open)) Finish(open, from, "replaced", tick);
-        if (task != IntPtr.Zero) lastOwnTask[guid] = task;
+        // Only a party member's order passes the game's DirectOrder; the bandits' go another way and would crowd the party's out.
+        if (player) ownTasks.Add(task, GameClock.Now);
         var startDistance = GroupAiRules.Distance(from.x, from.y, to.x, to.y);
         orders[guid] = new Order
         {
@@ -96,9 +98,8 @@ internal static class GroupAiMoveWatch
         };
     }
 
-    // Whether a brain task is the MoveTask Core sent last to this unit, also after its order ended.
-    internal static bool IsOwnTask(UnitEntity unit, IntPtr task)
-        => unit != null && task != IntPtr.Zero && lastOwnTask.TryGetValue(unit.Guid.ToString(), out var own) && own == task;
+    // Whether a task passing the game's DirectOrder is a MoveTask Core sent, also after its order ended; it is taken out.
+    internal static bool TakeOwnTask(IntPtr task) => ownTasks.Take(task, GameClock.Now);
 
     // The unit's own order still runs (GroupAiRules.MoveHolds): CoreUnitCombat and GroupAiDecideSkillPatch
     // then lay nothing on it. count notes one decision held back (waits=).
@@ -110,8 +111,8 @@ internal static class GroupAiMoveWatch
         return true;
     }
 
-    // The enemy tree's own step toward the hostile while the unit's order runs (CoreUnitMovePatch): held
-    // back and counted (stops=).
+    // The game's own step toward the hostile while the unit's order runs (CoreUnitMovePatch for the bandits,
+    // GroupAiFormationHoldPatch for the party with the group AI): held back and counted (stops=).
     internal static bool Stops(UnitEntity unit)
     {
         var o = Open(unit);
@@ -135,7 +136,7 @@ internal static class GroupAiMoveWatch
     internal static void End(UnitEntity unit, string result)
     {
         if (unit == null || !orders.TryGetValue(unit.Guid.ToString(), out var o)) return;
-        var inMap = InMapOf(o.Map);
+        var inMap = CoreGame.InMapOf(o.Map);
         Finish(o, inMap != null ? inMap.GetLogicalPosition(o.Unit.Guid) : o.From, result, Tick());
         orders.Remove(o.Guid);
     }
@@ -186,7 +187,7 @@ internal static class GroupAiMoveWatch
     private static string Look(Order o, long tick, ref Vector2Int at)
     {
         if (o.Unit == null || o.Unit.IsDead) return "dead";
-        var inMap = InMapOf(o.Map);
+        var inMap = CoreGame.InMapOf(o.Map);
         if (inMap == null) return "gone";
         at = inMap.GetLogicalPosition(o.Unit.Guid);
         o.Moved = Math.Max(o.Moved, GroupAiRules.Distance(o.From.x, o.From.y, at.x, at.y));
@@ -251,12 +252,6 @@ internal static class GroupAiMoveWatch
         return affecters != null
             && (affecters.HasCategory(AffecterCategory.Stun) || affecters.HasCategory(AffecterCategory.Bondage)
                 || affecters.HasCategory(AffecterCategory.Unconscious));
-    }
-
-    private static IInMapDataSupplier InMapOf(MapType map)
-    {
-        var maps = CoreGame.Flow?._inMapDatas;
-        return maps != null && maps.ContainsKey(map) ? maps[map] : null;
     }
 
     private static long Tick() => CoreGame.Flow?._campaignData?.TimeData?.Tick ?? 0;

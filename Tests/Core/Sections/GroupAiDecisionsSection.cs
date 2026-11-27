@@ -19,7 +19,7 @@ internal static class GroupAiDecisionsSection
 
     static void TauntAndRain()
     {
-        // (134505): a running foreign taunt replaced by another forced target (the bandit's own chain or another
+        // A running foreign taunt replaced by another forced target (the bandit's own chain or another
         // taunter) ends with cause replaced; an ended or own track reports nothing.
         {
             Func<double> sixSeconds = () => 6.0;
@@ -28,17 +28,20 @@ internal static class GroupAiDecisionsSection
             var byOther = GroupAiRules.LookAtTaunt(GroupAiRules.LookAtTaunt(null, "D", 10.0, sixSeconds, 0.5, false, null).Track, "K", 11.0, sixSeconds, 0.5, false, null);
             var same = GroupAiRules.LookAtTaunt(GroupAiRules.LookAtTaunt(null, "D", 10.0, sixSeconds, 0.5, false, null).Track, "D", 11.0, sixSeconds, 0.5, false, null);
             Check(darius.Replaced == null && byChain.Replaced == "D" && byChain.Own && byOther.Replaced == "D" && byOther.Started && same.Replaced == null,
-                "C34e: a replaced taunt logs its end with cause replaced");
+                "taunt: a replaced taunt logs its end with cause replaced");
             Check(GroupAiRules.TauntCancels("P", "D", "G") && !GroupAiRules.TauntCancels("D", "D", "G") && !GroupAiRules.TauntCancels("G", "D", "G") && !GroupAiRules.TauntCancels(null, "D", "G")
                 && GroupAiRules.TauntCancelLine("G", "D", "P", 7) == "CORE_AI_BANDIT_TAUNT_CANCEL unit=G by=D aim=P tick=7",
-                "C34f: a starting taunt drops a running action aimed at anyone but the taunter");
+                "taunt: a starting taunt drops a running action aimed at anyone but the taunter");
         }
         // The arrow rain on a held focus of rank 0 or 1 in reach, also alone; rank 2 or out of reach keeps the old rule.
         Check(GroupAiReachRules.RainOnFocus(0, true) && GroupAiReachRules.RainOnFocus(1, true) && !GroupAiReachRules.RainOnFocus(2, true)
                 && !GroupAiReachRules.RainOnFocus(0, false) && !GroupAiReachRules.RainOnFocus(-1, true),
-            "C24c: the arrow rain follows a focus of rank 0 or 1 in reach");
+            "arrow rain: the arrow rain follows a focus of rank 0 or 1 in reach");
+        Check(GroupAiReachRules.InTauntReach(5, 5) && !GroupAiReachRules.InTauntReach(6, 5) && GroupAiReachRules.InTauntReach(1, 0)
+                && !GroupAiReachRules.InTauntReach(2, 0) && GroupAiReachRules.TauntReach(5) == 5,
+            "shield taunt: Guardian's Taunt reaches a foe within its area of 5 by Manhattan distance, at least the next cell; the boss taunt asks the same");
         Check(GroupAiReachRules.TauntWasted(2, 2) && !GroupAiReachRules.TauntWasted(2, 1) && !GroupAiReachRules.TauntWasted(0, 0),
-            "C24c: Guardian's Taunt is skipped only when every foe in reach would break it at once");
+            "taunt: Guardian's Taunt is skipped only when every foe in reach would break it at once");
     }
 
     static void NearCampAndOrderPath()
@@ -47,14 +50,14 @@ internal static class GroupAiDecisionsSection
         Check(!GroupAiRules.GroupCapableNear(GroupAiRules.BandDistances(11, new[] { (3, false), (9, true) }), 8)
                 && GroupAiRules.GroupCapableNear(GroupAiRules.BandDistances(11, new[] { (3, true) }), 8)
                 && GroupAiRules.BandDistances(5, null).Count == 1,
-            "C17j: only bandits in combat make a capable player near");
+            "bandits: only bandits in combat make a capable player near");
         // The input path of a player's order, nested senders joined; via= only when asked for.
         Check(GroupAiRules.OrderVia(new[] { "left-click", "trymove" }) == "left-click>trymove" && GroupAiRules.OrderVia(new string[0]) == "-"
                 && GroupAiRules.ClickSender(false, true) == "left-click+shift" && GroupAiRules.ClickSender(true, false) == "left-click+alt"
                 && GroupAiRules.StanceOrderLine("f", "player", "MoveTask", null, 7, "left-click>trymove") == "CORE_AI_ORDER unit=f source=player task=MoveTask forced=- via=left-click>trymove tick=7"
                 && GroupAiRules.StanceOrderLine("f", "player", "MoveTask", null, 7) == "CORE_AI_ORDER unit=f source=player task=MoveTask forced=- tick=7"
                 && GroupAiRules.OrderSourceLine("f", "waypoint", "MoveTask", 9) == "CORE_AI_ORDER_SOURCE unit=f via=waypoint task=MoveTask tick=9",
-            "C18h: the input path of a player's order in CORE_AI_ORDER");
+            "orders: the input path of a player's order in CORE_AI_ORDER");
     }
 
     static void LifebloomSlotCooldown()
@@ -72,7 +75,7 @@ internal static class GroupAiDecisionsSection
                 && LifebloomSlotCooldownRules.ShowLine(Guid.Empty, 2, "ours", 8f, 1) == "CORE_LIFEBLOOM_CD_SHOW caster=00000000-0000-0000-0000-000000000000 charges=2 mode=ours left=8 slots=1"
                 && LifebloomSlotCooldownRules.ProbeLine("SKILL_X", 1.5f, 1.5f, 1f, 0f, -1f)
                     == "CORE_LIFEBLOOM_CD_PROBE skill=SKILL_X cooldown=1.50 duration=1.50 imgCooldown=1.00 imgSkillduration=0.00 imgSkillDurationBar=-1.00",
-            "C32: the Lifebloom slot counts down to the next charge with 1 or 2 left, at 0 the game's seconds and lock with the circle of the charge's time, full clears; it turns the other way round than the game's cooldowns, lighter while a charge is left");
+            "Lifebloom slot: counts down to the next charge with 1 or 2 left, at 0 the game's seconds and lock with the circle of the charge's time, full clears; it turns the other way round than the game's cooldowns, lighter while a charge is left");
     }
 
     static void LifebloomSounds()

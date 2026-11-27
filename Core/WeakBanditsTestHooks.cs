@@ -2,8 +2,8 @@ using UnityEngine;
 
 namespace DungeonSettlersDelvers.Core;
 
-// DelversCoreRuntime, the weak bandits' test hooks for the Toolkit's comparison of weak groups with parties of their strength:
-// a group of a level set at a cell, built from the same class table as the spawn (WeakBanditRules: skills, weapon
+// DelversCoreRuntime, the weak bandits' test hooks for the comparison of weak groups with parties of their strength: a group of
+// a level set at a cell, built from the same class table as the spawn (WeakBanditRules: skills, weapon
 // skill, factor, armour, kit), and the spawn's gate and hash over many seeds. Only in the loaded test campaign,
 // internal (the Toolkit reaches them by reflection with NonPublic), so the public surface stays as it is.
 public static partial class DelversCoreRuntime

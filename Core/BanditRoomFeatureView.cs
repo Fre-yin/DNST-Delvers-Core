@@ -87,8 +87,10 @@ internal static class BanditRoomFeatureView
     }
 
     // The seed of the shown dungeon floor; 0 on the other maps, which stay.
-    internal static int FloorSeed()
-        => CoreGame.CurrentMap == MapType.Dungeon ? CoreGame.Flow?._campaignData?.DungeonDataContainer?.GetCurrentSeed() ?? 0 : 0;
+    internal static int FloorSeed() => CoreGame.CurrentMap == MapType.Dungeon ? DungeonSeed() : 0;
+
+    // The seed of the dungeon floor the campaign is on, whichever map is shown.
+    internal static int DungeonSeed() => CoreGame.Flow?._campaignData?.DungeonDataContainer?.GetCurrentSeed() ?? 0;
 
     // A new or loaded campaign: everything drawn goes.
     internal static void ResetCampaign()

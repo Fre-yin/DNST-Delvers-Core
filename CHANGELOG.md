@@ -1,5 +1,39 @@
 # Changelog
 
+## 0.5.2: 27.11.2026
+
+- Taktische Formation: Ein Gruppenbefehl mit Rechtsklick verschiebt jetzt die ganze Formation ans Ziel, statt sie aufzulösen. Der Anführer steht auf dem Klickfeld, die anderen auf ihren Plätzen um ihn.
+- Ohne den Anführer stellen sich die ausgewählten Figuren am Ziel auf, als stünde er dort, und bleiben, bis er nachkommt. Ein Befehl nur an den Anführer lässt die anderen folgen, auch Figuren mit Autoskill aus. Nur Position halten hält eine Figur an ihrem Platz.
+- Die Formation hält in die Richtung, aus der der Anführer gekommen ist, auch hinter einer Ecke. Wegpunkte mit Shift laufen in Formation.
+- Ist ein Platz durch Gelände belegt, nimmt die Figur zuerst den gespiegelten Platz auf der anderen Seite. Die Formation gibt zwei Figuren nie dasselbe Feld.
+- Im Kampf bricht eine einzeln weggeschickte Figur die Formation nur für sich. Sie kehrt nach dem Kampf oder mit dem nächsten Gruppenbefehl zurück.
+- Ein Angriffsbefehl gilt, bis das Ziel fällt, ein neuer Befehl kommt oder der Kampf endet.
+- Neu im Formationsfenster: Rollen für jedes Mitglied (Tank, Schaden, Support, neutral), je Formation, noch experimentell, und der Schalter In Formation bewegen: Die Gruppe läuft außerhalb des Kampfs im Tempo ihres langsamsten Mitglieds.
+- Ebenfalls neu: feste Plätze für Beschwörungen und beliebig viele Mitglieder mit Scrollleiste. Gefallene behalten ihren Platz.
+- Das Formationsfenster ist neu gestaltet und breiter. Jede Figur steht im Rahmen der Porträts, mit ihrer Rolle als Symbol und Name und ihren Prioritätsplätzen als nummerierte Felder. Das Raster steht rechts, darüber Vorne über die ganze Breite.
+- Im Raster ist der Anführer golden gerahmt, Beschwörungen blau. In der Liste stehen Beschwörungen eingerückt unter ihrer Beschwörerin. Gefallene und Abwesende sind grau.
+- Hinzufügen öffnet eine Auswahl mit Bildern. Beim Ziehen zeigt das Fenster das Ziel und eine Vorschau, die Seiten der Formationen zeigen Punkte statt einer Zahl.
+- Das Formationsfenster lässt sich an der Titelzeile verschieben und bleibt dort, bis du ins Hauptmenü gehst. Beschwörungen wie Bubbleling und Blasenkröte lassen sich schon einplanen, sobald eine Figur sie beschwören kann.
+- Der Tooltip des Formationsknopfs zeigt, ob die Formation an ist, und was Linksklick und Rechtsklick tun. In Formation ist die Wegpunktlinie des Anführers kräftiger, die der Begleiter blass gestrichelt.
+- Gruppen KI: Die Gruppe geht gemeinsam in den Kampf, und jede Rolle handelt danach. Heilungen gehen an den am schwersten Verletzten in Reichweite, Beschwörungen halten ihre Plätze.
+- Waldbanditen: Jeder Bandit kämpft auf seine eigene Art, und sie arbeiten besser zusammen. Kleine Gruppen ziehen auf den ersten Ebenen durch den Wald.
+- Im Delvers Menü neu: der Anteil der Banditenpatrouillen und eine Wartezeit für das Zusammenspiel der Banditen (0 schaltet es aus).
+- Mit der Mod Hell steht Apocalypse in der Auswahl zwischen Downfall und Hell.
+- Dungeon Settlers Modded Loader: Core und Frieren laufen in eigenen Ordnern des Loaders und übernehmen einmal die Einstellungen des normalen Spiels. Mit älteren Fassungen des Loaders, die die Besitzprüfung des Spiels abschalten, bleibt Core aus und sagt im Spiel, warum.
+- Mit den Kampfwunden zeigt Blut am Körper einer Figur der Gruppe nur noch das Körperblut von Delvers. Läuft die Blutung des Spiels nach dem Schließen der Wunde weiter, ist sie wieder zu sehen.
+- Behoben: Figuren wichen im Pfeilregen nicht mehr aus, wenn sie erst später unter halbes Leben fielen.
+- Behoben: Eine fast verheilte Wunde konnte die nächste Wunde sofort tödlich machen.
+- Behoben: Im zweiten Gefecht auf einer Karte verhielten sich Gruppe und Banditen nicht mehr wie im ersten.
+- Behoben: Nach einer neuen Kampagne in derselben Sitzung setzte die Nachwirkung der Wiederbelebung verspätet ein.
+- Behoben: Der Verbandskasten wurde über Auf andere Figur anwenden an einer Gefallenen verbraucht, ohne sie zu retten. Gefallene rettet er per Klick auf sie.
+- Behoben: Ein Verbandskasten für eine andere Figur ging verloren, wenn das Anlegen nicht zustande kam. Er kommt jetzt zurück in die Tasche, bei voller Tasche liegt er vor der Figur.
+- Behoben: Die Formation holte eine Figur zurück, bevor sie fertig gefüttert, verbunden oder gezaubert hatte. Was eine Figur auf deinen Befehl tut, macht sie jetzt zu Ende.
+- Behoben: Rote Striche an Brust oder Gesicht konnten nach dem Verbinden oder einer Rettung an der Figur hängen bleiben.
+- Behoben: Eine getragene Gefallene blieb manchmal zurück. Lebensblüte mit der Einstellung 0 heilte trotzdem. Die Farben der Schriftrolle der Wiederbelebung stimmen wieder. Weitere Fehler bei Formation, In Formation bewegen, Gruppen KI und den Waldbanditen.
+- Extended Hotbar 1.0.4 wird als verträglich erkannt.
+- Für Paketautoren: Core API 1.12.0, neu sind Testaufrufe für die Formation.
+- Geprüft: 1776 Prüfungen für Core und 133 für Frieren ohne Buildwarnungen. Im Spiel unter BepInEx auf DS_B.0.4.29, zusammen mit Frieren 0.5.1 und Extended Hotbar 1.0.4.
+
 ## 0.5.1: 02.11.2026
 
 - Extended Hotbar 1.0.3 wird als verträglich erkannt.

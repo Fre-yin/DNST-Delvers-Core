@@ -25,6 +25,8 @@ internal static class GroupAiStanceSection
                 && GroupAiRules.HealerStance(4, 7, false, false, false, false) == "back"
                 && GroupAiRules.HealerStance(9, 7, true, false, false, false) == "in" && GroupAiRules.HealerStance(9, 7, true, true, false, false) == "in"
                 && GroupAiRules.HealerStance(5, 7, false, true, false, false) == "return"
+                && GroupAiRules.HealerStance(5, 7, false, false, false, false, waitsToCast: true) == "hold"
+                && GroupAiRules.HealerStance(5, 7, false, true, false, false, waitsToCast: true) == "return"
                 && GroupAiRules.HealerStance(5, 7, true, false, true, false) == "emergency"
                 && GroupAiRules.HealerStance(2, 7, true, true, true, true) == "none"
                 // Held in formation only the emergency walk moves her; with the comrade in reach "back" waits.
@@ -60,22 +62,19 @@ internal static class GroupAiStanceSection
 
     static void PlayerOrderQuiet()
     {
-        // A player's order keeps the AI quiet for 3 s; after that a clicked target
-        // (not an enemy's taunt) leaves the forced slot and stays the focus; the order line and hp= in the stance line.
+        // A player's order keeps the AI quiet for 3 s; the order line and hp= in the
+        // stance line.
         Check(GroupAiRules.StancePlayerQuiet(10f, 8f) && !GroupAiRules.StancePlayerQuiet(11f, 8f) && !GroupAiRules.StancePlayerQuiet(5f, float.MinValue)
                 && GroupAiRules.StancePlayerQuiet(5f, 9f) == false
-                && GroupAiRules.StanceReleaseClick(false, "a", "a", false) && !GroupAiRules.StanceReleaseClick(true, "a", "a", false)
-                && !GroupAiRules.StanceReleaseClick(false, "a", "a", true) && !GroupAiRules.StanceReleaseClick(false, "a", "b", false)
-                && !GroupAiRules.StanceReleaseClick(false, null, null, false)
                 && GroupAiRules.StanceOrderLine("f", "player", "MoveTask", null, 7) == "CORE_AI_ORDER unit=f source=player task=MoveTask forced=- tick=7"
                 && GroupAiRules.StanceOrderLine("f", "click", null, "k", 8) == "CORE_AI_ORDER unit=f source=click task=- forced=k tick=8"
                 && GroupAiRules.StanceLine("f", "in", 9, "3,4", "approach", 12, 0.5f) == "CORE_AI_STANCE unit=f mode=in nearest=9 to=3,4 reason=approach hp=0.50 tick=12",
-            "party stance: 3 s quiet after a player's order, then a clicked target becomes the focus");
+            "party stance: 3 s quiet after a player's order");
     }
 
     static void ConeTurn()
     {
-        // (010641: blade on 452,151 struck Darius on 451,152, the cone took the fallen Frieren on 452,152):
+        // (blade on 452,151 struck Darius on 451,152, the cone took the fallen Frieren on 452,152):
         // the greatsword's basic attack turns to a foe in reach whose cone is clear; without one it strikes anyway.
         Check(BanditConeRules.ConeBasic("BasicGreatswordAttack") && !BanditConeRules.ConeBasic("BasicClubAttack")
                 && BanditConeRules.ConePick(false, new[] { ("darius", true), ("korgas", false) }) == ("switch", "korgas")
@@ -88,7 +87,7 @@ internal static class GroupAiStanceSection
             "bandit greatsword: the basic attack's cone spares a fallen unit while another foe in reach has a clear cone");
         // Taunted, the cone check does not turn the bandit away from its taunter.
         Check(BanditConeRules.ConeMayTurn(false) && !BanditConeRules.ConeMayTurn(true),
-            "C18j: a taunted bandit stays on its taunter despite a fallen unit in the cone");
+            "taunt: a taunted bandit stays on its taunter despite a fallen unit in the cone");
     }
 
     static void ShieldDefence()
@@ -110,7 +109,7 @@ internal static class GroupAiStanceSection
                 && GroupAiReachRules.ReachStep(0, 0, 3, 0, 5) == (0, 0)
                 && GroupAiReachRules.CounterLine("d", "h", "a", "taunt", "healer", "taunt", 5) == "CORE_AI_COUNTERTANK unit=d victim=h attacker=a action=taunt reason=healer why=taunt tick=5"
                 && GroupAiReachRules.ReachLine("k", "walk", "t", "2,2", 7, 5, int.MaxValue, 6) == "CORE_AI_REACH unit=k action=walk target=t to=2,2 distance=7 range=5 nearest=-1 tick=6",
-            "C24: counter tank for the healer and the low, ranged focus reach 8 and walking in while no foe is within 3");
+            "counter tank: for for the healer and the low, ranged focus reach 8 and walking in while no foe is within 3");
         // The shield turns at once when on no attacker, holds 1 s only to switch between attackers;
         // the ranged focus no longer drops the held foe or an enemy healer for a foe stepping close, shoots the nearest in range
         // meanwhile; the bandits' healer kites only while a capable hostile is left.
@@ -121,7 +120,7 @@ internal static class GroupAiStanceSection
                 && GroupAiReachRules.RangedReachable(7, 5, 2, keep: true) && !GroupAiReachRules.RangedReachable(7, 5, 2) && !GroupAiReachRules.RangedReachable(9, 5, 9, keep: true)
                 && GroupAiReachRules.RangedInterim(7, 5, 3) && !GroupAiReachRules.RangedInterim(7, 5, 4) && !GroupAiReachRules.RangedInterim(5, 5, 1)
                 && GroupAiReachRules.KiteAllowed(1) && !GroupAiReachRules.KiteAllowed(0),
-            "C24b: the shield turns at once, the ranged focus holds with a shot in range meanwhile, no kiting after the wipe");
+            "shield: the shield turns at once, the ranged focus holds with a shot in range meanwhile, no kiting after the wipe");
     }
 
     static void CounterTauntAndVines()
@@ -129,11 +128,11 @@ internal static class GroupAiStanceSection
         // A: a counter taunt for the healer is always due, for others only after the time limit.
         Check(GroupAiReachRules.CounterDue(true, true, 2f, 1f, 8f) && !GroupAiReachRules.CounterDue(false, true, 2f, 1f, 8f)
                 && GroupAiReachRules.CounterDue(false, true, 10f, 1f, 8f) && GroupAiReachRules.CounterDue(false, false, 2f, 0f, 8f),
-            "C34 a: the healer's counter taunt waits for no time limit");
+            "counter taunt: the healer's waits for no time limit");
         // B: why no vines line, and a recent hit within the window.
         Check(GroupAiRules.VinesNoneReason(true, true) == "friend" && GroupAiRules.VinesNoneReason(false, true) == "blocked" && GroupAiRules.VinesNoneReason(false, false) == "no-hit"
                 && GroupAiRules.RecentHit(5f, 3.5f, 2f) && !GroupAiRules.RecentHit(5f, 2.9f, 2f) && !GroupAiRules.RecentHit(3f, 4f, 2f),
-            "C34 b: vines none reasons and recent hits");
+            "vines: none reasons and recent hits");
     }
 
     static void BandageAtLethalWound()
@@ -152,11 +151,12 @@ internal static class GroupAiStanceSection
                 && GroupAiBandageRules.Line("f", null, "cd", 0.4f, "light", true, int.MaxValue, false, "none:noslot", null, null, false,
                         new GroupAiBandageRules.BagCounts(0, 2, 1, 0, 0), 3, false)
                     == "CORE_AI_BANDAGE unit=f item=- trigger=cd pool=0.40 stage=light bleeding=1 nearest=-1 taunted=0 result=none:noslot from=- slots=- bagopt=0 salves=0 herbals=2 heavies=1 lights=0 tick=3"
-                && GroupAiBandageRules.LostSeconds == 4f && GroupAiBandageRules.LostReason(true, true, true) == "dead"
+                && GroupAiBandageRules.LostSeconds == 4f && GroupAiBandageRules.LostSecondsFor(GroupAiBandageRules.AidKit) > 7f
+                && GroupAiBandageRules.LostSecondsFor("light") == 4f && GroupAiBandageRules.LostReason(true, true, true) == "dead"
                 && GroupAiBandageRules.LostReason(false, true, true) == "down" && GroupAiBandageRules.LostReason(false, false, true) == "stun"
                 && GroupAiBandageRules.LostReason(false, false, false) == "unknown"
                 && GroupAiBandageRules.LostLine("k", "salve", 4.02f, "unknown", "AttackBehaviour", 41340)
                     == "CORE_AI_BANDAGE_LOST unit=k item=salve waited=4.0 reason=unknown behaviour=AttackBehaviour tick=41340",
-            "C34 c: the party puts a bandage on when nothing else heals or the wound is lethal");
+            "bandages: the party puts a bandage on when nothing else heals or the wound is lethal");
     }
 }

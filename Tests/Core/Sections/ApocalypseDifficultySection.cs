@@ -31,6 +31,27 @@ internal static class ApocalypseDifficultySection
         var away = Step(Downfall - 1, selected: true, increase: true, available: true);
         Check(!away.Handled && !away.Selected && !away.Changed,
             "difficulty: a native step away from Downfall drops the selection and is left to the game");
+        HellSteps();
+    }
+
+    // With Amfi's Hell (the game's own value 5) the order is Downfall, Apocalypse, Hell; the game makes the steps to and from 5.
+    static void HellSteps()
+    {
+        var toApocalypse = Step(Downfall, selected: false, increase: true, available: true, hell: true);
+        var toHell = Step(Downfall, selected: true, increase: true, available: true, hell: true);
+        var fromHell = Step(Hell, selected: false, increase: false, available: true, hell: true);
+        var aboveHell = Step(Hell, selected: false, increase: true, available: true, hell: true);
+        Check(toApocalypse == new StepResult(true, true, true) && toHell == new StepResult(false, false, true)
+                && fromHell == new StepResult(false, true, true) && aboveHell == new StepResult(false, false, false),
+            "difficulty: with Hell, up from Downfall is Apocalypse, up from it the game's Hell, down from Hell Apocalypse again");
+        var offFromHell = Step(Hell, selected: false, increase: false, available: false, hell: true);
+        var withoutHell = Step(Hell, selected: false, increase: false, available: true, hell: false);
+        Check(offFromHell == new StepResult(false, false, false) && withoutHell == new StepResult(false, false, false)
+                && Step(Downfall, selected: true, increase: true, available: true) == new StepResult(true, true, false),
+            "difficulty: with the switch off Hell steps down to Downfall, and without Hell Apocalypse stays the top step");
+        var shown = default(State).WithSelected(true, fromHell.Selected);
+        Check(shown.Shows(true, Downfall) && !shown.Shows(true, Hell) && !shown.Shows(false, Downfall),
+            "difficulty: after the step down from Hell the screen shows Apocalypse on the game's Downfall of that part");
     }
 
     static void SelectionToActive()
@@ -98,5 +119,19 @@ internal static class ApocalypseDifficultySection
         var plain = default(State).Begun(request);
         Check(!plain.ClaimsTestMark(next) && !default(State).Loaded(default).ActiveCombat,
             "difficulty: without an armed marker nothing is claimed, and a load without a mark has no parts");
+
+        var both = new ApocalypseMark(true, true);
+        var onDownfall = Checked(both, (Downfall, Downfall));
+        var onHell = Checked(both, (Hell, Downfall));
+        var unknown = Checked(both, null);
+        Check(onDownfall.Combat && onDownfall.Management && !onHell.Combat && onHell.Management && unknown.Combat && unknown.Management
+                && !Checked(both, (Hell, Hell)).Any && !Checked(default, (Downfall, Downfall)).Any,
+            "difficulty: a save's mark counts only for a part on the game's Downfall, so a Hell world never loads as Apocalypse");
+        var test = Checked(both, (1, 1), testCampaign: true);
+        Check(test.Combat && test.Management && !Checked(both, (1, 1)).Any,
+            "difficulty: a test campaign keeps the mark the tools set on any difficulty, a normal world on Normal does not");
+        var campaign = Guid.Parse("4799f5bf-0000-4000-8000-000000000001");
+        Check(IgnoredLine(campaign, both, onHell, (Hell, Downfall)) == "CORE_APOCALYPSE_MARK_IGNORED campaign=4799f5bf-0000-4000-8000-000000000001 combat=5 management=-",
+            "difficulty: the line names each ignored part with its game value");
     }
 }

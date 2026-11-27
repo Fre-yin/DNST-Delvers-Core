@@ -35,6 +35,13 @@ internal static class SeedStayRules
     internal static bool Stays(bool staying, float share, double below, double until)
         => staying ? share < (float)until : share <= (float)below;
 
+    // An ended stay is over once the unit is above the entry share on the seed line, look ahead and buffer included (low: the share
+    // GroupAiLow gives), so one state brings one walk (freed on the real share, three walks in one fall).
+    internal static bool Freed(float low, double below) => low > (float)below;
+
+    // The share a new stay asks: the seed line's (low), but never a stay that would end at once, at or above the exit share.
+    internal static float EntryShare(float low, float share, double until) => share >= (float)until ? share : low;
+
     // A seed is worth walking to while its life is unknown (0: aura not seen yet) or at least MinSecondsLeft.
     internal static bool SeedUsable(float secondsLeft, float life) => life < 0f || secondsLeft >= MinSecondsLeft;
 
@@ -54,6 +61,27 @@ internal static class SeedStayRules
         }
         return best;
     }
+
+    // Heal seeking: a unit without a heal skill of its own that finds no usable seed walks once into the
+    // healer's reach instead and stays there the same way, until seeds.stay.until. The reach: Lifebloom's range less one cell, so a
+    // step of the healer keeps it in reach. The healer herself never seeks a healer.
+    internal const int HealerReach = LifebloomRules.Range - 1;
+
+    internal static bool SeeksHealer(bool hasHealSkill, bool isHealer) => !hasHealSkill && !isHealer;
+
+    // The cells within reach of the healer's cell, her own cell left out, in rows from the top left.
+    internal static List<(int X, int Y)> ReachCells(int x, int y, int reach)
+    {
+        var cells = new List<(int X, int Y)>();
+        for (var dy = -reach; dy <= reach; dy++)
+            for (var dx = -reach; dx <= reach; dx++)
+                if ((dx != 0 || dy != 0) && GroupAiRules.Distance(x, y, x + dx, y + dy) <= reach) cells.Add((x + dx, y + dy));
+        return cells;
+    }
+
+    internal static string HealSeekLine(string side, string unit, string healer, string step, float share, int x, int y, long tick)
+        => string.Format(CultureInfo.InvariantCulture, "CORE_AI_HEAL_SEEK side={0} unit={1} healer={2} step={3} share={4:0.00} at={5},{6} tick={7}",
+            side, unit ?? "-", healer ?? "-", step, share, x, y, tick);
 
     internal static bool InArea(IReadOnlyList<(int X, int Y)> area, int x, int y)
     {

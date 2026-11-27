@@ -22,4 +22,12 @@ internal static class GroupAiGate
         var info = unit == null ? null : CoreGame.Component<EntityInfoComponent>(unit.Cast<IEntity>());
         return info != null && !info.IsBehaviourOption(BehaviourOption.WaitForOrder) && info.IsBehaviourOption(BehaviourOption.AutoAttack);
     }
+
+    // "Wait for orders" alone, for the formation's follow (GroupAiFormationRules.OpenToFollow); a unit without its info counts as
+    // waiting, as it did under OpenFor.
+    internal static bool WaitsForOrder(UnitEntity unit)
+    {
+        var info = unit == null ? null : CoreGame.Component<EntityInfoComponent>(unit.Cast<IEntity>());
+        return info == null || info.IsBehaviourOption(BehaviourOption.WaitForOrder);
+    }
 }

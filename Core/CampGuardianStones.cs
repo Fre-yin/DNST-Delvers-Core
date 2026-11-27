@@ -2,7 +2,8 @@ using UnityEngine;
 
 namespace DungeonSettlersDelvers.Core;
 
-// The camp's guardian stones give their aura (CampGuardianStoneRules). On the camp's floor, every 10 s of game time: the stones
+// The camp's guardian stones give their aura (CampGuardianStoneRules). On the camp's floor, every 10 s of game time, also while the
+// player looks at another map (the dungeon map ticks on): the stones
 // are found once per floor visit, in the camp's box from Core's block (CoreSaveData.CampBox, so also after a load), and each
 // pulse looks at them again at their cells, so a destroyed stone gives nothing. Each living party member closer than 7 to a
 // stone gets AFFECTER_LesserGuardianAura for 10 s through the game's own apply. CORE_CAMP_GUARDIAN_STONES once per floor,
@@ -35,7 +36,8 @@ internal static class CampGuardianStones
             stones = null;
             lastPulse = -1f;
         }
-        if (box == null || CoreGame.CurrentMap != MapType.Dungeon || seed != BanditRoomFeatureView.FloorSeed())
+        var inMap = box == null ? null : CoreGame.InMapOf(MapType.Dungeon);
+        if (inMap == null || seed != BanditRoomFeatureView.DungeonSeed())
         {
             stones = null;
             return;
@@ -43,8 +45,6 @@ internal static class CampGuardianStones
         var now = GameClock.Now;
         if (!CampGuardianStoneRules.Due(lastPulse, now)) return;
         lastPulse = now;
-        var inMap = CoreGame.InMap;
-        if (inMap == null) return;
         if (stones == null)
         {
             stones = Find(inMap, box.Value);
@@ -91,10 +91,10 @@ internal static class CampGuardianStones
             if (stone != null && stone.Guid == guid) standing.Add((stone, cell));
         }
         if (standing.Count == 0) return;
-        foreach (var unit in CoreGame.PlayerUnits(false))
+        foreach (var unit in CoreGame.PlayerUnits(MapType.Dungeon, false))
         {
             if (unit == null || unit.IsDead) continue;
-            var at = CoreGame.Position(unit);
+            var at = inMap.GetLogicalPosition(unit.Guid);
             foreach (var (stone, cell) in standing)
             {
                 if (!CampGuardianStoneRules.InReach(at.x, at.y, cell.x, cell.y)) continue;

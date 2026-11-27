@@ -38,39 +38,51 @@ public static class DelversSummons
     // The owner's GUID, "" when the entity was not summoned (SummonerGuid).
     internal static string OwnerOf(IEntity summon) => SummonerGuid(summon);
 
-    // The owner as a unit of the shown map or a party member, living or dead; null when there is none.
+    // The owner as a unit on any loaded map (the shown map first): a living unit, or a party member living or dead; null when there is
+    // none. A bandit summons on the floor the party fights on, also while the player looks at the base. A dead bandit stands on no
+    // map any more (IsCoreOwned asks its corpse).
     internal static UnitEntity OwnerUnitOf(IEntity summon)
-        => Guid.TryParse(OwnerOf(summon), out var owner) ? CoreGame.FindUnit(owner) : null;
+        => Guid.TryParse(OwnerOf(summon), out var owner) ? CoreGame.FindUnitOnAnyMap(owner, out _) : null;
 
     // Whether the owner is one of Core's units, a bandit.
     internal static bool IsCoreOwned(IEntity summon)
     {
         var owner = OwnerUnitOf(summon);
-        return owner != null && CoreUnitRules.IsCoreUnit(owner.Key);
+        if (owner != null) return CoreUnitRules.IsCoreUnit(owner.Key);
+        // A dead bandit's summons stay bandits (CorpseKeep, also once its corpse is gone): a dead herbalist's sun bloom keeps aiming
+        // at the party, not at the other bandits.
+        var id = OwnerOf(summon);
+        return id.Length > 0 && CorpseKeep.IsDeadBandit(id);
     }
 
     // The owner's living summons on the shown map, units and buildings, in the order they appeared (SummonOwnerRules). Every
     // side's units are searched: a player's bubbleling is an Ally and stands in no list of the player's units.
-    internal static List<IEntity> SummonsOf(string owner)
+    internal static List<IEntity> SummonsOf(string owner) => SummonsIn(owner, CoreGame.InMap, true);
+
+    // The same on a loaded map (the map an owner died on); the running numbers of the shown map's summons stay as they are.
+    internal static List<IEntity> SummonsOf(string owner, MapType map) => SummonsIn(owner, CoreGame.InMapOf(map), false);
+
+    private static List<IEntity> SummonsIn(string owner, IInMapDataSupplier inMap, bool shown)
     {
         var result = new List<IEntity>();
-        if (string.IsNullOrEmpty(owner)) return result;
+        if (string.IsNullOrEmpty(owner) || inMap == null) return result;
         var found = new Dictionary<string, IEntity>(StringComparer.Ordinal);
         var alive = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var unit in CoreGame.MapUnits())
+        var units = inMap.GetAliveUnitsOnMap();
+        for (var i = 0; units != null && i < units.Count; i++)
         {
-            if (unit.IsDead) continue;
-            var entity = unit.Cast<IEntity>();
-            Note(entity, owner, found, alive);
+            var unit = units[i];
+            if (unit == null || unit.IsDead) continue;
+            Note(unit.Cast<IEntity>(), owner, found, alive);
         }
-        var buildings = CoreGame.InMap?.GetCombatableBuildingsOnMap();
+        var buildings = inMap.GetCombatableBuildingsOnMap();
         for (var i = 0; buildings != null && i < buildings.Count; i++)
         {
             var building = buildings[i];
             if (building == null || building.IsDead) continue;
             Note(building.Cast<IEntity>(), owner, found, alive);
         }
-        order.Keep(alive);
+        if (shown) order.Keep(alive);
         foreach (var id in order.Sort(found.Keys)) result.Add(found[id]);
         return result;
     }

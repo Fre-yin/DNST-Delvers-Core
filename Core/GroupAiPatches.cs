@@ -61,6 +61,7 @@ internal static class GroupAiDecideSkillPatch
             return;
         }
         var watched = false;
+        GroupAiEmptyMove.Clear();
         try
         {
             var owner = __instance._owner;
@@ -72,15 +73,16 @@ internal static class GroupAiDecideSkillPatch
             if (GroupAiGate.Open(__instance) && GroupAiPolicy.TryDodge(__instance))
             {
                 GroupAiPolicy.Forget(guid);
+                GroupAiEmptyMove.Mark(__instance, "dodge");
                 return;
             }
             // While Core's own move order of the unit runs, Core lays no skill on
-            // it. A null skill would throw in SetActCombatBehaviourTask; the game keeps a player's move order
-            // itself (TaskSystem.IsPlayerMoveDirectOrder).
+            // it (GroupAiEmptyMove); the game keeps a player's move order itself (TaskSystem.IsPlayerMoveDirectOrder).
             if (GroupAiMoveWatch.Holds(owner, count: true))
             {
                 GroupAiPolicy.Forget(guid);
                 GroupAiBandageUse.NoteGate(owner, "held");
+                GroupAiEmptyMove.Mark(__instance, "held");
                 return;
             }
             var noEnemy = CombatUtility.GetClosestSingleEnemy(owner.Cast<IEntity>(), __instance._inMapData) == null;
@@ -88,7 +90,6 @@ internal static class GroupAiDecideSkillPatch
             if (noEnemy)
             {
                 GroupAiFocus.EndFight(guid);
-                GroupAiStance.EndFight(guid);
             }
             if (!GroupAiGate.Open(__instance) || noEnemy)
             {
@@ -102,6 +103,7 @@ internal static class GroupAiDecideSkillPatch
                 && GroupAiBandageUse.TryUse(GroupAiSituation.Build(__instance, withSlots: true)))
             {
                 GroupAiPolicy.Forget(guid);
+                GroupAiEmptyMove.Mark(__instance, "bandage");
                 return;
             }
             if (__instance._skillReader.HasGlobalCooldown())
@@ -121,29 +123,53 @@ internal static class GroupAiDecideSkillPatch
                 return;
             }
             var situation = GroupAiSituation.Build(__instance, withSlots: true);
-            // "Im Samen bleiben": low on health, one walk into the aura of a party seed; the game keeps its choice, as with a dodge.
+            GroupAiChase.MarkRefused(situation);
+            // "Im Samen bleiben": low on health, one walk into the aura of a party seed; no skill, as with a dodge.
             if (GroupAiSeedStay.TryWalk(situation))
             {
                 GroupAiPolicy.Forget(guid);
+                GroupAiEmptyMove.Mark(__instance, "seed-stay");
                 return;
             }
-            // The healer's distance and swing; with a move order the game keeps its own choice, as with a dodge.
+            // The healer's distance and swing; with a move order no skill, as with a dodge.
             if (GroupAiStance.TryMove(situation, GroupAiPolicy.LastRule(guid)))
             {
                 GroupAiPolicy.Forget(guid);
+                GroupAiEmptyMove.Mark(__instance, "stance");
                 return;
             }
             // A ranged unit with no foe in its kit's reach walks toward its focus (GroupAiRangedReach).
             if (GroupAiRangedReach.TryMove(situation))
             {
                 GroupAiPolicy.Forget(guid);
+                GroupAiEmptyMove.Mark(__instance, "reach");
                 return;
             }
             // C: a bandage when everything else is on cooldown or at a lethal wound (GroupAiBandageUse).
             if (GroupAiBandageUse.TryUse(situation))
             {
                 GroupAiPolicy.Forget(guid);
+                GroupAiEmptyMove.Mark(__instance, "bandage");
                 return;
+            }
+            // The player's roles from the formation lead the priority casts: the tank's taunt for an attacked damage
+            // or support member or its walk out to gather, the support's burst heal and seed (GroupAiPolicy.RoleFirst).
+            var first = GroupAiPolicy.RoleFirst(situation, out var gathers);
+            if (gathers)
+            {
+                GroupAiPolicy.Forget(guid);
+                GroupAiEmptyMove.Mark(__instance, "role-move");
+                return;
+            }
+            if (first != null)
+            {
+                var skill = CombatDataManager.Instance?.GetActiveSkillData(first.Skill);
+                if (skill != null)
+                {
+                    __result = skill;
+                    return;
+                }
+                GroupAiPolicy.Forget(guid);
             }
             // The player's priority casts, after the dodge, the moves and the bandage, before Core's own choice;
             // the healer in her emergency casts the seed or Lifebloom from her places first.
@@ -214,6 +240,7 @@ internal static class GroupAiDecideTargetPatch
         try
         {
             var owner = __instance._owner;
+            if (GroupAiEmptyMove.Marked(__instance)) return;
             if (owner != null && owner.Faction == FactionType.Player && !GroupAiExcluded.Has(owner.Guid.ToString()) && GroupAiGate.Open(__instance))
             {
                 var target = GroupAiPolicy.Target(GroupAiPolicy.SituationFor(__instance), skill, __result);
@@ -224,6 +251,11 @@ internal static class GroupAiDecideTargetPatch
                 // In formation, a foe in reach of the member's place (GroupAiFormation).
                 var fromPlace = GroupAiFormation.Retarget(owner, skill, __result, __instance._inMapData);
                 if (fromPlace != null) __result = fromPlace;
+                // A damage dealer gone to the foes strikes the one it went to (GroupAiRoleMoves).
+                var roam = GroupAiRoleMoves.Retarget(owner, __result);
+                if (roam != null) __result = roam;
+                GroupAiFightStart.NoteTarget(owner, __result);
+                GroupAiChase.NoteChoice(owner, skill, __result);
             }
         }
         catch (Exception ex)
@@ -234,10 +266,11 @@ internal static class GroupAiDecideTargetPatch
 }
 
 // A player's direct order on a party unit. TaskSystem.DirectOrder is called by the
-// game's input event (TickFlowHandler.HandleEvent). The prefix only watches: it changes, blocks
-// or replaces nothing. Only with the group AI on or a formation in place (GroupAiFormation.Active, which needs it without the AI
-// too), only for party units, Core's own move orders excluded (GroupAiMoveWatch.IsOwnTask). GroupAiStance then keeps the AI and
-// the formation quiet for 3 s.
+// game's input event (TickFlowHandler.HandleEvent). The prefix blocks and replaces nothing of the
+// game's: it ends Core's own open move order of the unit and notes an attack order for the move step (GroupAiChase.NoteOrder).
+// Only with the group AI on or a formation in place (GroupAiFormation.Active, which needs it without the AI too), only for
+// party units, Core's own orders excluded (GroupAiMoveWatch.TakeOwnTask and the others). GroupAiStance then keeps the AI
+// and the formation quiet for 3 s.
 [HarmonyPatch(typeof(TaskSystem), nameof(TaskSystem.DirectOrder))]
 internal static class GroupAiDirectOrderPatch
 {
@@ -250,7 +283,10 @@ internal static class GroupAiDirectOrderPatch
         {
             var unit = target.TryCast<UnitEntity>();
             if (unit == null || unit.Faction != FactionType.Player) return;
-            if (GroupAiMoveWatch.IsOwnTask(unit, task.Pointer) || GroupAiBandageUse.IsOwnTask(task.Pointer)) return;
+            if (GroupAiMoveWatch.TakeOwnTask(task.Pointer) || GroupAiBandageUse.TakeOwnTask(task.Pointer) || GroupAiSummonCast.TakeOwnTask(task.Pointer)) return;
+            // The player's order replaces Core's open move order, as Core's next order does (GroupAiMoveWatch.Start: replaced);
+            // left open it would cancel the player's attack at the move step (GroupAiFormationHoldPatch) until its deadline.
+            GroupAiMoveWatch.End(unit, "player");
             if (!hookSeen)
             {
                 hookSeen = true;
@@ -258,6 +294,10 @@ internal static class GroupAiDirectOrderPatch
             }
             // The input path the order came through (GroupAiOrderSource), observed only.
             GroupAiStance.NotePlayerOrder(unit, task.GetIl2CppType().Name, GroupAiOrderSource.Take(task.Pointer));
+            // The player's attack order goes first at the move step (GroupAiChase.Holds, GroupAiFormation.CancelsMove).
+            GroupAiChase.NoteOrder(unit, task);
+            // The formation takes a group's planned cell, the leader's goal or a member placed by hand from it.
+            GroupAiFormation.OnPlayerOrder(unit, task);
         }
         catch (Exception ex) { GroupAiPolicy.Warn("CORE_AI_ORDER_FAILED: " + ex.Message); }
     }

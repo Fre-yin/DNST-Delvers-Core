@@ -1,0 +1,9 @@
+Tactical formation: a group order now moves the whole formation, facing the way the leader came, also around corners and with Shift waypoints.
+Formation window: redesigned and wider, with a role for every member per formation (experimental), numbered priority places, the Move in formation switch, fixed places for summons and as many members as you like.
+Followers keep up with the leader in formation even with Auto Skill off. Only Hold Position keeps a character in place.
+Group AI: the party goes into a fight together and acts by its roles.
+Forest bandits: every bandit fights in its own way, and they work better together. Small groups now roam the forest on the first levels.
+New options in the Delvers menu for bandit patrols and bandit teamwork.
+Apocalypse sits between Downfall and Hell when the Hell mod is installed.
+Support for the Dungeon Settlers Modded loader. Loader files on GitHub: https://github.com/Fre-yin/DNST-Delvers-Core/releases/tag/v0.5.2
+Fixes for dodging, wounds, revive sickness, the aid kit on fallen characters, the second fight on a map, blood marks that stayed on a character and aid kits that could get lost.

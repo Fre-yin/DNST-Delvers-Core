@@ -35,25 +35,24 @@ internal static partial class GroupAiRules
     // Held in formation, only the emergency walk to a comrade out of her reach moves the healer; every other stance waits.
     internal static bool StanceMovesHeld(bool held, string mode) => !held || mode == "emergency";
 
+    // waitsToCast: she marched in, the comrade she came for is in the reach of a free heal and she has not cast yet; she holds
+    // until the heal, and only then the way back may follow (a foe near on arrival sent her back before she healed).
     internal static string HealerStance(int nearestFoe, int distance, bool castPending, bool justCast, bool emergencyUnreached, bool quiet,
-        bool tauntApproach = false)
+        bool tauntApproach = false, bool waitsToCast = false)
         => quiet ? "none"
             : emergencyUnreached ? "emergency"
             : tauntApproach ? "taunt"
             : castPending ? "in"
             : justCast ? "return"
+            : waitsToCast ? "hold"
             : nearestFoe < distance - 1 ? "back"
             : "hold";
 
     // A player's order is seen where the game takes it (TaskSystem.DirectOrder,
-    // a task Core did not send) or as a new forced target without an enemy's taunt; she is quiet until StanceQuietSeconds
-    // after the last one. The game's own tasks (fleeing, walking for a skill, idle) never count.
+    // a task Core did not send; a forced target comes only with an enemy's taunt and is no order); she is quiet until
+    // StanceQuietSeconds after the last one. The attack order stands as GroupAiChase's until its target dies, a new order or
+    // the fight's end. The game's own tasks (fleeing, walking for a skill, idle) never count.
     internal static bool StancePlayerQuiet(float now, float lastPlayerOrder) => !GameClockRules.Elapsed(now, lastPlayerOrder, StanceQuietSeconds);
-
-    // After the quiet time a clicked target stays her focus and the game's forced target is let go (so the game does not
-    // walk her to it); a taunt keeps its forced target.
-    internal static bool StanceReleaseClick(bool quiet, string forced, string clicked, bool taunted)
-        => !quiet && !taunted && forced != null && forced == clicked;
 
     // (ForeignSeen stayed set from run 1, EndFight ran only when she decided without a foe and she fell
     // in every run): the fight also ends once she is down or StanceFightEndSeconds out of combat.

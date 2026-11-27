@@ -25,6 +25,9 @@ public static partial class DelversCoreRuntime
             try
             {
                 CoreStartup.Log("init");
+                ModLoader.LogStart();
+                // Started without Steam by an old mod loader: Core stays off, only the menu's tab and the notice (SteamGuard).
+                if (SteamGuard.Engage(harmony)) return;
                 VerifyGameBuild();
                 LoadIntegrityGuard.ResetLifecycle();
                 PatchAllClasses(harmony);
@@ -104,10 +107,14 @@ public static partial class DelversCoreRuntime
     internal static void LateFrame()
     {
         if (!IsReady) return;
+        try { BanditComboCall.LateFrame(); }
+        catch (Exception ex) { DelversHost.Warning("CORE_BANDIT_COMBO_CALL_FAILED: " + ex.Message); }
         try { BanditTint.LateFrame(); }
         catch (Exception ex) { DelversHost.Warning("CORE_SEED_TINT_FAILED frame: " + ex.Message); }
         try { CoreShieldWave.AnimateAll(); }
         catch (Exception ex) { ShieldWaveFailed(ex); }
+        try { TacticalFormationPathLook.LookAgain(); }
+        catch (Exception ex) { TacticalFormationButton.ReportOnce("CORE_TACTICAL_PATH_LOOK_AGAIN_FAILED stage=loop: " + ex.Message); }
     }
 
     private static int shieldWaveErrors;
@@ -146,11 +153,15 @@ public static partial class DelversCoreRuntime
             BanditCampFurnish.ResetLifecycle();
             BanditCampFootprint.ResetLifecycle();
             BanditCampWake.ResetLifecycle();
+            BanditCampHome.ResetLifecycle();
+            BanditTakeoverProbe.ResetLifecycle();
             CampGuardianStones.ResetLifecycle();
             BanditCampTemplates.ResetLifecycle();
             HealSources.ResetLifecycle();
+            CoreRandom.ResetLifecycle();
             BossEffects.ResetLifecycle();
             FalconEyes.ResetLifecycle();
+            TacticalFormationTempo.ResetLifecycle();
             TargetSortGuard.ResetLifecycle();
             SummonLimit.ResetLifecycle();
             ApocalypseSlowDisplay.ResetLifecycle();
@@ -175,13 +186,19 @@ public static partial class DelversCoreRuntime
     }
 
     // What the summons' parts know of a campaign's units (owners, followed targets, the probe's counts): a campaign that starts or
-    // is loaded begins without the last one's (ApocalypseDifficulty.StartCampaignRules), and so does a lifecycle reset.
+    // is loaded begins without the last one's (ApocalypseDifficulty.StartCampaignRules), and so does a lifecycle reset. The path lines'
+    // look of the formation goes back to the game's here too.
     internal static void ResetSummons()
     {
         DelversSummons.Forget();
+        TacticalFormation.ForgetSummons();
         SummonProbe.Reset();
         SummonSide.Reset();
         SummonFollowTarget.Reset();
+        // The path lines' looks: the elements may outlive a load, so they get the game's look back and the cache starts empty
+        // (TacticalFormationPathLook).
+        try { TacticalFormationPathLook.Reset(); }
+        catch (Exception ex) { DelversHost.Warning("CORE_TACTICAL_PATH_LOOK_RESET_FAILED: " + ex.Message); }
     }
 
     private static void VerifyGameBuild()

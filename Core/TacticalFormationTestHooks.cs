@@ -1,11 +1,13 @@
 namespace DungeonSettlersDelvers.Core;
 
-// DelversCoreRuntime, the formation window's test hooks for the Toolkit's block "-Only formation": the window's steps
+// DelversCoreRuntime, the formation window's test hooks for the formation tests: the window's steps
 // without the mouse. Only in the loaded test campaign; GUIDs are strings, results BCL types, for reflection. A drag and drop is
 // FormationMoveForTest (the drop of the member on the cell), so the mouse itself is checked by hand.
 public static partial class DelversCoreRuntime
 {
-    // Opens the window like the button: in a dungeon for the expedition, in the village for every living party member there.
+    // Opens the window like the button. Each set keeps its own rows: a saved set opens with its rows, only an empty one starts
+    // with the party (in a dungeon the expedition, in the village every living member there). A member not in the rows comes
+    // in through FormationAddForTest, as with the window's "+".
     public static bool FormationOpenForTest()
     {
         if (!LoadedTestCampaign()) return false;
@@ -83,6 +85,59 @@ public static partial class DelversCoreRuntime
         var entity = CoreGame.FindUnit(unit);
         if (entity == null) return "-";
         return $"on={(TacticalFormation.IsOn(unit) ? 1 : 0)} sleep={(CoreSaveStore.Current.IsFormationSleep(unit) ? 1 : 0)} rest={(TacticalFormationSleep.IsRestFirst(entity) ? 1 : 0)}";
+    }
+
+    // The fixed selection (TacticalFormationWindowSelection), like the "+" choice and a right click while the window is open: a
+    // member wherever it is, a summon place of a summoner in the set and a kind (the unit key), a row taken out.
+    public static bool FormationAddForTest(string unitGuid)
+        => Guid.TryParse(unitGuid, out var unit) && LoadedTestCampaign() && FormationStep("add", () => TacticalFormationWindow.AddMember(unit));
+
+    public static bool FormationAddSummonForTest(string summonerGuid, string kind)
+        => Guid.TryParse(summonerGuid, out var summoner) && LoadedTestCampaign() && FormationStep("add-summon", () => TacticalFormationWindow.AddSummon(summoner, kind));
+
+    public static bool FormationRemoveForTest(string unitGuid)
+        => Guid.TryParse(unitGuid, out var unit) && LoadedTestCampaign() && FormationStep("remove", () => TacticalFormationWindow.RemoveRow(unit));
+
+    // A member's role in the shown formation, like a choice in its role field: tank, damage, support or neutral.
+    public static bool FormationSetRoleForTest(string unitGuid, string role)
+        => Guid.TryParse(unitGuid, out var unit) && LoadedTestCampaign()
+           && FormationStep("role", () => TacticalFormationWindow.SetRole(unit, TacticalRoles.Parse(role)));
+
+    // A member's role as the group AI reads it in the dungeon: "role=<word> acts=<rule set|-> reach=<cells> out=<0|1> roam=<0|1>
+    // center=<x>,<y>" (GroupAiRoles, GroupAiRoleMoves: out is a tank gathering, roam a damage dealer gone to the foes; center the cell
+    // the places stand around, GroupAiFormation.Center).
+    public static string FormationRoleStatusForTest(string unitGuid)
+    {
+        try
+        {
+            if (!Guid.TryParse(unitGuid, out var unit)) return "error=guid";
+            var guid = unit.ToString("D");
+            var center = GroupAiFormation.Center;
+            return $"role={TacticalRoles.Word(GroupAiRoles.PlayerOf(guid)) ?? "neutral"} acts={GroupAiRoles.Known(guid)?.ToString() ?? "-"} {GroupAiRoleMoves.Status(unit)} center={center.X},{center.Y}";
+        }
+        catch (Exception ex) { return "error=" + ex.Message; }
+    }
+
+    // What "+" offers now, "<key>=<name>/<where or summoner>|…" (a member's key its GUID, a summon kind's "<kind>|<summoner>" written
+    // with ";" for the bar); "-" for nothing.
+    public static string FormationCandidatesForTest()
+    {
+        try
+        {
+            var found = TacticalFormationWindow.Candidates();
+            return found.Count == 0 ? "-" : string.Join("|", found.Select(c => c.Key.Replace('|', ';') + "=" + c.Name + "/" + c.Note));
+        }
+        catch (Exception ex) { return "error=" + ex.Message; }
+    }
+
+    // The tempo button below the grid, like a click on it while the window is open (TacticalFormationTempo).
+    public static bool FormationTempoForTest(bool on) => LoadedTestCampaign() && FormationStep("tempo", () => TacticalFormationWindow.SetTempo(on));
+
+    // "on=<0|1> stacks=<unit>:<stacks>,…|-": the button and the stacks of Core's tempo effect on the party (TacticalFormationTempo.Status).
+    public static string FormationTempoStatusForTest()
+    {
+        try { return TacticalFormationTempo.Status(); }
+        catch (Exception ex) { return "error=" + ex.Message; }
     }
 
     public static bool FormationResetForTest() => LoadedTestCampaign() && FormationStep("reset", TacticalFormationWindow.ResetGrid);

@@ -20,6 +20,8 @@ internal static class ReviveRulesSection
                 && ScrollGlowRules.Turn(0x22, 0x20, 0x25) == (0x22, 0x20, 0x25) && ScrollGlowRules.Turn(0xD0, 0xBD, 0xA1) == (0xD0, 0xBD, 0xA1)
                 && ScrollGlowRules.Turns.Length == 6 && ScrollGlowRules.Ring.A == 90,
             "revive scroll look: paper gold-yellow, ribbon silver, the outline kept, a tone within the tolerance turns, one further off stays");
+        Check(ScrollGlowRules.Turns.All(turn => ScrollGlowRules.Turn(turn.From.R, turn.From.G, turn.From.B) == turn.To),
+            "revive scroll look: every tone of the game turns into its own, the ribbon's middle grey too");
     }
 
     static bool Near(double value, double expected, double tolerance = 1e-3) => Math.Abs(value - expected) < tolerance;
@@ -67,7 +69,7 @@ internal static class ReviveRulesSection
                 && ReviveText.ScrollKey.StartsWith(CoreSaveItems.Prefix, StringComparison.Ordinal),
             "Core's own keys have exactly one underscore, so the game shows its full tooltips");
         Check(Math.Abs(ReviveRules.DurationUnitsPerDay * 3.5 - 3855.6) < 0.01 && Math.Abs(ReviveRules.DurationUnitsPerDay * 7 - 7711.2) < 0.01,
-            "half a week and a week in the game's duration units match the toolkit's measured 3856 and 7711");
+            "half a week and a week in the game's duration units match the measured 3856 and 7711");
         Check(ReviveRules.Price(ReviveRules.Level.Easy, ReviveRules.Level.Normal) == 4000
                 && ReviveRules.Price(ReviveRules.Level.Hard, ReviveRules.Level.VeryHard) == 7000
                 && ReviveRules.Price(ReviveRules.Level.Downfall, ReviveRules.Level.Downfall) == 10000

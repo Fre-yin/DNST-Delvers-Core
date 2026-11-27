@@ -11,6 +11,8 @@ internal static class SourceRulesSection
     {
         TableRules();
         NullableLambdaProbe();
+        ItemAmountsNeverNull();
+        NativeListIndexerProbe();
         HarmonyBindsByName();
         VfxEntriesHaveOneCaller();
         GlobalCooldownWarningIgnoresCap();
@@ -67,6 +69,21 @@ internal static class SourceRulesSection
         _ => true
     };
 
+    // The indexer case of the native list rule (trap 1): writing a struct element back into a native list is a hit, through a parameter
+    // and through an alias; reading an element, comparing it, a list of a type known not to be a struct and the target set on the game's
+    // own task (the formation's group order) are not.
+    static void NativeListIndexerProbe()
+    {
+        const string param = "void Put(Il2CppSystem.Collections.Generic.List<FormationOrder> orders, FormationOrder order)\n{\n";
+        Check(SourceRuleReader.HitCount("native-list", param + "    orders[0] = order;\n}\n") == 1
+                && SourceRuleReader.HitCount("native-list", param + "    orders[i] = new FormationOrder { Unit = unit, Target = cell };\n}\n") == 1
+                && SourceRuleReader.HitCount("native-list", "using Orders = Il2CppSystem.Collections.Generic.List<FormationOrder>;\nvoid Put(Orders list, FormationOrder o)\n{\n    list[1] = o;\n}\n") == 1
+                && SourceRuleReader.HitCount("native-list", param + "    var game = orders[i].Target;\n    if (orders[0] == order) return;\n}\n") == 0
+                && SourceRuleReader.HitCount("native-list", "var plain = new Il2CppSystem.Collections.Generic.List<int>();\nplain[0] = 1;\n") == 0
+                && SourceRuleReader.HitCount("native-list", param + "    move._TargetPosition_k__BackingField = new Vector2Int(cell.X, cell.Y);\n}\n") == 0,
+            "native lists of IL2CPP structs: an indexer write is a hit, a read, a plain list and the task's own target are not");
+    }
+
     static void NullableLambdaProbe()
     {
         Check(SourceRuleReader.HitCount("nullable-lambda", "=> rows.SelectMany(row => Problems(row.Key));") == 1
@@ -77,6 +94,21 @@ internal static class SourceRulesSection
                 && SourceRuleReader.HitCount("nullable-lambda", "hits.RemoveAll(hit => hit.At > now);") == 0
                 && SourceRuleReader.HitCount("nullable-lambda", "foreach (var (key, text) in rows) Use(key, text);") == 0,
             "trap: the lambda rule finds SelectMany, ToDictionary and a MatchEvaluator, and leaves other lambdas and loops alone");
+    }
+
+    // The game's item processor takes its amount as Nullable<int> (EndCarry, CarryDownItem, CarryUpItem, DropItemFromInventory,
+    // DropItemFromEquipment, PickUpFromInventory). Under Il2Cpp that Nullable is an object: a null throws inside the interop before the
+    // game is reached, so every such call passes a built Nullable, never null.
+    static void ItemAmountsNeverNull()
+    {
+        var calls = new[] { ".EndCarry(", ".CarryDownItem(", ".CarryUpItem(", ".DropItemFromInventory(", ".DropItemFromEquipment(", ".PickUpFromInventory(" };
+        var bad = new List<string>();
+        foreach (var file in SourceTree.Current.Files(SourceFolders.Core))
+            foreach (var line in file.Code.Split('\n'))
+                foreach (var call in calls)
+                    if (line.Contains(call, StringComparison.Ordinal) && line.TrimEnd().EndsWith(", null);", StringComparison.Ordinal))
+                        bad.Add(file.Name + ": " + line.Trim());
+        Check(bad.Count == 0, "trap: the game's item processor never gets null for its amount" + (bad.Count > 0 ? ": " + string.Join(" | ", bad) : ""));
     }
 
     static void HarmonyBindsByName()

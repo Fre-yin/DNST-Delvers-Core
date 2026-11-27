@@ -13,12 +13,16 @@ namespace DungeonSettlersDelvers.Core;
 // nearest bandit seed and stays there until seeds.stay.until. Inside it attacks a foe in reach of a free skill or its basic
 // attack and otherwise holds; a dodge still comes first (Decide). The formation is not asked while it stays. When its one
 // order ends outside the aura or the seed is gone, the stay ends and the kit decides again until the bandit has risen above
-// the entry share. CORE_AI_SEED_STAY per step change.
+// the entry share. CORE_AI_SEED_STAY per step change. The entry asks the share with look ahead and buffer (GroupAiLow, seed line;
+// the exit stays at seeds.stay.until). Heal seeking: a bandit without a heal skill that finds no usable seed
+// walks once into the herbalist's reach instead (SeedStayRules.HealerReach) and stays there the same way; CORE_AI_HEAL_SEEK.
 internal static partial class GroupAiBandits
 {
     private sealed class Stay
     {
+        // The seed's GUID, or the herbalist's while Healer.
         internal string Seed;
+        internal bool Healer;
         internal bool Ordered;
         internal bool Ended;
         internal string Step;
@@ -37,16 +41,29 @@ internal static partial class GroupAiBandits
         stayLines = 0;
     }
 
+    // A bandit's seed line: the setting moved a little by its courage (BanditTraitRules), never above the exit. One line per bandit
+    // for its stay and for the herbalist's burst on it (SeedBurst), so the low line's look ahead and buffer (GroupAiLow, kept per
+    // unit and line) always see the same threshold.
+    private static double SeedLineOf(UnitEntity unit, string guid)
+        => (double)Math.Clamp((float)stayBelow + TraitsOf(unit, guid).CourageDelta, 0f, (float)stayUntil);
+
     private static Choice SeedStay(Situation s)
     {
         var staying = stays.TryGetValue(s.Guid, out var stay);
+        // Its courage moves the entry a little; the exit stays.
+        var below = SeedLineOf(s.Unit, s.Guid);
+        // The seed line with look ahead and buffer (GroupAiLow), on the same moved line as the entry and the release; the exit uses
+        // the real share.
+        var low = GroupAiLow.Share(s.Self.Unit, s.Self.Share, LowLine.SeedStay, (float)below);
         if (staying && stay.Ended)
         {
-            // Over until the bandit rose above the entry share; a new drop starts a new stay.
-            if (s.Self.Share > stayBelow) stays.Remove(s.Guid);
+            // Over until the bandit rose above the entry share, look ahead and buffer included (freed on the
+            // real share, the look ahead sent a second and a third walk); a new drop starts a new stay.
+            if (SeedStayRules.Freed(low, below)) stays.Remove(s.Guid);
             return null;
         }
-        if (!SeedStayRules.Stays(staying, s.Self.Share, stayBelow, stayUntil))
+        var share = staying ? s.Self.Share : SeedStayRules.EntryShare(low, s.Self.Share, stayUntil);
+        if (!SeedStayRules.Stays(staying, share, below, stayUntil))
         {
             if (staying)
             {
@@ -56,8 +73,12 @@ internal static partial class GroupAiBandits
             return null;
         }
         (int Seeds, int Bandit, int Usable) count = default;
-        var seed = staying ? SeedByGuid(s, stay.Seed) : NearestSeed(s, out count);
-        if (seed == null)
+        IEntity seed = null;
+        Figure healer = null;
+        if (staying && stay.Healer) healer = HealerToSeek(s, stay.Seed);
+        else seed = staying ? SeedByGuid(s, stay.Seed) : NearestSeed(s, out count);
+        if (!staying && seed == null && SeedStayRules.SeeksHealer(HasHealSkill(s), s.Kit == Kit.Healer)) healer = HealerToSeek(s, null);
+        if (seed == null && healer == null)
         {
             if (staying) End(s, stay, "gone");
             else NoteNoSeed(s, count);
@@ -65,11 +86,16 @@ internal static partial class GroupAiBandits
         }
         if (!staying)
         {
-            stay = new Stay { Seed = seed.Guid.ToString() };
+            stay = healer != null ? new Stay { Seed = healer.Guid, Healer = true } : new Stay { Seed = seed.Guid.ToString() };
             stays[s.Guid] = stay;
         }
-        var at = s.PositionOf(seed);
-        var area = GroupAiHealerSeed.AuraCells(stay.Seed, at.x, at.y);
+        List<(int X, int Y)> area;
+        if (stay.Healer) area = SeedStayRules.ReachCells(healer.Position.x, healer.Position.y, SeedStayRules.HealerReach);
+        else
+        {
+            var at = s.PositionOf(seed);
+            area = GroupAiHealerSeed.AuraCells(stay.Seed, at.x, at.y);
+        }
         var inArea = SeedStayRules.InArea(area, s.Self.Position.x, s.Self.Position.y);
         var cell = inArea || stay.Ordered ? null : FreeCell(s, area);
         var attack = inArea ? StayAttack(s) : null;
@@ -105,7 +131,8 @@ internal static partial class GroupAiBandits
     }
 
     // The nearest living seed of a bandit with enough life left (SeedStayRules.SeedUsable); count: the seeds on the map, of a
-    // bandit, and of those usable.
+    // bandit, and of those usable. The seed heals as long as it stands, also after the herbalist's death, so a
+    // dead herbalist's seed counts (CoreFaction.IsBandit, DelversSummons.IsCoreOwned).
     private static IEntity NearestSeed(Situation s, out (int Seeds, int Bandit, int Usable) count)
     {
         count = (0, 0, 0);
@@ -129,6 +156,22 @@ internal static partial class GroupAiBandits
             bestDistance = distance;
         }
         return best;
+    }
+
+    // The herbalist of the band to seek, standing and alive, not the bandit itself; guid: only that one (a stay under way).
+    private static Figure HealerToSeek(Situation s, string guid)
+    {
+        var healer = s.Healer;
+        if (healer == null || healer == s.Self || healer.Unit == null || healer.Unit.IsDead || IsDowned(healer.Unit)) return null;
+        return guid == null || healer.Guid == guid ? healer : null;
+    }
+
+    // A heal skill of its own on the bar (GroupAiRules.HealSkills): it heals itself and seeks no healer.
+    private static bool HasHealSkill(Situation s)
+    {
+        foreach (var slot in s.Slots)
+            if (slot != null && GroupAiRules.HealSkills.Contains(slot.Key)) return true;
+        return GroupAiRules.HealSkills.Contains(s.BasicAttack);
     }
 
     private static IEntity SeedByGuid(Situation s, string guid)
@@ -173,10 +216,9 @@ internal static partial class GroupAiBandits
     {
         if (s.Kit == Kit.Healer)
         {
-            var lowest = s.LowestAlly;
-            if (lowest == null || s.Self.Share < lowest.Share) lowest = s.Self;
+            var lowest = LowestOnLine(s, LowLine.Emergency, out var lowestShare);
             var own = HealerSeedUpgrade(s)
-                ?? (lowest.Share < EmergencyShare ? SingleAlly(s, LifebloomSkill, lowest, "seed-lifebloom", withRange: true, exact: true) : null);
+                ?? (lowestShare < EmergencyShare ? SingleAlly(s, LifebloomSkill, lowest, "seed-lifebloom", withRange: true, exact: true) : null);
             if (own != null) return own;
         }
         var foes = new List<Figure>(s.Hostiles);
@@ -214,6 +256,8 @@ internal static partial class GroupAiBandits
         if (stay.Step == step) return;
         stay.Step = step;
         if (stayLines++ < SeedStayRules.LogCap)
-            Log(SeedStayRules.StayLine("bandit", s.Guid, stay.Seed, step, s.Self.Share, at.x, at.y, Tick()));
+            Log(stay.Healer
+                ? SeedStayRules.HealSeekLine("bandit", s.Guid, stay.Seed, step, s.Self.Share, at.x, at.y, Tick())
+                : SeedStayRules.StayLine("bandit", s.Guid, stay.Seed, step, s.Self.Share, at.x, at.y, Tick()));
     }
 }

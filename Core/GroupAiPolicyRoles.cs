@@ -21,7 +21,10 @@ internal static partial class GroupAiPolicy
         var forHealer = GroupAiCounterTank.Choose(s, healerFirst: true);
         if (forHealer != null) return forHealer;
         var taunt = s.Find("SKILL_GuardiansTaunt");
-        if (taunt != null && taunt.Free && s.Boss != null && s.BossTarget != null && s.BossTarget.Guid.ToString() != s.Guid)
+        // The taunt is not wasted, so the boss must stand in its reach around the shield (the same reach as
+        // the counter tank's); further off the rule passes and the next one decides. No walk toward the boss.
+        if (taunt != null && taunt.Free && s.Boss != null && s.BossTarget != null && s.BossTarget.Guid.ToString() != s.Guid
+            && GroupAiCounterTank.Reaches(s, s.PositionOf(s.Boss.Cast<IEntity>()), taunt.Data))
         {
             if (GameClock.Since(bossTargetSince) > GroupAiRules.HoldSeconds) tauntLate++;
             return NewChoice(taunt.Key, s.Boss.Cast<IEntity>(), "shield-taunt");

@@ -69,6 +69,21 @@ internal static class UniqueCandidateLocalization
         registeredLanguage = language;
     }
 
+    // One row only, the same way as Register: the Steam guard's notice while the rest of Core stays off (SteamGuard).
+    internal static void EnsureRow(string key)
+    {
+        var sheet = DataSheetManager.Instance?._text;
+        if (sheet?._tableData == null || sheet._textTable == null) return;
+        TextKeyTableData row = null;
+        foreach (var candidate in Rows)
+            if (candidate.Key == key) row = candidate;
+        if (row == null) return;
+        if (!sheet._tableData.ContainsKey(key)) sheet._tableData.Add(key, row);
+        var active = sheet._tableData[key];
+        sheet._textTable[key] = TextKeyLanguageTool.GetPreferredText(
+            TextKeyLanguageTool.GetTextByLanguage(active, LanguageSetting.GetCurrentLanguage()), active.English);
+    }
+
     internal static string GetLockConflictText()
     {
         EnsureCurrent();

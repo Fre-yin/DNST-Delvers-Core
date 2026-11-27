@@ -30,7 +30,7 @@ internal static partial class GroupAiBandits
         if (threat == null)
         {
             threat = closest;
-            if (threat == null || threat.Distance > KiteDistance) return null;
+            if (threat == null || threat.Distance > KiteOf(s)) return null;
         }
         var vines = s.Find(VinesSkill);
         if (vines != null && vines.Free && vines.Data != null && closest != null && closest.Distance <= GroupAiRules.VinesNearCells)
@@ -100,7 +100,7 @@ internal static partial class GroupAiBandits
         var owner = CoreGame.GuidOf(s.Unit);
         var healSoon = (slot.Free && Lifebloom.ChargesOf(owner) > 0) || Lifebloom.SecondsUntilCharges(owner, 1) <= GroupAiRules.HealWaitSeconds;
         var reach = (int)slot.Data.Range;
-        var mode = GroupAiRules.HealPath(lowest.Share, healBelow, healSoon, lowest.Distance, reach, s.HealerAttacker != null,
+        var mode = GroupAiRules.HealPath(GroupAiLow.Share(lowest.Unit, lowest.Share, LowLine.Emergency), healBelow, healSoon, lowest.Distance, reach, s.HealerAttacker != null,
             closest?.Distance ?? int.MaxValue, s.Taunter != null);
         if (mode == null) return null;
         var (steps, passFoes, minFoe) = GroupAiRules.HealPathLimits(mode);

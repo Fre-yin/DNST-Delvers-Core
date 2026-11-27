@@ -50,6 +50,32 @@ internal static class SettingsCopySection
             Check(other.Migrated && new CoreSettingsFile(other.Path).Get("founders.lowell.enabled", true)
                     && !new CoreSettingsFile(other.Path).Get("founders.liana.enabled", true),
                 "settings copy: a switch set in one copy does not reach another; each starts from the shared values");
+            // Amfi's mod loader: its own data folder without a file takes the normal game's values once, read only.
+            var gameRoot = Path.Combine(copyRoot, "NormalGame");
+            var loaderRoot = Path.Combine(copyRoot, "LoaderData");
+            var gameSaves = Path.Combine(gameRoot, "Saves");
+            Directory.CreateDirectory(gameSaves);
+            Directory.CreateDirectory(CoreSettingsCopyRules.CoreFolder(gameRoot));
+            File.WriteAllText(CoreSettingsCopyRules.SharedPath(gameRoot), "{\"apocalypse.offered\": true}");
+            var outside = CoreSettingsCopyRules.OutsideRoot(gameSaves + "\\", loaderRoot);
+            var gameFiles = Directory.GetFiles(gameRoot, "*", SearchOption.AllDirectories).Select(file => file + "|" + File.ReadAllText(file)).OrderBy(x => x).ToList();
+            var loaderFirst = CoreSettingsCopyRules.Prepare(loaderRoot, gameA, outside);
+            var loaderAgain = CoreSettingsCopyRules.Prepare(loaderRoot, gameA, outside);
+            var gameFilesAfter = Directory.GetFiles(gameRoot, "*", SearchOption.AllDirectories).Select(file => file + "|" + File.ReadAllText(file)).OrderBy(x => x).ToList();
+            Check(outside == gameRoot && loaderFirst.Source == "game-shared" && loaderAgain.Source == null
+                    && new CoreSettingsFile(loaderFirst.Path).Get("apocalypse.offered", false)
+                    && loaderFirst.Path.StartsWith(loaderRoot, StringComparison.Ordinal) && gameFiles.SequenceEqual(gameFilesAfter)
+                    && CoreSettingsCopyRules.OutsideRoot(null, loaderRoot) == null
+                    && CoreSettingsCopyRules.OutsideRoot(Path.Combine(loaderRoot, "Saves"), loaderRoot) == null,
+                "settings copy in a mod loader: the normal game's shared values once, read only, nothing written there; none without the variable");
+            File.Delete(CoreSettingsCopyRules.SharedPath(gameRoot));
+            var copyOutside = CoreSettingsCopyRules.CopyPath(gameRoot, gameB);
+            Directory.CreateDirectory(Path.GetDirectoryName(copyOutside));
+            File.WriteAllText(copyOutside, "{\"hints.enabled\": false}");
+            var fromCopy = CoreSettingsCopyRules.Prepare(Path.Combine(copyRoot, "LoaderData2"), gameB, outside);
+            Check(fromCopy.Source == "game-copy" && !new CoreSettingsFile(fromCopy.Path).Get("hints.enabled", true)
+                    && CoreSettingsCopyRules.Line("AB12CD34", "G", true, "game-shared") == "CORE_SETTINGS_COPY id=AB12CD34 game=G migrated=1 from=game-shared",
+                "settings copy in a mod loader: without the normal game's shared file its copy for the same game folder, the line names the origin");
             Check(CoreSettingsCopyRules.Line("AB12CD34", "G", true) == "CORE_SETTINGS_COPY id=AB12CD34 game=G migrated=1"
                     && CoreSettingsCopyRules.Line(null, null, false) == "CORE_SETTINGS_COPY id=- game=- migrated=0",
                 "settings copy log line");

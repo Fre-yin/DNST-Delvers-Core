@@ -35,7 +35,7 @@ internal static class BanditPassives
     }
 
     // The game took the unit into its passive table (PassiveActionContainer.RegisterEntity): a bandit's passives right away, so
-    // one that never fights has them too (-I2: guards and swordsmen without a decision had none).
+    // one that never fights has them too (guards and swordsmen without a decision had none).
     internal static void OnHeld(PassiveActionContainer container, IEntity target)
     {
         var unit = target?.TryCast<UnitEntity>();

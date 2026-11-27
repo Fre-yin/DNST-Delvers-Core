@@ -21,7 +21,6 @@ internal static partial class TacticalFormationWindow
     private const float Cell = 44f, CellGap = 2f, EntryHeight = 50f, Portrait = 40f, Crown = 16f;
     private static readonly Color CellDark = new(0.16f, 0.12f, 0.11f, 0.9f);
     private static readonly Color CellLight = new(0.21f, 0.16f, 0.14f, 0.9f);
-    private static readonly Color CellTarget = new(0.55f, 0.45f, 0.25f, 1f);
     private static readonly Color Beige = new(0.8f, 0.75f, 0.72f, 1f);
     private static readonly Color FrontColor = new(0.71f, 0.51f, 0.35f, 1f);
 
@@ -43,6 +42,11 @@ internal static partial class TacticalFormationWindow
     {
         Close(false);
         ForgetIcons();
+        ForgetKinds();
+        ForgetGreys();
+        ForgetFrames();
+        tooltipsLogged = false;
+        ForgetPlace();
     }
 
     internal static void Open(IReadOnlyList<UnitEntity> group)
@@ -53,8 +57,8 @@ internal static partial class TacticalFormationWindow
         book = TacticalFormation.Book();
         page = book.Active;
         order = guids;
-        grid = GridFor(page, guids, TacticalFormation.AllPriorityCasts());
         for (var i = 0; i < group.Count; i++) units[guids[i]] = group[i];
+        grid = GridFor(page);
         if (grid.Left > 0) DelversHost.Info($"CORE_TACTICAL_GROUP_CAPPED members={guids.Count} shown={grid.Members.Count}");
         try
         {
@@ -71,13 +75,14 @@ internal static partial class TacticalFormationWindow
     // save: the book with the shown set active goes into Core's block first (the window's own buttons and Escape).
     internal static void Close(bool save)
     {
+        DropTooltips();
         if (root == null) return;
         if (save)
         {
             try
             {
                 StorePage();
-                TacticalFormation.Save(book, grid);
+                TacticalFormation.Save(book, grid, castsSeen);
             }
             catch (Exception ex) { TacticalFormationButton.ReportOnce("CORE_TACTICAL_SAVE_FAILED: " + ex.Message); }
         }
@@ -93,6 +98,10 @@ internal static partial class TacticalFormationWindow
         cells.Clear();
         ClearList();
         ClearBook();
+        ClearSelection();
+        ClearRoles();
+        ClearTempo();
+        ClearLook();
         dragFrom = hovered = -1;
     }
 
@@ -104,7 +113,7 @@ internal static partial class TacticalFormationWindow
         return true;
     }
 
-    // ---- the same steps without the mouse, for the Toolkit's block (DelversCoreRuntime.Formation*ForTest) ----
+    // ---- the same steps without the mouse, for the tests (DelversCoreRuntime.Formation*ForTest) ----
 
     internal static bool SetCrown(Guid unit)
     {
@@ -155,8 +164,8 @@ internal static partial class TacticalFormationWindow
         return true;
     }
 
-    // "open=1 set=3 leader=<guid> list=<guid>|… cells=<column>,<row>:<guid>|… casts=<guid>:<skill>,<skill>|…
-    // saved=<set>:<leader>:<places>|… active=3 test=idle" for the Toolkit's checks; sets count from 1, as the pager shows them.
+    // "open=1 set=3 leader=<guid> list=<guid>|… cells=<column>,<row>:<guid>|… casts=<guid>:<skill>,,<skill>|…
+    // saved=<set>:<leader>:<places>|… active=3 test=idle" for the tests; sets count from 1, as the pager shows them.
     internal static string Status()
     {
         var text = new System.Text.StringBuilder("open=" + (grid != null ? 1 : 0));
@@ -165,6 +174,23 @@ internal static partial class TacticalFormationWindow
         {
             text.Append(" leader=").Append(grid.Leader.ToString("D")).Append(" list=");
             for (var i = 0; i < grid.Members.Count; i++) text.Append(i > 0 ? "|" : "").Append(grid.Members[i].ToString("D"));
+            text.Append(" summons=");
+            for (var i = 0; i < grid.Summons.Count; i++)
+            {
+                var id = grid.Summons[i];
+                summonPlaces.TryGetValue(id, out var place);
+                text.Append(i > 0 ? "|" : "").Append(id.ToString("D")).Append(':').Append(place.Summoner.ToString("D")).Append(':').Append(place.Kind)
+                    .Append(':').Append(place.Number).Append(':').Append(liveSummons.ContainsKey(id) ? "live" : "none");
+            }
+            if (grid.Summons.Count == 0) text.Append('-');
+            text.Append(" away=").Append(awayAt.Count == 0 ? "-" : string.Join("|", awayAt.Select(pair => pair.Key.ToString("D") + ":" + pair.Value)));
+            text.Append(" roles=").Append(grid.AllRoles().Count == 0 ? "-" : string.Join("|", grid.AllRoles().Select(pair => pair.Key.ToString("D") + ":" + TacticalRoles.Word(pair.Value))));
+            text.Append(" down=").Append(down.Count == 0 ? "-" : string.Join("|", down.Select(unit => unit.ToString("D"))));
+            text.Append(" rows=").Append(rows.Count(row => row.Line != null && row.Line.gameObject.activeSelf));
+            // The list's rows top down as shown, each member with its summon places below it.
+            var shownRows = ListOrder();
+            text.Append(" shown=").Append(shownRows.Count == 0 ? "-" : string.Join("|", shownRows.Select(entry => entry.Unit.ToString("D"))));
+            text.Append(" bar=").Append(listScroll?.verticalScrollbar != null && listScroll.verticalScrollbar.gameObject.activeSelf ? 1 : 0);
             text.Append(" cells=");
             var first = true;
             for (var row = 0; row < TacticalFormationGrid.Size; row++)
@@ -193,12 +219,15 @@ internal static partial class TacticalFormationWindow
         {
             var set = saved.Sets[i];
             if (set == null) continue;
-            text.Append(any ? "|" : "").Append(i + 1).Append(':').Append(set.Leader.ToString("D")).Append(':').Append(set.Places.Count);
+            text.Append(any ? "|" : "").Append(i + 1).Append(':').Append(set.Leader.ToString("D")).Append(':').Append(set.Places.Count)
+                .Append(':').Append(set.Summons.Count);
             any = true;
         }
         if (!any) text.Append('-');
         text.Append(" active=").Append(saved.Active + 1);
         text.Append(" test=").Append(TacticalFormationTest.Running ? "running" : "idle");
+        // Where the window stands, dragged or not (TacticalFormationWindowFront.WindowPlace): "place=dx=<px>,dy=<px>,inside=<0|1>".
+        if (grid != null) text.Append(" place=").Append(WindowPlace().Replace(' ', ','));
         return text.ToString();
     }
 
@@ -225,6 +254,8 @@ internal static partial class TacticalFormationWindow
         var canvas = root.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = SortingOrder;
+        // Every part on whole screen pixels, so the places' seams and the rows' frames come out the same width (Px).
+        canvas.pixelPerfect = true;
         var scaler = root.AddComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920f, 1080f);
@@ -247,6 +278,14 @@ internal static partial class TacticalFormationWindow
         backdrop.offsetMin = Vector2.zero;
         backdrop.offsetMax = Vector2.zero;
         var panel = Require(window.transform, "Panel_GameOptionUI");
+        windowPanel = panel.GetComponent<RectTransform>();
+        // The game's frames read once per session; the window wider than the options window (TacticalFormationWindowFrames).
+        // Never in the way of the window: a failure leaves the drawn frames (TacticalFormationFrameRead).
+        try { ReadFrames(); }
+        catch (Exception ex) { TacticalFormationButton.ReportOnce("CORE_TACTICAL_FRAMES_FAILED part=all: " + ex.Message); }
+        try { Canvas.ForceUpdateCanvases(); }
+        catch (Exception ex) { TacticalFormationButton.ReportOnce("CORE_TACTICAL_HEAD_LAYOUT_FAILED: " + ex.Message); }
+        Widen(windowPanel, WindowExtra);
         DelversMenuWindow.SetText(Require(panel, "Txt_Title").GetComponent<TMP_Text>(), MenuText.Pick(TacticalFormationText.Name));
         panel.Find("Panel_KeySettingAwaitPanel")?.gameObject.SetActive(false);
         panel.Find("Btn_Info")?.gameObject.SetActive(false);
@@ -259,52 +298,58 @@ internal static partial class TacticalFormationWindow
         });
         Wire(panel.Find("Btn_Cancel"), MenuText.Pick(TacticalFormationText.Test), Test);
 
+        footerButton = panel.Find("Btn_Confirm");
         var content = Require(panel, "ScrollView_SettingData/Viewport/Content");
         for (var i = content.childCount - 1; i >= 0; i--) UnityEngine.Object.DestroyImmediate(content.GetChild(i).gameObject);
         var fitter = content.GetComponent<ContentSizeFitter>() ?? content.gameObject.AddComponent<ContentSizeFitter>();
         fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-        var page = Layout<VerticalLayoutGroup>(content, "Page", 10f, new RectOffset(16, 16, 16, 16));
-        page.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.UpperCenter;
+        // The grid with its head stands at the content box's right, not in its middle: the role and cast choices
+        // open in the room between the list and the grid without covering it (TacticalFormationWindowLook.GridRightMargin).
+        var page = Layout<VerticalLayoutGroup>(content, "Page", 10f, new RectOffset(16, (int)GridRightMargin, 16, 16));
+        page.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.UpperRight;
         var columns = Layout<HorizontalLayoutGroup>(page.transform, "Columns", 20f, new RectOffset(0, 0, 0, 0));
 
-        BuildList(parts, Require(panel, "Panel_OptionCategoryButton"));
+        var listColumn = Require(panel, "Panel_OptionCategoryButton");
+        // The new canvas laid out once before anything is measured from it (the pager's gap, the frame's listing).
+        try { Canvas.ForceUpdateCanvases(); }
+        catch (Exception ex) { TacticalFormationButton.ReportOnce("CORE_TACTICAL_HEAD_LAYOUT_FAILED: " + ex.Message); }
+        MeasurePixels();
+        ListFrameParts(panel, content, listColumn);
+        CoverOrnament(panel);
+        BuildList(parts, listColumn, panel.Find("ScrollView_SettingData")?.GetComponent<ScrollRect>());
+        // The rows with their role reach over the content box's left margin: the list's column is drawn after the box (the box
+        // covered them).
+        listColumn.SetAsLastSibling();
+        // The title bar takes a drag (TacticalFormationWindowFront).
+        AddTitleDrag(windowPanel);
 
         var right = Layout<VerticalLayoutGroup>(columns.transform, "Formation", 6f, new RectOffset(0, 0, 0, 0));
         var gridWidth = TacticalFormationGrid.Size * Cell + (TacticalFormationGrid.Size - 1) * CellGap;
         BuildPager(parts, panel);
         AddFront(parts, right.transform, gridWidth);
         AddGrid(right.transform, gridWidth);
+        AddTempo(parts, Require(right.transform, "Grid"));
 
         var shadow = new GameObject("DragGhost", Il2CppType.Of<RectTransform>());
         shadow.transform.SetParent(root.transform, false);
         ghost = shadow.AddComponent<Image>();
         ghost.raycastTarget = false;
         ghost.preserveAspect = true;
+        ghost.color = GhostTint;
         shadow.GetComponent<RectTransform>().sizeDelta = new Vector2(Portrait, Portrait);
         shadow.SetActive(false);
         Refresh();
+        // The place it was dragged to before, and the game's tooltips in front of it while it is open (TacticalFormationWindowFront).
+        RestorePlace();
+        LiftTooltips();
         return true;
-    }
-
-    // The front above the grid (the direction must be clear): a bar in the crown's colour with the word.
-    private static void AddFront(DelversMenuWindow.Parts parts, Transform parent, float width)
-    {
-        var bar = Layout<VerticalLayoutGroup>(parent, "Front", 2f, new RectOffset(0, 0, 0, 0));
-        bar.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
-        Text(parts, bar.transform, MenuText.Pick(TacticalFormationText.Front), width);
-        var text = bar.GetComponentInChildren<TMP_Text>();
-        text.alignment = TextAlignmentOptions.Center;
-        text.color = FrontColor;
-        var line = new GameObject("Line", Il2CppType.Of<RectTransform>());
-        line.transform.SetParent(bar.transform, false);
-        line.AddComponent<Image>().color = FrontColor;
-        Fixed(line, width, 3f);
     }
 
     private static void AddGrid(Transform parent, float width)
     {
         var holder = new GameObject("Grid", Il2CppType.Of<RectTransform>());
         holder.transform.SetParent(parent, false);
+        gridRect = holder.GetComponent<RectTransform>();
         Fixed(holder, width, width);
         var layout = holder.AddComponent<GridLayoutGroup>();
         layout.cellSize = new Vector2(Cell, Cell);
@@ -324,6 +369,8 @@ internal static partial class TacticalFormationWindow
                 crownRect.anchorMin = crownRect.anchorMax = new Vector2(0.5f, 1f);
                 crownRect.anchoredPosition = new Vector2(0f, -2f);
                 cells.Add((back, unit, crown.GetComponent<Image>()));
+                cellNumbers.Add(NumberBadge(cell.transform));
+                cellFrames.Add(AddFrame(cell.transform));
                 var trigger = cell.AddComponent<EventTrigger>();
                 TacticalFormationButton.AddTrigger(trigger, EventTriggerType.BeginDrag, () => BeginDrag(index));
                 AddPointer(trigger, EventTriggerType.Drag, MoveGhost);
@@ -342,15 +389,17 @@ internal static partial class TacticalFormationWindow
         // The crown stays in the middle; it changes through the list.
         if (unit == Guid.Empty || TacticalFormationGrid.IsCenter(column, row)) return;
         dragFrom = index;
-        ghost.sprite = PortraitOf(unit);
+        ghost.sprite = FaceOf(unit);
         ghost.gameObject.SetActive(true);
+        // As large as the portraits in the window's cells and rows (the window's scale, ScaleLikeWindow).
+        ScaleLikeWindow(ghost.rectTransform);
         ghost.transform.SetAsLastSibling();
         Refresh();
     }
 
     private static void MoveGhost(PointerEventData pointer)
     {
-        if (dragFrom < 0 || pointer == null) return;
+        if (!TacticalFormationGrid.Dragging(dragFrom, listFrom) || pointer == null) return;
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, pointer.position, null, out var local))
             ghost.rectTransform.anchoredPosition = local;
     }
@@ -385,12 +434,23 @@ internal static partial class TacticalFormationWindow
         {
             var (column, row) = CellAt(i);
             var (back, picture, crown) = cells[i];
-            back.color = dragFrom >= 0 && i == hovered ? CellTarget : (column + row) % 2 == 0 ? CellLight : CellDark;
+            // A drop target is framed in gold and lightly tinted; the dragged member stays faint at its place.
+            // Only a cell the drop can take: not the dragged member's own, not the crown's middle (TacticalFormationGrid.Drop).
+            var target = dragFrom >= 0 && i == hovered && i != dragFrom && !TacticalFormationGrid.IsCenter(column, row);
+            var ground = (column + row) % 2 == 0 ? CellLight : CellDark;
+            back.color = target ? Color.Lerp(ground, FrameLeader, TargetTint) : ground;
             var unit = grid.At(column, row);
-            var shown = unit != Guid.Empty && i != dragFrom;
-            picture.sprite = shown ? PortraitOf(unit) : null;
-            picture.enabled = shown && picture.sprite != null;
-            crown.enabled = shown && unit == grid.Leader && crown.sprite != null;
+            var shown = unit != Guid.Empty;
+            var dragged = shown && i == dragFrom;
+            ShowFace(picture, shown ? FaceOf(unit) : null, shown && IsAway(unit));
+            if (dragged) picture.color = Pale;
+            crown.enabled = shown && !dragged && unit == grid.Leader && crown.sprite != null;
+            if (i < cellNumbers.Count) DelversMenuWindow.SetText(cellNumbers[i], shown && !dragged ? NumberText(unit) : "");
+            if (i < cellFrames.Count)
+            {
+                if (target) ShowFrame(cellFrames[i], FrameLeader);
+                else ShowFrame(cellFrames[i], unit, shown && !dragged);
+            }
         }
         RefreshList();
         RefreshPager();
@@ -450,6 +510,7 @@ internal static partial class TacticalFormationWindow
             try { click(); }
             catch (Exception ex) { TacticalFormationButton.ReportOnce("CORE_TACTICAL_UI_FAILED button=" + transform.name + ": " + ex.Message); }
         }));
+        AddHover(transform.gameObject);
     }
 
     private static GameObject Layout<T>(Transform parent, string name, float spacing, RectOffset padding) where T : HorizontalOrVerticalLayoutGroup

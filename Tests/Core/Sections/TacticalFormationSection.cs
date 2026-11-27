@@ -11,8 +11,29 @@ internal static class TacticalFormationSection
         Directions();
         Rotation();
         Turning();
+        Stopping();
         Placing();
+        Anchored();
         Defaults();
+    }
+
+    // An anchored member holds its place (while the leader moves outside the grid, the members sent to the anchor do not
+    // move); the leader's followers make way for it (GroupAiFormationRules.PlaceWithAnchors).
+    static void Anchored()
+    {
+        var a = Guid.NewGuid();
+        var b = Guid.NewGuid();
+        // B's slot around the leader at (0,0) facing north is (3,-1); A, anchored at (3,0) facing north, has its place one behind:
+        // the same cell.
+        var slots = new List<Slot> { new(b, 3, -1), new(a, 0, -1) };
+        var anchors = new Dictionary<Guid, ((int X, int Y) Cell, Facing Facing)> { [a] = ((3, 0), Facing.North) };
+        var places = GroupAiFormationRules.PlaceWithAnchors((0, 0), Facing.North, slots, anchors, (x, y) => true, (x, y) => false);
+        Check(places[1] == (3, -1) && places[0] != null && places[0] != (3, -1) && places[0] != (-3, -1)
+                && Math.Max(Math.Abs(places[0].Value.X - 3), Math.Abs(places[0].Value.Y + 1)) == 1,
+            "tactical anchor: the anchored member keeps its cell, the leader's follower takes the free cell next to its slot, never the mirrored side");
+        var plain = GroupAiFormationRules.PlaceWithAnchors((0, 0), Facing.North, slots, new Dictionary<Guid, ((int X, int Y) Cell, Facing Facing)>(),
+            (x, y) => true, (x, y) => false);
+        Check(plain[0] == (3, -1) && plain[1] == (0, -1), "tactical anchor: without anchors the plain placing around the leader");
     }
 
     static void Directions()
@@ -87,6 +108,31 @@ internal static class TacticalFormationSection
             "tactical: a turn of exactly 45 degrees counts");
     }
 
+    // Where the leader stops (StopFacing): the way it walked, a single cell too, the click's diagonal on open
+    // ground, the last stretch behind a corner.
+    static void Stopping()
+    {
+        static bool Open(int x, int y) => true;
+        Check(StopFacing(new[] { (0, 0), (0, -1) }, Open) == Facing.South && StopFacing(new[] { (0, 0), (1, 0) }, Open) == Facing.East
+                && StopFacing(new[] { (0, 0), (-1, 0) }, Open) == Facing.West,
+            "tactical stop: a single cell turns the formation the way the leader went");
+        Check(StopFacing(new[] { (0, 0), (0, -1), (1, -2), (2, -3), (3, -3) }, Open) == Facing.SouthEast,
+            "tactical stop: on open ground the way to the click, whatever path the game took (3 southeast)");
+        Check(StopFacing(new[] { (0, 0), (1, 0), (2, 0), (3, -1) }, Open) == Facing.East
+                && StopFacing(new[] { (0, 0), (1, 0), (2, -1) }, Open) == Facing.SouthEast,
+            "tactical stop: the nearest of eight directions (3 east 1 south is east, 2 east 1 south is southeast)");
+        // A wall south of the first three cells of the row y = -1: the way goes 3 east, then 2 south around it.
+        static bool Wall(int x, int y) => !(y == -1 && x >= 0 && x <= 2);
+        Check(StopFacing(new[] { (0, 0), (1, 0), (2, 0), (3, 0), (3, -1), (3, -2) }, Wall) == Facing.South,
+            "tactical stop: behind a corner the last stretch counts (3 east, 2 south around a wall: south)");
+        Check(StopFacing(new[] { (0, 0), (1, 0), (2, 0), (3, 0), (3, -1), (3, -2) }, Open) == Facing.SouthEast,
+            "tactical stop: the same way without the wall faces the click");
+        Check(StopFacing(new[] { (0, 0), (0, -1), (0, 0) }, Open) == null && StopFacing(new[] { (5, 5) }, Open) == null,
+            "tactical stop: back where it started, or no walk, no turn");
+        Check(!LineFree((0, 0), (2, 2), (x, y) => !(x == 1 && y == 0)) && LineFree((0, 0), (0, 3), (x, y) => x == 0),
+            "tactical stop: a line through a corner touches both cells beside it");
+    }
+
     static void Placing()
     {
         var a = Guid.NewGuid();
@@ -122,6 +168,40 @@ internal static class TacticalFormationSection
         var order = Place(10, 10, Facing.North, new[] { new Slot(a, 0, -1), new Slot(b, 1, -1) }, (x, y) => (x, y) != (10, 9));
         Check(order[1] == (11, 9) && order[0] != (11, 9) && order[0] != null,
             "tactical: a member whose place is free keeps it against another member's fallback");
+
+        // No cap of eight. Forty members on the default places, each on its own cell, none on the leader's.
+        var forty = new List<Slot>();
+        var offsets = new List<(int X, int Y)>();
+        for (var y = -MaxOffset; y <= MaxOffset && offsets.Count < 40; y++)
+            for (var x = -MaxOffset; x <= MaxOffset && offsets.Count < 40; x++)
+                if ((x, y) != (0, 0)) offsets.Add((x, y));
+        foreach (var (x, y) in offsets) forty.Add(new Slot(Guid.NewGuid(), x, y));
+        var placed = Place(30, 30, Facing.East, forty, (x, y) => true);
+        var distinct = new HashSet<(int, int)>();
+        foreach (var cell in placed) if (cell is { } got) distinct.Add(got);
+        Check(offsets.Count == 40 && distinct.Count == 40 && !distinct.Contains((30, 30)), "tactical: forty members each get a cell of their own");
+        var blockedHalf = Place(30, 30, Facing.North, forty, (x, y) => x >= 30);
+        var placedHalf = 0;
+        var seen = new HashSet<(int, int)>();
+        foreach (var cell in blockedHalf)
+            if (cell is { } got && seen.Add(got) && got.Item1 >= 30) placedHalf++;
+        Check(placedHalf == seen.Count && placedHalf >= 30, "tactical: with half the ground blocked they fall back onto the free half, no two on a cell");
+
+        // Terrain on the place mirrors first, a figure on it takes the nearest free cell first.
+        var single = new[] { new Slot(a, -1, -1) };
+        Func<int, int, bool> noFigure = (x, y) => false;
+        var wall = Place(10, 10, Facing.North, single, (x, y) => (x, y) != (9, 9), noFigure);
+        Check(wall[0] == (11, 9), "tactical: a place blocked by terrain takes the mirrored place first");
+        var figure = Place(10, 10, Facing.North, single, (x, y) => (x, y) != (9, 9), (x, y) => (x, y) == (9, 9));
+        Check(figure[0] == (9, 10), "tactical: a place a figure stands on takes the nearest free cell on the same side first");
+        var passable = Place(10, 10, Facing.North, single, (x, y) => true, (x, y) => (x, y) == (9, 9));
+        Check(passable[0] == (9, 10), "tactical: a figure's cell is taken even where the movable check lets it pass");
+        var bothWalls = Place(10, 10, Facing.North, single, (x, y) => (x, y) != (9, 9) && (x, y) != (11, 9), noFigure);
+        Check(bothWalls[0] == (9, 10), "tactical: with the mirrored place blocked too, terrain falls back to the nearest free cell");
+        var twice = Place(10, 10, Facing.North, new[] { new Slot(a, -1, -1), new Slot(b, -1, -1) }, (x, y) => true, noFigure);
+        Check(twice[0] == (9, 9) && twice[1] == (9, 10), "tactical: another member's place counts as a figure, not as terrain");
+        var axis = Place(10, 10, Facing.North, new[] { new Slot(a, 0, -1) }, (x, y) => (x, y) != (10, 9), noFigure);
+        Check(axis[0] != null && axis[0] != (10, 9), "tactical: a place on the leader's axis has no mirror and falls back to the nearest free cell");
     }
 
     static void Defaults()

@@ -96,5 +96,16 @@ internal static class WoundBloodSection
                 && WoundRules.Heal(WoundRules.Stage.Deep, WoundRules.HealKind.Portal, 40, 50, 134, WoundRules.HealFactor(WoundRules.Stage.Deep)) == (40, 40)
                 && WoundRules.Heal(WoundRules.Stage.None, WoundRules.HealKind.Regeneration, 30, 50, 134, WoundRules.HealFactor(WoundRules.Stage.None)) == (30, 0),
             "wound: an open wound stops the body's regeneration, the portal heals and closes it, a closed wound regenerates again");
+        // One source of blood on a party member's body, Core's own.
+        Check(WoundRules.HidesGameBleed(WoundRules.BleedingVfx, true, true, true) && WoundRules.HidesGameBleed(WoundRules.BleedingAlwaysVfx, true, true, true)
+                && WoundRules.BleedingVfx == 4 && WoundRules.BleedingAlwaysVfx == 5
+                && !WoundRules.HidesGameBleed(WoundRules.BleedingVfx, false, true, true) && !WoundRules.HidesGameBleed(WoundRules.BleedingAlwaysVfx, true, false, true)
+                && !WoundRules.HidesGameBleed(44, true, true, true) && !WoundRules.HidesGameBleed(29, true, true, true),
+            "blood on the body: the game's Bleeding and Bleeding_Always on a party member go while combat wounds are on; foes, play without wounds and the ground keep the game's");
+        Check(!WoundRules.HidesGameBleed(WoundRules.BleedingVfx, true, true, false) && !WoundRules.HidesGameBleed(WoundRules.BleedingAlwaysVfx, true, true, false),
+            "blood on the body: without Core's body blood (wound closed, the game's bleeding still running) the game's picture stays, nothing bleeds unseen");
+        Check(WoundRules.FxIndex(1) > WoundRules.GameVfxIdMax && WoundRules.FxIndex(0) == WoundRules.FxGuidBase
+                && WoundRules.FxIndex(5) != WoundRules.BleedingAlwaysVfx && WoundRules.FxIndex(4) != WoundRules.BleedingVfx,
+            "effects: Core numbers its own effects above every game effect id, so no Guid of Core's is ever one of the game's blood effects");
     }
 }

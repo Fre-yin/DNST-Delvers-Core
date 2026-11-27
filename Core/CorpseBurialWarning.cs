@@ -78,9 +78,7 @@ internal static class CorpseBurialWarning
 
     private static bool OnMap(MapType map, Il2CppSystem.Guid guid)
     {
-        var maps = CoreGame.Flow?._inMapDatas;
-        var inMap = maps != null && maps.ContainsKey(map) ? maps[map] : null;
-        return inMap?.GetEntity(guid) != null;
+        return CoreGame.InMapOf(map)?.GetEntity(guid) != null;
     }
 
     // The question for a dressed party corpse the user carries; runAgain gives the same order to the game again on yes.

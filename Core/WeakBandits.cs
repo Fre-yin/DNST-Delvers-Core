@@ -19,6 +19,8 @@ namespace DungeonSettlersDelvers.Core;
 // The game shuffles the positions, spawns and saves the units as it does with its own; Core's rows draw and steer them. A room the
 // game refills later asks without a pending room and gets the game's monsters. CORE_WEAKBANDIT_ROOM per replaced room,
 // CORE_WEAKBANDIT_FLOOR when the next floor begins.
+// A patrol of the game's (DungeonBehaviorSimulator.CheckDungeonPatrol, MonsterPatrolHandler) asks GetPatrolGroupData: with
+// bandits.vary on a weak group may come in its place (WeakBanditsPatrolPatch, CORE_WEAKBANDIT_PATROL). The boss party never patrols.
 internal static class WeakBandits
 {
     private const int LogCap = 60;
@@ -33,8 +35,22 @@ internal static class WeakBandits
         floorOn = false;
         pending = null;
         spawnCells.Clear();
+        lastCoinAt = null;
         lines = 0;
         groups.Clear();
+    }
+
+    // A new or loaded campaign: the spawn cells and the last stack belong to the last one.
+    internal static void ResetCampaign()
+    {
+        spawnCells.Clear();
+        lastCoinAt = null;
+    }
+
+    // The game took the unit off its map: its spawn cell goes (the cap below would otherwise empty the cells of living bandits).
+    internal static void Forget(UnitEntity unit)
+    {
+        if (unit != null && spawnCells.Count > 0) spawnCells.Remove(unit.Guid.ToString());
     }
 
     // A floor is about to be built.
@@ -63,12 +79,14 @@ internal static class WeakBandits
     // together, and a fight spreads it out (guard and healer of one group died 15 cells apart and each left
     // the group's coins). Not saved; after a load a bandit without its cell counts where it stands.
     private static readonly Dictionary<string, (int X, int Y)> spawnCells = new(StringComparer.Ordinal);
+    private static float? lastCoinAt;
+    private static (int X, int Y) lastCoinHome;
     private const int SpawnCellCap = 512;
 
-    internal static void NoteSpawn(UnitEntity unit)
+    internal static void NoteSpawn(MapType map, UnitEntity unit)
     {
         if (unit == null || !CoreUnitRules.TryGet(unit.Key, out var definition) || !WeakBanditRules.IsWeak(definition)) return;
-        var inMap = CoreGame.InMap;
+        var inMap = CoreGame.InMapOf(map);
         if (inMap == null) return;
         // Called before the difficulty swap in the same postfix: a unit the map cannot place yet only goes without its cell.
         try
@@ -94,18 +112,23 @@ internal static class WeakBandits
     internal static void OnDied(MapType map, UnitEntity unit, CoreUnitRules.Definition definition)
     {
         if (unit == null || definition == null || !WeakBanditRules.IsWeak(definition)) return;
-        var inMap = CoreGame.InMap;
+        var inMap = CoreGame.InMapOf(map);
         if (inMap == null) return;
         var at = inMap.GetLogicalPosition(unit.Guid);
         var home = CellOf(inMap, unit);
         var living = 0;
-        foreach (var other in CoreGame.MapUnits())
+        foreach (var other in CoreGame.MapUnits(map))
         {
             if (other == null || other.IsDead || other.Guid == unit.Guid || !CoreUnitRules.TryGet(other.Key, out var od) || !WeakBanditRules.IsWeak(od)) continue;
             var there = CellOf(inMap, other);
             if (GroupAiRules.IsGroupAlly(Math.Max(Math.Abs(there.X - home.X), Math.Abs(there.Y - home.Y)))) living++;
         }
+        spawnCells.Remove(unit.Guid.ToString());
         if (!WeakBanditRules.DropsCoin(true, living)) return;
+        var apart = Math.Max(Math.Abs(lastCoinHome.X - home.X), Math.Abs(lastCoinHome.Y - home.Y));
+        if (WeakBanditRules.CoinsJustDropped(GameClock.Now, lastCoinAt, apart)) return;
+        lastCoinAt = GameClock.Now;
+        lastCoinHome = home;
         CoreGame.Enqueue(new SpawnItemRequested(map, WeakBanditRules.CoinKey, at, WeakBanditRules.CoinCount).Cast<IEventData>());
         DelversHost.Info($"CORE_WEAKBANDIT_COIN unit={unit.Guid} key={unit.Key} count={WeakBanditRules.CoinCount} at={at.x},{at.y}");
     }
@@ -121,7 +144,7 @@ internal static class WeakBandits
         foreach (var room in roomIds)
         {
             if (level == 0 || !WeakBanditSpawnRules.Hit(floorSeed, WeakBanditSpawnRules.Region, scanFloor, room, scanPercent)) continue;
-            picked.Add(room + ":" + string.Join("+", WeakBanditSpawnRules.GroupOf(floorSeed, WeakBanditSpawnRules.Region, scanFloor, room, level, WeakBanditSpawnRules.ClassesOf())));
+            picked.Add(room + ":" + string.Join("+", WeakBanditSpawnRules.GroupOf(floorSeed, WeakBanditSpawnRules.Region, scanFloor, room, level, WeakBanditSpawnRules.ClassesOf(), CoreSettings.BanditsVary)));
         }
         return (roomIds.Count, picked.Count, string.Join(";", picked));
     }
@@ -136,21 +159,39 @@ internal static class WeakBandits
         if (roomId == null || !WeakBanditSpawnRules.Replaceable(roomType)) return null;
         rooms++;
         if (!WeakBanditSpawnRules.Hit(seed, region, floor, roomId, percent)) return null;
-        var classes = WeakBanditSpawnRules.GroupOf(seed, region, floor, roomId, level, WeakBanditSpawnRules.ClassesOf());
-        var keys = WeakBanditSpawnRules.KeysOf(level, classes);
+        var classes = WeakBanditSpawnRules.GroupOf(seed, region, floor, roomId, level, WeakBanditSpawnRules.ClassesOf(), CoreSettings.BanditsVary);
+        var keys = WeakBanditSpawnRules.KeysOf(level, classes, CoreSettings.BanditsVary ? WeakBanditSpawnRules.VariantHash(seed, region, floor, roomId) : 0);
         if (keys.Length == 0) return null;
         replaced++;
         groups.Add(roomId + ":" + string.Join("+", classes));
         if (lines++ < LogCap) DelversHost.Info(WeakBanditSpawnRules.RoomLine(seed, region, floor, roomId, keys));
-        return new SpawnGroupTableData
-        {
-            Key = WeakBanditSpawnRules.GroupKey,
-            Region = (DungeonRegion)region,
-            RoomType = (RoomType)WeakBanditSpawnRules.CombatRoomType,
-            Weight = 0,
-            AvailablePhase = new Il2CppStructArray<int>(new[] { floor + 1 }),
-            SpawnPool = new Il2CppStringArray(keys)
-        };
+        return GroupOf(keys, region, WeakBanditSpawnRules.CombatRoomType, floor + 1);
+    }
+
+    private static SpawnGroupTableData GroupOf(string[] keys, int region, int roomType, int phase) => new SpawnGroupTableData
+    {
+        Key = WeakBanditSpawnRules.GroupKey,
+        Region = (DungeonRegion)region,
+        RoomType = (RoomType)roomType,
+        Weight = 0,
+        AvailablePhase = new Il2CppStructArray<int>(new[] { phase }),
+        SpawnPool = new Il2CppStringArray(keys)
+    };
+
+    // A weak group for a patrol of the game's, or null for the game's own.
+    internal static SpawnGroupTableData PatrolFor(int patrolRegion, int phase)
+    {
+        if (!ApocalypseRules.WeakBandits || !CoreSettings.BanditsVary) return null;
+        var patrolLevel = WeakBanditSpawnRules.PatrolLevelOf(patrolRegion, phase);
+        if (patrolLevel == 0) return null;
+        var chance = WeakBanditSpawnRules.PatrolPercent(CoreSettings.Number(WeakBanditSpawnRules.PatrolPercentKey));
+        if (!WeakBanditSpawnRules.PatrolHit(CoreRandom.Next01(CoreRandomRules.BanditPatrol, Guid.Empty), chance)) return null;
+        var roll = (int)(CoreRandom.Next01(CoreRandomRules.BanditPatrol, Guid.Empty) * int.MaxValue);
+        var classes = WeakBanditSpawnRules.GroupOf(roll, patrolRegion, phase - 1, WeakBanditSpawnRules.PatrolRoom, patrolLevel, WeakBanditSpawnRules.ClassesOf(), pairs: true);
+        var keys = WeakBanditSpawnRules.KeysOf(patrolLevel, classes, WeakBanditSpawnRules.VariantHash(roll, patrolRegion, phase - 1, WeakBanditSpawnRules.PatrolRoom));
+        if (keys.Length == 0) return null;
+        if (lines++ < LogCap) DelversHost.Info(WeakBanditSpawnRules.PatrolLine(patrolRegion, phase, keys));
+        return GroupOf(keys, patrolRegion, WeakBanditSpawnRules.PatrolRoomType, phase);
     }
 
     private static void EndFloor()
@@ -197,5 +238,19 @@ internal static class WeakBanditsGroupPatch
             if (weak != null) __result = weak;
         }
         catch (Exception ex) { DelversHost.Warning("CORE_WEAKBANDIT_FAILED stage=group (the room keeps the game's roll): " + ex.Message); }
+    }
+}
+
+[HarmonyPatch(typeof(DataSheetManager), nameof(DataSheetManager.GetPatrolGroupData))]
+internal static class WeakBanditsPatrolPatch
+{
+    private static void Postfix(DungeonRegion region, int phase, ref SpawnGroupTableData __result)
+    {
+        try
+        {
+            var weak = WeakBandits.PatrolFor((int)region, phase);
+            if (weak != null) __result = weak;
+        }
+        catch (Exception ex) { DelversHost.Warning("CORE_WEAKBANDIT_FAILED stage=patrol (the patrol stays the game's): " + ex.Message); }
     }
 }

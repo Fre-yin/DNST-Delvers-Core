@@ -11,6 +11,8 @@ internal static class CoreTextRowsSection
         ProbedEntries();
         CheckedSources();
         LanguagesAndDashes();
+        EveryLanguageTranslated();
+        EveryTextChecked();
         HyphensInCoveredSources();
         RulesOnBrokenTexts();
         GuideTopics();
@@ -65,8 +67,9 @@ internal static class CoreTextRowsSection
             "text rows: every registered row has its own key");
         Check(keys[0] == UniqueCandidateLocalizationText.NativeLockConflictKey
                 && keys[1] == LoadIntegrityNoticeText.SaveBlockedKey
-                && keys[^1] == TacticalFormationText.DescKey,
-            "text rows: the registration order starts with the lock conflict and the load notices and ends with the formation tooltip");
+                && keys[^3] == TacticalFormationText.DescKey && keys[^2] == TacticalFormationText.TempoNameKey
+                && keys[^1] == TacticalFormationText.TempoDescKey,
+            "text rows: the registration order starts with the lock conflict and the load notices and ends with the formation tooltips");
     }
 
     // The rows of the enemy abilities and of the first hints are made from their own lists: the same keys and texts in the
@@ -134,6 +137,36 @@ internal static class CoreTextRowsSection
     {
         var problems = CoreTextRules.Problems(CoreTextRows.Checked).ToList();
         Check(problems.Count == 0, "text rows: ten non-empty languages and no dash in every row" + Named(problems));
+    }
+
+    // No row carries the English text in another language of the game, except names the game writes the same (the group AI's menu
+    // section stood in English in Korean).
+    static void EveryLanguageTranslated()
+    {
+        var problems = CoreTextRules.UntranslatedProblems(CoreTextRows.Checked).Distinct().ToList();
+        Check(problems.Count == 0, "text rows: every language of the game is translated, no English left in another language" + Named(problems));
+        Check(CoreTextRules.UntranslatedProblems("probe", new[] { "Close", "Close", "Fermer", "Schließen", "Закрыть", "关闭", "關閉", "閉じる", "Cerrar", "Fechar" })
+                    .SequenceEqual(new[] { "Core text in English for ko: probe" })
+                && !CoreTextRules.UntranslatedProblems("probe", new[] { "10", "10", "10", "10", "10", "10", "10", "10", "10", "10" }).Any(),
+            "text rows: an English text in Korean is named with its language, a text without letters is no problem");
+    }
+
+    // Every text of Core in ten languages, a static field of type UniqueCandidateTranslations anywhere in Core, stands in the list
+    // the language checks read (CoreTextRows.Checked): a new menu word that is not listed escapes them, as the group AI's did.
+    static void EveryTextChecked()
+    {
+        var listed = new HashSet<UniqueCandidateTranslations>(CoreTextRows.Checked.Select(row => row.Text), ReferenceEqualityComparer.Instance);
+        var missing = new List<string>();
+        foreach (var type in typeof(CoreTextRows).Assembly.GetTypes())
+        {
+            if (type.Namespace != typeof(CoreTextRows).Namespace) continue;
+            foreach (var field in type.GetFields(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic))
+            {
+                if (field.FieldType != typeof(UniqueCandidateTranslations) || field.Name.Contains('<')) continue;
+                if (field.GetValue(null) is UniqueCandidateTranslations text && !listed.Contains(text)) missing.Add(type.Name + "." + field.Name);
+            }
+        }
+        Check(missing.Count == 0, "text rows: every text of Core in ten languages stands in the checked list" + Named(missing));
     }
 
     // Only the sources listed here are held to the hyphen rule.

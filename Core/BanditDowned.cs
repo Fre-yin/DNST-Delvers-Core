@@ -116,7 +116,7 @@ internal static partial class GroupAiBandits
         return count;
     }
 
-    // (135916: a club attack decided on a standing unit hit her 160 ticks after she fell): every tick,
+    // A club attack decided on a standing unit hit her 160 ticks after she fell, so every tick
     // a bandit whose combat target has fallen while a capable player unit stands within chase reach drops its running
     // action and turns to the nearest capable one (GroupAiRules.SkipsFallenNow); once per bandit and fallen target.
     // It turns to the bandit's focus when that one is capable, else to the nearest (GroupAiRules.SkipTargetPick), so

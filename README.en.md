@@ -4,11 +4,11 @@
 
 Shared core for Dungeon Settlers character mods. Core brings the story characters **Lowell, Liana and Kragas** into recruitment and gives character packs a small, stable API.
 
-**Version 0.5.0 for BepInEx. Core API 1.11.0.**
+**Version 0.5.2 for BepInEx. Core API 1.12.0.**
 
 ## Downloads
 
-The mod package `DelversCore-0.5.0-BepInEx.zip` is on the [Releases](../../releases) page. From 0.5.0 on, Delvers is available for BepInEx only; MelonLoader is no longer supported. The MelonLoader versions up to 0.4.1 are being archived.
+The mod package `DelversCore-0.5.2-BepInEx.zip` is on the [Releases](../../releases) page. From 0.5.0 on, Delvers is available for BepInEx only; MelonLoader is no longer supported. The MelonLoader versions up to 0.4.1 are being archived.
 
 The automatically generated source-code archives are not installation packages.
 
@@ -52,7 +52,7 @@ Back up your saves before first use. Core runs on its own; character packs need 
 
 ## Tested
 
-For 0.5.0, 1435 Core checks and 129 Frieren checks passed offline with no build warnings. In game, Core ran under BepInEx `6.0.0-be.788` on DS_B.0.4.29 together with Frieren 0.5.0 and Extended Hotbar 1.0.2.
+For 0.5.2, 1776 Core checks and 133 Frieren checks passed offline with no build warnings. In game, Core ran under BepInEx `6.0.0-be.788` on DS_B.0.4.29 together with Frieren 0.5.1 and Extended Hotbar 1.0.4.
 
 For 0.4.1, an in-game self-test ran on DS_B.0.4.29 under MelonLoader and BepInEx on 10 October 2026, together with Frieren 0.4.1 and Extended Hotbar 1.0.2. Two test campaigns, one with keys to rename and one with missing fixed traits, were loaded, saved and loaded again. All nine monitored load methods carried Core's protection, and each of these loads was trusted. A save with an unknown effect was detected: Core blocked saving, showed its notice and refused a manual save. The offline matrix passed 168 Core checks per loader with no build warnings or errors.
 

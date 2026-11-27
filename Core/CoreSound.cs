@@ -34,13 +34,13 @@ internal static class CoreSound
     private static object runner;
     private static float runnerBeat;
 
-    // At the unit's place in the world; silent when it has none.
+    // At the unit's place in the world; silent when it has none, or when it stands on a map the player does not look at.
     internal static void PlayAt(UnitEntity unit, string file, float volume)
     {
         try
         {
             var inMap = CoreGame.InMap;
-            if (unit == null || inMap == null) return;
+            if (unit == null || inMap == null || CoreGame.FindUnit(CoreGame.GuidOf(unit)) == null) return;
             var world = inMap.GetWorldPosition(unit.Guid);
             Play(file, new Vector2(world.x, world.y), volume);
         }

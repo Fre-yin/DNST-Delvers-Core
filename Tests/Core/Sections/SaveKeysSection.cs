@@ -8,19 +8,22 @@ using static TestKit;
 internal static class SaveKeysSection
 {
     // Every JSON name of CoreSaveData, top-level and nested, pv, pr and px since the presence of unique units;
-    // camp, seed, wagon, flip, box and a room part's s since the bandit camp; formations since the tactical formation (its places reuse
-    // unit, x and y); casts since its priority casts (per unit three skill keys, "" for an empty place);
+    // camp, seed, wagon, flip, box and a room part's s since the bandit camp; formations since the tactical formation (its places reuse unit, x and y); casts since its
+    // priority casts (per unit three skill keys, "" for an empty place);
     // sets, leader and places since the formation book (eight sets and the active one, which reuses active);
     // formationOff since the formation's switch (the members switched off); wake since the camp's wake on entering
     // became a property of the camp file (true only for a camp that wakes); formationSleep since Prioritize Sleep
     // switches the formation (the members sleep took out); hotbarSlots since Extended Hotbar's extra item slots keep Core's
-    // items (per unit its two slots).
+    // items (per unit its two slots); formationTempo since the formation's tempo button (true while on); summons, of, kind and n since the formation's
+    // summon places (per set the summoner, the summon's unit key, its number and the cell); roles since the formation's
+    // roles (per set the members' roles as words); homes since the boss party stays in its camp (the camp's
+    // spawn cells by unit key).
     static readonly string[] Frozen =
     {
         "active", "apocalypse", "at", "autoUse", "body", "box", "camp", "campaign", "casts", "combat", "cooldown", "count", "duration", "extra", "flip",
-        "formationOff", "formationSleep", "formations", "hotbarSlots", "index",
-        "itemSlots", "items", "k", "key", "leader", "lifebloom", "list", "m", "management", "next", "on", "ownSkills", "ownUnits", "places", "queue",
-        "pr", "pv", "px", "remaining", "research", "revives", "roomFeatures", "s", "seed", "sets", "sickness", "slot", "snapshot", "storageItems", "tasks", "text",
+        "formationOff", "formationSleep", "formationTempo", "formations", "homes", "hotbarSlots", "index",
+        "itemSlots", "items", "k", "key", "kind", "leader", "lifebloom", "list", "m", "management", "n", "next", "of", "on", "ownSkills", "ownUnits", "places", "queue",
+        "pr", "pv", "px", "remaining", "research", "revives", "roles", "roomFeatures", "s", "seed", "sets", "sickness", "slot", "snapshot", "storageItems", "summons", "tasks", "text",
         "total", "undressed", "unit", "units", "version", "wagon", "wake", "wound", "woundfatal", "x", "y"
     };
 

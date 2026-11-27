@@ -108,6 +108,76 @@ internal static class TacticalFormationRules
         return now - turn.Since >= TurnSeconds ? new Turn(candidate) : turn;
     }
 
+    // Where the leader stopped, the formation faces the way it walked (what counts is the way the
+    // leader walked where it stops, a single cell too; at a corner the last stretch, on open ground the way to
+    // the click, a diagonal too). trail holds the leader's cells from where it last stood to where it stands now. The direction
+    // is the one from the earliest cell of the trail with a straight line to the stop that crosses no terrain: on open ground the
+    // start, behind a corner the corner. INTERPRETATION (not the author's words): "the last stretch" read as the last stretch one
+    // can see the stop from; a line touching a cell counts that cell, so a line along a wall's edge counts the wall.
+    // null when the leader stands where it started.
+    internal static Facing? StopFacing(IReadOnlyList<(int X, int Y)> trail, Func<int, int, bool> terrainFree)
+        => StopFacing(trail, terrainFree, out _);
+
+    // The same with the cell the direction is read from (the start on open ground, the corner behind one).
+    internal static Facing? StopFacing(IReadOnlyList<(int X, int Y)> trail, Func<int, int, bool> terrainFree, out (int X, int Y) from)
+    {
+        from = default;
+        if (trail == null || trail.Count < 2) return null;
+        var stop = trail[trail.Count - 1];
+        if (stop == trail[0]) return null;
+        for (var i = 0; i < trail.Count - 1; i++)
+        {
+            from = trail[i];
+            if (from == stop || !LineFree(from, stop, terrainFree)) continue;
+            return FacingOf(stop.X - from.X, stop.Y - from.Y);
+        }
+        from = trail[trail.Count - 2];
+        return FacingOf(stop.X - from.X, stop.Y - from.Y);
+    }
+
+    // Whether every cell a straight line between the two cells touches, the ends left out, is free of terrain.
+    internal static bool LineFree((int X, int Y) from, (int X, int Y) to, Func<int, int, bool> terrainFree)
+    {
+        foreach (var cell in LineCells(from, to))
+            if (cell != from && cell != to && !terrainFree(cell.X, cell.Y)) return false;
+        return true;
+    }
+
+    // The cells a straight line from one cell's middle to another's touches, both ends included; where it runs exactly
+    // through a corner, both cells beside the corner.
+    internal static List<(int X, int Y)> LineCells((int X, int Y) from, (int X, int Y) to)
+    {
+        var cells = new List<(int X, int Y)> { from };
+        int dx = to.X - from.X, dy = to.Y - from.Y;
+        int nx = Math.Abs(dx), ny = Math.Abs(dy), sx = Math.Sign(dx), sy = Math.Sign(dy);
+        int x = from.X, y = from.Y;
+        for (int ix = 0, iy = 0; ix < nx || iy < ny;)
+        {
+            var decision = (1 + 2 * ix) * ny - (1 + 2 * iy) * nx;
+            if (decision == 0)
+            {
+                cells.Add((x + sx, y));
+                cells.Add((x, y + sy));
+                x += sx;
+                y += sy;
+                ix++;
+                iy++;
+            }
+            else if (decision < 0)
+            {
+                x += sx;
+                ix++;
+            }
+            else
+            {
+                y += sy;
+                iy++;
+            }
+            cells.Add((x, y));
+        }
+        return cells;
+    }
+
     // ---- offsets on the map ----
 
     // An offset turned clockwise by whole steps of 45 degrees, kept on its square ring around the leader: every cell of a ring
@@ -150,17 +220,24 @@ internal static class TacticalFormationRules
     // ---- placing the group ----
 
     // Where each member goes, in the order of the slots; null for a member without any free cell. free says whether a cell can
-    // be walked on and reached. A blocked place falls back, in this order (Core's plan):
-    //   1. the nearest free cell within FallbackRadius of the place, on the leader's same side first;
-    //   2. else the mirrored place on the other side of the leader's axis;
-    //   3. else the nearest free cell around the leader.
+    // be walked on and reached; figure whether a figure stands on it. What blocks a place decides the fallback:
+    //   a figure (one standing there, the leader's cell, another member's place), or figure not given:
+    //     1. the nearest free cell within FallbackRadius of the place, on the leader's same side first;
+    //     2. else the mirrored place on the other side of the leader's axis;
+    //   the terrain (wall, water, tree, rock, furniture, building: blocked without a figure on it):
+    //     1. the mirrored place first;
+    //     2. else the nearest free cell within FallbackRadius, on the same side first;
+    //   then in both cases the nearest free cell around the leader.
     // Never two members on one cell, never one on the leader's cell. Members whose own place is free are placed first, so a
     // fallback never takes another member's place.
-    internal static (int X, int Y)?[] Place(int leaderX, int leaderY, Facing facing, IReadOnlyList<Slot> slots, Func<int, int, bool> free)
+    internal static (int X, int Y)?[] Place(int leaderX, int leaderY, Facing facing, IReadOnlyList<Slot> slots, Func<int, int, bool> free,
+        Func<int, int, bool> figure = null)
     {
         var result = new (int X, int Y)?[slots.Count];
         var taken = new HashSet<(int, int)> { (leaderX, leaderY) };
-        bool Open((int X, int Y) cell) => !taken.Contains(cell) && free(cell.X, cell.Y);
+        // A cell a figure stays on is taken even where the game's movable check lets it pass (a member was sent
+        // onto the cell another stood on).
+        bool Open((int X, int Y) cell) => !taken.Contains(cell) && free(cell.X, cell.Y) && (figure == null || !figure(cell.X, cell.Y));
         for (var i = 0; i < slots.Count; i++)
         {
             var cell = CellOf(leaderX, leaderY, slots[i].X, slots[i].Y, facing);
@@ -171,7 +248,9 @@ internal static class TacticalFormationRules
         for (var i = 0; i < slots.Count; i++)
         {
             if (result[i] != null) continue;
-            var cell = Fallback(leaderX, leaderY, facing, slots[i], Open);
+            var place = CellOf(leaderX, leaderY, slots[i].X, slots[i].Y, facing);
+            var terrain = figure != null && !taken.Contains(place) && !free(place.X, place.Y) && !figure(place.X, place.Y);
+            var cell = Fallback(leaderX, leaderY, facing, slots[i], Open, terrain);
             if (cell == null) continue;
             result[i] = cell;
             taken.Add(cell.Value);
@@ -179,14 +258,15 @@ internal static class TacticalFormationRules
         return result;
     }
 
-    private static (int X, int Y)? Fallback(int leaderX, int leaderY, Facing facing, Slot slot, Func<(int X, int Y), bool> open)
+    private static (int X, int Y)? Fallback(int leaderX, int leaderY, Facing facing, Slot slot, Func<(int X, int Y), bool> open, bool terrain)
     {
         var place = CellOf(leaderX, leaderY, slot.X, slot.Y, facing);
+        var mirrored = CellOf(leaderX, leaderY, -slot.X, slot.Y, facing);
+        if (terrain && mirrored != place && open(mirrored)) return mirrored;
         var side = Side(facing, place.X - leaderX, place.Y - leaderY);
         var near = Nearest(place, FallbackRadius, open, cell => side == 0 || Side(facing, cell.X - leaderX, cell.Y - leaderY) == side);
         if (near != null) return near;
-        var mirrored = CellOf(leaderX, leaderY, -slot.X, slot.Y, facing);
-        if (open(mirrored)) return mirrored;
+        if (!terrain && open(mirrored)) return mirrored;
         return Nearest((leaderX, leaderY), LeaderSearchRadius, open, null, place);
     }
 
@@ -254,4 +334,38 @@ internal static class TacticalFormationRules
     // The leader's cell in the window: the middle of the grid, so places fit in front, beside and behind.
     internal const int DefaultLeaderColumn = GridSize / 2;
     internal const int DefaultLeaderRow = GridSize / 2;
+}
+
+// The role the player gives a member in a formation (each formation keeps its own): what it should do in a
+// fight, finer than the group AI's own reading of its equipment (GroupAiRole). Neutral, the start, leaves the decision to the AI.
+// Saved per set as a word (TacticalRoles).
+internal enum TacticalRole
+{
+    Neutral,
+    Tank,
+    Damage,
+    Support
+}
+
+internal static class TacticalRoles
+{
+    internal static readonly TacticalRole[] All = { TacticalRole.Tank, TacticalRole.Damage, TacticalRole.Support, TacticalRole.Neutral };
+
+    // The word in Core's block; Neutral is never written.
+    internal static string Word(TacticalRole role) => role switch
+    {
+        TacticalRole.Tank => "tank",
+        TacticalRole.Damage => "damage",
+        TacticalRole.Support => "support",
+        _ => null
+    };
+
+    // A word from the block; an unknown one, from a later Core, reads as Neutral.
+    internal static TacticalRole Parse(string word) => word switch
+    {
+        "tank" => TacticalRole.Tank,
+        "damage" => TacticalRole.Damage,
+        "support" => TacticalRole.Support,
+        _ => TacticalRole.Neutral
+    };
 }

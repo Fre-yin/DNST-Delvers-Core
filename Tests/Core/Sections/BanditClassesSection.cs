@@ -38,7 +38,7 @@ internal static class BanditClassesSection
                     && CoreUnitRules.ProfileIndexIn(Guid.Empty, 0) == -1 && CoreUnitRules.ProfileIndexIn(Guid.Empty, 7) is >= 0 and < 7
                     && CoreUnitRules.ProfilePrefixes.Length == 9 && CoreUnitRules.ProfilePrefix("LizardMan") == "UNITVISUAL_LizardMan_"
                     && CoreUnitRules.VisualTypeOf("UNITVISUAL_LizardMan_4") == "LizardMan",
-                "bandits C23: short names in 10 languages, the herbalist only in the three female forms, the others in all nine, humans about half");
+                "bandits: short names in 10 languages, the herbalist only in the three female forms, the others in all nine, humans about half");
         }
         Check(new[] { CoreUnitRules.BladeDescription, CoreUnitRules.GuardDescription, CoreUnitRules.ArcherDescription, CoreUnitRules.HealerDescription }
                     .All(d => d.AllLanguages.Count == 10 && d.AllLanguages.All(text => !string.IsNullOrWhiteSpace(text) && text.IndexOf('-') < 0

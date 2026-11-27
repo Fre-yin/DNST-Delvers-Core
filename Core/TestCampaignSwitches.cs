@@ -1,6 +1,6 @@
 namespace DungeonSettlersDelvers.Core;
 
-// Switches that loosen uniqueness for tests (review, H7 and H10). They only ever act on a
+// Switches that loosen uniqueness for tests. They only ever act on a
 // campaign that Core knows as a test campaign by its GUID, and every question checks that again,
 // so a real campaign stays strict even with a switch left on. Any doubt means strict.
 // Pure logic, tested offline; the test mark itself lives in CampaignPresenceStore.

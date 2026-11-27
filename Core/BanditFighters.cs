@@ -92,7 +92,7 @@ internal static partial class GroupAiBandits
                 return NewChoice(charge.Key, intended, "guard-stuncharge");
             }
         }
-        return Damage(s, s.Protecting ? "guard-protect" : "guard", BanditKitKeys.Hammering, BanditKitKeys.WildFlurry);
+        return Damage(s, s.Protecting ? "guard-protect" : "guard", BanditKitKeys.Hammering, WeakBanditKitKeys.VileInsult, BanditKitKeys.WildFlurry);
     }
 
     // Guardian's Taunt as a slowing ring (BanditSlowRing), when a player hitting the

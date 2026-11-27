@@ -161,7 +161,9 @@ internal static partial class GroupAiBandits
         if (look.Replaced != null) Log(GroupAiRules.TauntEndLine(guid, look.Replaced, "replaced", null, Tick()));
         if (look.Track == null) taunts.Remove(guid);
         else taunts[guid] = look.Track;
-        if (look.Started)
+        // A taunt the same look ends (the healer's drop, a fallen taunter, factor 0) is never followed: it costs no running action
+        // and is not counted as heeded.
+        if (look.Started && !look.Release)
         {
             taunted++;
             Log(GroupAiRules.TauntedLine(guid, look.Track.By, look.Track.NativeEnd - now, heed.Factor, look.Track.Until - now, Tick()));

@@ -185,12 +185,19 @@ internal sealed class CoreShieldBand
         if (index < 0)
         {
             under?.Clip?.SetAsLastSibling();
+            blood?.Clip?.SetAsLastSibling();
             top?.Clip?.SetAsLastSibling();
             return;
         }
-        // Lower layer first, the current one above it, both right after the last child that holds a bar.
-        if (under?.Clip != null) under.Clip.SetSiblingIndex(Math.Min(index, parent.childCount - 1));
-        if (top?.Clip != null) top.Clip.SetSiblingIndex(Math.Min(under?.Clip != null ? under.Clip.GetSiblingIndex() + 1 : index, parent.childCount - 1));
+        // Lower layer first, the blood part, the current one above them, all right after the last child that holds a bar. The
+        // lifted texts follow the current layer (Lift), so every part of the band lies behind the numbers.
+        var next = index;
+        foreach (var layer in new[] { under, blood, top })
+        {
+            if (layer?.Clip == null) continue;
+            layer.Clip.SetSiblingIndex(Math.Min(next, parent.childCount - 1));
+            next = layer.Clip.GetSiblingIndex() + 1;
+        }
     }
 
     // Texts under the parent that still draw below the band (inside a bar's own container): their names for the log.

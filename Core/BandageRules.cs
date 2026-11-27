@@ -53,9 +53,12 @@ internal static class BandageRules
 
     // A unit an item may be put on (BandageOnOther.TargetAt): the same rule as on oneself for the items Core dresses with (kind,
     // KindOnOther), so the light and heavy bandage and the raw herbs need an open wound and are never used up on the game's bleeding
-    // alone; the game's ointment (kind null) on any bleeding unit, as before.
-    internal static bool TakesOnOther(Kind? kind, bool woundOpen, int bleedingStacks)
-        => kind is Kind known ? AllowsUse(woundOpen, known, bleedingStacks) : woundOpen || bleedingStacks > 0;
+    // alone; the game's ointment (kind null) on any bleeding unit, as before. The aid kit on a fallen unit is the game's own case, as
+    // with Q (AidKitRefusal): Core's skill for it runs the ointment's class and would use the kit up without the game's rescue, so
+    // it takes no fallen unit and the kit stays in the bag; the game's own click on the fallen unit rescues it.
+    internal static bool TakesOnOther(Kind? kind, bool woundOpen, int bleedingStacks, bool fallen = false)
+        => kind == Kind.Kit && fallen ? false
+            : kind is Kind known ? AllowsUse(woundOpen, known, bleedingStacks) : woundOpen || bleedingStacks > 0;
 
     // The buffer after the bandage is on. A lethal wound is not closed by the herbal or salve bandage: they take 30 or 40 %
     // of the whole health, unless the setting lets them close it; the light and heavy bandage take their share as on any stage.
@@ -113,5 +116,87 @@ internal static class BandageRules
         if (facts.Down) return RefusalDown;
         if (!facts.WoundOpen && facts.BleedingStacks <= 0) return RefusalNoWound;
         return null;
+    }
+
+    // ---- the aid kit put on another unit, watched until Core dressed with it ----
+
+    // A kit put on a comrade (BandageOtherWatch): only the game using up this very kit for Core's skill opens an entry, one per use;
+    // Core's dressing of that use closes it (Dressed, the helper's newest entry, as the dressing follows its own use at once). An
+    // entry still open RefundAfterSeconds of game time later is due: the kit comes back. A kit that left the bag any other way
+    // (dropped, given, traded, sold) opens nothing and closes nothing, so no kit is doubled and none is lost. A load or a new
+    // campaign clears the ledger, as its times belong to the old clock.
+    internal const double RefundAfterSeconds = 5.0;
+
+    // Only Core's dressing with the kit put on a comrade closes a kit's entry; a bandage or salve of the same helper, on itself or on
+    // another, leaves it open.
+    internal static bool ClosesKitEntry(bool onOther, Kind kind) => onOther && kind == Kind.Kit;
+
+    // A kit Core's skill took into the helper's hand that was never used up (the use broke off, say the target walked away): the
+    // game leaves it in the hand. Once the helper no longer uses an item, HandBackAfterSeconds after the aim, the kit goes back
+    // (BandageOtherWatch, CORE_BANDAGE_BACK). A kit used up belongs to the ledger alone, so no kit comes back twice; a use still
+    // running after HandWatchSeconds is let go.
+    internal const double HandBackAfterSeconds = 2.0;
+    internal const double HandWatchSeconds = 60.0;
+
+    internal enum HandStep { Wait, Back, Done }
+
+    // The helper still uses the kit: the click in the target mode gives it an ActCombatBehaviourTask with Core's kit skill (the game's
+    // UseSkillMode.UseSkill), which walks to the target and puts the kit on; from the bag the game's own UseItem
+    // tasks do the same. Any other task, or none, is no use of the kit.
+    internal static bool StillUsing(string taskSkill, string taskName)
+        => taskSkill == AidKitOtherSkillKey || (taskName != null && taskName.Contains("UseItem", StringComparison.Ordinal));
+    internal const string AidKitOtherSkillKey = "SKILL_DelversCoreAidKitOther";
+
+    internal static HandStep HandBack(bool usedUp, bool stillUsing, bool carriesKit, double sinceAim)
+    {
+        if (usedUp) return HandStep.Done;
+        if (sinceAim < HandBackAfterSeconds) return HandStep.Wait;
+        if (stillUsing) return sinceAim >= HandWatchSeconds ? HandStep.Done : HandStep.Wait;
+        return carriesKit ? HandStep.Back : HandStep.Done;
+    }
+
+    internal sealed class KitLedger<T>
+    {
+        internal readonly struct Entry
+        {
+            internal Entry(Guid helper, T where, double goneAt)
+            {
+                Helper = helper;
+                Where = where;
+                GoneAt = goneAt;
+            }
+
+            internal Guid Helper { get; }
+            internal T Where { get; }
+            internal double GoneAt { get; }
+        }
+
+        private readonly List<Entry> open = new();
+
+        internal int Count => open.Count;
+
+        internal void UsedUp(Guid helper, T where, double at) => open.Add(new Entry(helper, where, at));
+
+        // Core dressed with the kit this helper used up last; every other entry, of this helper or another, stays.
+        internal bool Dressed(Guid helper)
+        {
+            for (var i = open.Count - 1; i >= 0; i--)
+            {
+                if (open[i].Helper != helper) continue;
+                open.RemoveAt(i);
+                return true;
+            }
+            return false;
+        }
+
+        // The entries due at now, taken out of the ledger: each comes back exactly once.
+        internal List<Entry> Due(double now)
+        {
+            var due = open.FindAll(entry => now - entry.GoneAt >= RefundAfterSeconds);
+            open.RemoveAll(entry => now - entry.GoneAt >= RefundAfterSeconds);
+            return due;
+        }
+
+        internal void Clear() => open.Clear();
     }
 }

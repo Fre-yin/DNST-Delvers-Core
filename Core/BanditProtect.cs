@@ -153,6 +153,8 @@ internal static partial class GroupAiBandits
         if (amount <= 0f) return;
         // The first landed hit on a bandit wakes its camp (queued for the next tick).
         BanditGroupWake.OnHit(target, attacker);
+        // The seed measurement: a hit on a low bandit outside the seeds (BanditSeedTally, looked at in the tick).
+        BanditSeedTally.NoteHit(target);
         // A weak swordsman's counter stance answers a melee hit (BanditWeakClasses).
         NoteMeleeHit(target, attacker);
         // The offensive pull: damage on any bandit by attacker, and the last hit on the herbalist.

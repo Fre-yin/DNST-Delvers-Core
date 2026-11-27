@@ -125,6 +125,12 @@ internal static class GroupAiBandageRules
     // that put no bandage on within LostSeconds (putting one on takes 2 s) is logged as lost, with what the unit was then.
     internal const float LostSeconds = 4f;
 
+    // The game's aid kit is put on in its own routine after its start delay (7 s in the skill table, 4.8 to 6.3 s measured), and it
+    // reports its use only there (WoundAidKitPatch): it gets more time before it counts as lost.
+    internal const float AidKitLostSeconds = 10f;
+
+    internal static float LostSecondsFor(string item) => item == AidKit ? AidKitLostSeconds : LostSeconds;
+
     internal static string LostReason(bool dead, bool down, bool stunned) => dead ? "dead" : down ? "down" : stunned ? "stun" : "unknown";
 
     internal static string LostLine(string unit, string item, float waited, string reason, string behaviour, long tick)

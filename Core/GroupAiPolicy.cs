@@ -77,10 +77,19 @@ internal static partial class GroupAiPolicy
         GroupAiRangedReach.Reset();
         GroupAiOrderSource.Reset();
         GroupAiPartyHits.Reset();
+        GroupAiLow.Reset();
+        GroupAiChase.Reset();
         GroupAiBandageUse.Reset();
+        GroupAiSummonCast.Reset();
         GroupAiBandageSlots.Reset();
         GroupAiAftercare.Reset();
         GroupAiFormation.Reset();
+        GroupAiRoleMoves.Reset();
+        GroupAiSummonWalk.Reset();
+        GroupAiFightStart.Reset();
+        SummonControl.Reset();
+        TacticalFormationTempo.ResetLifecycle();
+        TacticalFormationMove.Reset();
         GroupAiPriority.Reset();
         GroupAiAreaProbe.Reset();
         GroupAiHealerSeed.Reset();
@@ -125,21 +134,28 @@ internal static partial class GroupAiPolicy
 
     internal static Choice Decide(GroupAiSituation s)
     {
-        var now = GameClock.Now;
-        decisions++;
-        recent[s.Guid] = (s, now);
         TrackBossTarget(s);
-        lowestShare = Math.Min(lowestShare, Math.Min(s.Self.Share, s.LowestAlly?.Share ?? 1f));
+        MarkRoleSkips(s);
         var choice = EscapeVines(s) ?? (s.Role switch
         {
-            GroupAiRole.Heal => Heal(s),
+            GroupAiRole.Heal => TankHealer(s) ? TankHeal(s) : Heal(s),
             GroupAiRole.Shield => Shield(s),
             GroupAiRole.Ranged => Ranged(s),
             GroupAiRole.Caster => Damage(s, "caster", GroupAiRules.DamageReserve),
             _ => Damage(s, "melee", GroupAiRules.DamageReserve)
         }) ?? NewChoice("", null, "basic");
+        return Record(s, choice);
+    }
+
+    // A decision's choice: counted, its planned target kept for the target step, and logged (CORE_AI_RULE).
+    private static Choice Record(GroupAiSituation s, Choice choice)
+    {
+        var now = GameClock.Now;
+        decisions++;
+        recent[s.Guid] = (s, now);
+        lowestShare = Math.Min(lowestShare, Math.Min(s.Self.Share, s.LowestAlly?.Share ?? 1f));
         ruleCounts[choice.Rule] = ruleCounts.TryGetValue(choice.Rule, out var count) ? count + 1 : 1;
-        lastRules[s.Guid] = choice.Rule;
+        lastRules[s.Guid] = (choice.Rule, now);
         if (choice.Skill == SeedSkill) seeds++;
         var chosen = choice.Skill.Length > 0 ? s.Find(choice.Skill) : null;
         if (chosen?.Data != null && chosen.Data.TargetType == TargetType.SelfTarget && chosen.Data.Duration > 0f)
@@ -164,13 +180,15 @@ internal static partial class GroupAiPolicy
         if (skill != null && pending.TryGetValue(s.Guid, out var planned) && planned.Skill == skill.Key && planned.Target != null)
         {
             pending.Remove(s.Guid);
-            target = planned.Target;
+            target = Reaim(s, skill, planned.Target);
             addsFirst = planned.AddsFirst;
         }
         else if (skill != null)
         {
             // The basic attack and every unplanned hostile skill go to the focused foe too.
-            target = GroupAiFocus.Choose(s, skill.Range, skill.AffectTarget, target, lastRules.TryGetValue(s.Guid, out var last) ? last : null);
+            target = GroupAiFocus.Choose(s, skill.Range, skill.AffectTarget, target, lastRules.TryGetValue(s.Guid, out var last) ? last.Rule : null);
+            // The priority casts and other unplanned skills: Core's target, not the game's (GroupAiPolicyTargets).
+            target = NoteOwnTarget(s, skill, target);
         }
         if (!addsFirst || !GroupAiSettings.AddsFirst || target == null || s.Boss == null || s.Role == GroupAiRole.Shield) return target;
         var boss = s.Boss.Guid.ToString();
@@ -199,10 +217,13 @@ internal static partial class GroupAiPolicy
     private static readonly Dictionary<string, (string Stage, float At)> seedChecks = new(StringComparer.Ordinal);
 
     // The rule of each unit's last decision; the focus decides a basic attack only in a damage rule (GroupAiFocus.Applies).
-    private static readonly Dictionary<string, string> lastRules = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, (string Rule, float At)> lastRules = new(StringComparer.Ordinal);
 
     // The healer's stance looks at whether her last decision was a heal (GroupAiStance).
-    internal static string LastRule(string guid) => lastRules.TryGetValue(guid, out var rule) ? rule : null;
+    internal static string LastRule(string guid) => lastRules.TryGetValue(guid, out var last) ? last.Rule : null;
+
+    // When that decision was made, in game time; negative infinity for none.
+    internal static float LastRuleAt(string guid) => lastRules.TryGetValue(guid, out var last) ? last.At : float.NegativeInfinity;
 
     // An elite enemy on the shield counts like the boss, for the shield wall only.
     private static string WallReason(GroupAiSituation s)

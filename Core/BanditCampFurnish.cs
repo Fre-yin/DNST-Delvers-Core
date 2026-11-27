@@ -70,6 +70,7 @@ internal static class BanditCampFurnish
         var (ox, oy) = BanditCampFurnishRules.Origin(room, area.X, area.Y);
         DelversHost.Info(BanditCampBuildRules.MapLine(camp.CampId, camp.Plan, room.Width, room.Height, ox - camp.Plan.CampOriginX, oy - camp.Plan.CampOriginY));
         int buildings = 0, items = 0, features = 0, units = 0, skipped = 0, forced = 0, doubled = 0;
+        var homes = new List<(string Key, int X, int Y)>();
         var wagon = Guid.Empty;
         var flips = new List<Guid>();
         var data = CoreSaveStore.Current;
@@ -131,6 +132,7 @@ internal static class BanditCampFurnish
                         new Il2CppSystem.Nullable<Il2CppSystem.Guid>(), new Il2CppSystem.Collections.Generic.List<string>(),
                         new Il2CppSystem.Nullable<AnimationType>()).Cast<IEventData>());
                     units++;
+                    homes.Add((spawn.Kind, ox + spawn.X, oy + spawn.Y));
                 }
                 catch (Exception) { skipped++; }
             }
@@ -140,8 +142,10 @@ internal static class BanditCampFurnish
             var campFile = BanditCampRoomFiles.FileOf(camp.Variant);
             var wakes = BanditCampWakeRules.WakesOnEnter(campFile);
             data?.SetCamp(floorSeed, wagon, flips, (ox, oy, ox + room.Width - 1, oy + room.Height - 1), wakes);
+            data?.SetCampHomes(homes);
             if (!wakes) DelversHost.Info(BanditCampWakeRules.OffLine(campFile));
             BanditCampWake.Reload();
+            BanditCampHome.Reload();
             CampGuardianStones.Reload();
             BanditCampFlip.Reload();
             BanditCampFootprint.Reload();

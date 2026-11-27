@@ -266,6 +266,23 @@ internal static class CoreAssets
         }
     }
 
+    // The roles' symbols in the formation window (the author's own works), 26x26, loaded once; null for a missing file.
+    internal static readonly string[] RoleFiles = { "Rolle_Neutral_26x26.png", "Rolle_Tank_26x26.png", "Rolle_Schaden_26x26.png", "Rolle_Support_26x26.png" };
+    private static bool rolesLoaded;
+    private static readonly Sprite[] roleIcons = new Sprite[4];
+
+    internal static Sprite RoleIcon(TacticalRole role)
+    {
+        if (!rolesLoaded)
+        {
+            rolesLoaded = true;
+            var missing = new List<string>();
+            for (var i = 0; i < RoleFiles.Length; i++) roleIcons[i] = Read(RoleFiles[i], 26, 26, missing);
+            DelversHost.Info($"CORE_ASSETS roles loaded={RoleFiles.Length - missing.Count} missing={(missing.Count == 0 ? "-" : string.Join(",", missing))}");
+        }
+        return roleIcons[(int)role];
+    }
+
     private static void LoadFormation()
     {
         if (formationLoaded) return;
@@ -350,6 +367,8 @@ internal static class CoreAssets
         bodyBloodLoaded = false;
         formationLoaded = false;
         formationButtonOff = formationButtonOn = formationCrown = formationCross = null;
+        rolesLoaded = false;
+        Array.Clear(roleIcons, 0, roleIcons.Length);
         bodyBloodAt.Clear();
         Array.Clear(bodyBlood, 0, bodyBlood.Length);
     }

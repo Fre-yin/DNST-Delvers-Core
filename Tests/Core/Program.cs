@@ -26,6 +26,12 @@ var sections = new (string Name, Action Run)[]
     ("ReviveRules", ReviveRulesSection.Run),
     ("CoreSettings", CoreSettingsSection.Run),
     ("SettingsKeys", SettingsKeysSection.Run),
+    ("CoreRandom", CoreRandomSection.Run),
+    ("BanditSeedTally", BanditSeedTallySection.Run),
+    ("GroupAiLow", GroupAiLowSection.Run),
+    ("GroupAiChase", GroupAiChaseSection.Run),
+    ("BanditTraits", BanditTraitSection.Run),
+    ("BanditCombos", BanditComboSection.Run),
     ("CoreProbeRules", CoreProbeRulesSection.Run),
     ("SourceRules", SourceRulesSection.Run),
     ("KeyConstants", KeyConstantsSection.Run),
@@ -85,6 +91,11 @@ var sections = new (string Name, Action Run)[]
     ("TacticalFormationGrid", TacticalFormationGridSection.Run),
     ("Summons", SummonsSection.Run),
     ("TacticalSleep", TacticalSleepSection.Run),
+    ("TacticalMove", TacticalMoveSection.Run),
+    ("TacticalTempo", TacticalTempoSection.Run),
+    ("TacticalSelection", TacticalSelectionSection.Run),
+    ("GroupAiPlayerRoles", GroupAiPlayerRolesSection.Run),
+    ("TacticalLook", TacticalLookSection.Run),
 };
 foreach (var (name, run) in sections) TestKit.RunSection(name, run);
 return TestKit.Summarize();

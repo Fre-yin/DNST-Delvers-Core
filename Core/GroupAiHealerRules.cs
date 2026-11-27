@@ -33,7 +33,7 @@ internal static partial class GroupAiRules
     // gives the game nothing).
     internal const string HoldRule = "healer-hold";
 
-    internal static bool HoldsStill(string rule) => rule == HoldRule || rule == SeedStayRules.HoldRule;
+    internal static bool HoldsStill(string rule) => rule == HoldRule || rule == SeedStayRules.HoldRule || rule == BanditComboRules.HoldRule;
 
     // The guard's chain is no damage skill, only a peel: on someone within
     // PullNearHealerCells of the healer, and only when the pull takes it away from her (the guard farther from her).

@@ -1,6 +1,6 @@
 namespace DungeonSettlersDelvers.Core;
 
-// The one rule for pack IDs, shared by every registration in Core (review, G1).
+// The one rule for pack IDs, shared by every registration in Core.
 internal static class PackIds
 {
     internal const string Rule = "Pack IDs may use lowercase letters, digits, and hyphens.";

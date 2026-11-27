@@ -157,6 +157,18 @@ public static partial class DelversCoreRuntime
         return true;
     }
 
+    // The camp's wake on entering (BanditCampWake) for the camp built in the loaded test campaign, whatever its camp file says
+    // (today's camp files have it off). Written into Core's block like the camp file's own value, so the
+    // game's next save keeps it; false without a test campaign or without a built camp (CORE_TEST_CAMP_WAKE).
+    public static bool SetCampWakeForTest(bool on)
+    {
+        var data = CoreSaveStore.Current;
+        if (data == null || !CampaignPresence.IsTestCampaign(data.Campaign) || !data.SetCampWake(on)) return false;
+        BanditCampWake.Reload();
+        DelversHost.Info($"CORE_TEST_CAMP_WAKE campaign={data.Campaign:D} wake={(on ? 1 : 0)}");
+        return true;
+    }
+
     // Generates nothing: whether the dungeon generator and its level inputs are reachable here
     // (CORE_BANDITS_GRAPH_RECON, also returned).
     public static string CampProbeReconForTest() => BanditCampProbe.Recon();

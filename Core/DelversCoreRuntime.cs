@@ -6,12 +6,13 @@ namespace DungeonSettlersDelvers.Core;
 public static partial class DelversCoreRuntime
 {
     // static readonly, not const: a const would be baked into every pack at its build time, so
-    // an older Frieren would report its own Core version after a Core update (review, F9).
+    // an older Frieren would report its own Core version after a Core update.
     // The minimum versions below stay const on purpose: they are the pack's own requirement.
     // It goes up with every change of Tests/Core/PublicApi.txt; the list's header line carries it and ApiSurfaceSection
     // fails when the two part. 1.11.0: new test API members (the tactical formation among them); four members that never
-    // left a release became internal, so the pack and tool APIs of 1.x lost nothing.
-    public static readonly string ApiVersion = "1.11.0";
+    // left a release became internal, so the pack and tool APIs of 1.x lost nothing. 1.12.0: the test hooks of the formation's
+    // tempo button.
+    public static readonly string ApiVersion = "1.12.0";
     public const string MinimumApiVersionForUniqueCandidatePredicates = "1.1.0";
     public const string MinimumApiVersionForFixedTraits = "1.2.0";
     public const string MinimumApiVersionForLoadIntegrations = "1.3.0";

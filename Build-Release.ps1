@@ -1,10 +1,13 @@
 #Requires -Version 7.0
 [CmdletBinding()]
 param(
-    [string]$Version = '0.5.1',
+    [string]$Version = '0.5.2',
     [string]$MelonGameDir = '',
     [string]$BepInExGameDir = '',
     [switch]$ValidateOnly,
+    # A folder for the zips of the Dungeon Settlers Modded loader (its docs/MODDING.md, section 9): one folder <id>/ with mod.json
+    # and the plugin's files, delvers-core-<version>.zip and delvers-frieren-<version>.zip. Only built here, never published.
+    [string]$LoaderZipDir = '',
     # 0.5.0 for BepInEx only: MelonLoader is built and checked only on this explicit switch.
     [switch]$Melon
 )
@@ -164,6 +167,10 @@ $CoreAssets = [ordered]@{
     'Formation_Knopf_Aus_20x23.png' = @(20, 23)
     'Formation_Knopf_An_20x23.png' = @(20, 23)
     'Formation_Krone_7x5.png' = @(7, 5)
+    'Rolle_Neutral_26x26.png' = @(26, 26)
+    'Rolle_Tank_26x26.png' = @(26, 26)
+    'Rolle_Schaden_26x26.png' = @(26, 26)
+    'Rolle_Support_26x26.png' = @(26, 26)
     # The guide topics' own pictures (GuideTopicText.ImageFile), screenshots of the game at the guide picture's size.
     'Guide_9001.png' = @(796, 284)
     'Guide_9004.png' = @(796, 284)
@@ -244,6 +251,56 @@ function Assert-WavFormat([string]$Path) {
 
 # The plan of one loader and package; -Tree names the tree it reads (the project, or a mirror of the public tree for the
 # private check Assert-PublicPackageSources).
+# The mod loader's package of one BepInEx plan: the files below the plugin folder under <id>/, and a mod.json with kind bepinex, the
+# scope, the dependency on Core for Frieren and every file's sha256 under platforms.any.files (the loader's key for BepInEx plugins).
+# The version is the plugin DLL's own (major.minor.build). Each file and the mod.json pass the private-path scan; the entries carry
+# one fixed time, so the same files give the same zip.
+function New-LoaderZip([object[]]$Plan, [string]$Package, [string]$Stage, [string]$OutDir) {
+    $pluginRoot = 'BepInEx/plugins/DungeonSettlersDelvers/'
+    $id = if ($Package -eq 'Core') { 'delvers-core' } else { 'delvers-frieren' }
+    $dll = Join-Path $Stage ($pluginRoot + "DungeonSettlersDelvers.$Package.dll").Replace('/', '\')
+    $fileVersion = [Diagnostics.FileVersionInfo]::GetVersionInfo($dll).FileVersion
+    $modVersion = ($fileVersion -split '\.')[0..2] -join '.'
+    $files = [ordered]@{}
+    foreach ($file in ($Plan | Where-Object { $_.Entry.StartsWith($pluginRoot, [StringComparison]::Ordinal) } | Sort-Object Entry)) {
+        $relative = $file.Entry.Substring($pluginRoot.Length)
+        $bytes = [IO.File]::ReadAllBytes((Join-Path $Stage $file.Entry.Replace('/', '\')))
+        Assert-NoPrivateBuildPath $bytes "$id/$relative"
+        $files[$relative] = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
+    }
+    $manifest = [ordered]@{
+        id = $id; name = "Delvers $Package"; version = $modVersion; author = 'Fre-yin'; kind = 'bepinex'
+        scope = 'gameplay'; save_dependent = $true
+    }
+    if ($Package -eq 'Frieren') { $manifest.requires = @('delvers-core>=0.5.0') }
+    $manifest.platforms = [ordered]@{ any = [ordered]@{ files = $files } }
+    $json = ($manifest | ConvertTo-Json -Depth 6) + "`n"
+    $jsonBytes = [Text.UTF8Encoding]::new($false).GetBytes($json)
+    Assert-NoPrivateBuildPath $jsonBytes "$id/mod.json"
+    New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
+    $zipPath = Join-Path $OutDir "$id-$modVersion.zip"
+    if (Test-Path -LiteralPath $zipPath) { throw "Loader zip exists already: $zipPath" }
+    Add-Type -AssemblyName System.IO.Compression
+    $stamp = [DateTimeOffset]::new(2026, 1, 1, 0, 0, 0, [TimeSpan]::Zero)
+    $stream = [IO.File]::Open($zipPath, [IO.FileMode]::CreateNew)
+    try {
+        $zip = [IO.Compression.ZipArchive]::new($stream, [IO.Compression.ZipArchiveMode]::Create)
+        try {
+            $entries = @(@{ Name = 'mod.json'; Bytes = $jsonBytes })
+            foreach ($relative in $files.Keys) { $entries += @{ Name = $relative; Bytes = [IO.File]::ReadAllBytes((Join-Path $Stage ($pluginRoot + $relative).Replace('/', '\'))) } }
+            foreach ($entry in $entries) {
+                $item = $zip.CreateEntry("$id/$($entry.Name)", [IO.Compression.CompressionLevel]::Optimal)
+                $item.LastWriteTime = $stamp
+                $writer = $item.Open()
+                try { $writer.Write($entry.Bytes, 0, $entry.Bytes.Length) } finally { $writer.Dispose() }
+            }
+        }
+        finally { $zip.Dispose() }
+    }
+    finally { $stream.Dispose() }
+    return "$id-$modVersion.zip ($($files.Count) files, sha256 $([Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([IO.File]::ReadAllBytes($zipPath))).Substring(0, 8)))"
+}
+
 function New-PackagePlan([string]$Loader, [string]$Package, [string]$Tree = $PSScriptRoot) {
     if ($Package -notin @('Core','Frieren')) { throw "Unknown package plan: $Package" }
     $bin = Join-Path $Tree "bin\$Loader\Release\net6.0"
@@ -444,10 +501,12 @@ try {
             }
             Assert-PackagePlan $plan $loader $package -Staged -BaseDirectory $stage
             "PASS: $loader $package package allowlist, asset paths, dependency split, private-path scan"
+            if ($LoaderZipDir -and $loader -eq 'BepInEx') { "PASS: mod loader zip $(New-LoaderZip $plan $package $stage $LoaderZipDir)" }
         }
         "PASS: $loader builds and offline rules; package plans validated: $($packages -join ', ')"
     }
-    "PASS: all $($loaders.Count * $packages.Count) loader/package plans validated ($($loaders -join ', ')); no archive was created and nothing was installed or published."
+    $archives = if ($LoaderZipDir) { "only the mod loader zips were built in $LoaderZipDir" } else { 'no archive was created' }
+    "PASS: all $($loaders.Count * $packages.Count) loader/package plans validated ($($loaders -join ', ')); $archives and nothing was installed or published."
 }
 finally {
     foreach ($name in $previousEnvironment.Keys) {

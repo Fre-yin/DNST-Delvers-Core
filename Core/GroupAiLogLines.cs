@@ -136,7 +136,7 @@ internal static partial class GroupAiRules
         => string.Format(CultureInfo.InvariantCulture,
             "CORE_AI_BANDIT_TAUNTED unit={0} by={1} native={2:0.0} factor={3:0.00} until={4:0.0} tick={5}", unit, by, nativeSeconds, factor, heedSeconds, tick);
 
-    // units: the struck units' GUIDs joined by "+" (summons included; Toolkit sammelblock 185848: targets=3 with two party
+    // units: the struck units' GUIDs joined by "+" (summons included; targets=3 with two party
     // figures in the ring, the third one not in the party list); renewed: how many of them carried the slow already.
     internal static string SlowRingLine(string unit, int targets, double seconds, long tick, IReadOnlyList<string> units = null, int renewed = 0)
         => string.Format(CultureInfo.InvariantCulture, "CORE_AI_BANDIT_SLOW_RING unit={0} targets={1} effect={2} seconds={3:0.0} tick={4}",

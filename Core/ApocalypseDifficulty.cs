@@ -6,7 +6,8 @@ namespace DungeonSettlersDelvers.Core;
 // management separately. Step 1: it takes Downfall's values; harsher
 // rules follow. The campaign screen shows the step when the switch in the Delvers menu is on
 // and Downfall is unlocked. The game keeps the value Downfall, so iron mode is forced for
-// combat exactly as on Downfall; Core remembers Apocalypse per campaign GUID.
+// combat exactly as on Downfall; Core remembers Apocalypse per campaign GUID. With Amfi's Hell
+// (the game's own step 5) the screen goes Downfall, Apocalypse, Hell.
 internal static class ApocalypseDifficulty
 {
     private const int Downfall = ApocalypseDifficultyRules.Downfall;
@@ -29,21 +30,24 @@ internal static class ApocalypseDifficulty
 
     internal static void ResetSelection() => state = state.SelectionCleared();
 
-    // Arrow step on the campaign screen. Returns true when Core handled it; the game's value
-    // stays Downfall either way.
+    // Arrow step on the campaign screen. Returns true when Core handled it; Core never changes the game's value. With Amfi's Hell
+    // the game's own steps between Downfall and Hell run (false), Core sets or drops the selection before them, and the game's text
+    // and button refresh after its step show Apocalypse on Downfall.
     internal static bool Step(CreateCampaignPresenter presenter, bool combat, bool increase)
     {
         if (presenter == null) return false;
         var current = combat ? (int)presenter._combatDifficulty : (int)presenter._managementDifficulty;
+        var hell = ModLoader.HellInstalled;
         var step = ApocalypseDifficultyRules.Step(current, state.Selected(combat), increase,
-            Offered && presenter._isDownfallDifficultyUnlocked);
+            Offered && presenter._isDownfallDifficultyUnlocked, hell);
         state = state.WithSelected(combat, step.Selected);
         if (!step.Changed) return step.Handled;
+        DelversHost.Info($"CORE_APOCALYPSE_SELECTED part={(combat ? "combat" : "management")} selected={step.Selected.ToString().ToLowerInvariant()} hell={(hell ? 1 : 0)}");
+        if (!step.Handled) return false;
         var panel = presenter.View?._campaignSettingPanel;
         if (combat) panel?.SetCombatDifficultyText(presenter._combatDifficulty);
         else panel?.SetManagementDifficultyText(presenter._managementDifficulty);
         presenter.RefreshDifficultyIncreaseButtonState();
-        DelversHost.Info($"CORE_APOCALYPSE_SELECTED part={(combat ? "combat" : "management")} selected={step.Selected.ToString().ToLowerInvariant()}");
         return true;
     }
 
@@ -111,6 +115,7 @@ internal static class ApocalypseDifficulty
         Lifebloom.ResetCampaign();
         EnemySkillTest.Reset();
         CorpseKeep.ResetCampaign();
+        WeakBandits.ResetCampaign();
         CorePartyShield.ResetCampaign();
         DelversCoreRuntime.ResetSummons();
         if (report) ApocalypseHooks.Run("enemy-ability-units", EnemyAbilities.ReportUnits);
@@ -159,7 +164,11 @@ internal static class ApocalypseDifficulty
         var guid = Guid.TryParse(campaign.ToString(), out var parsed) ? parsed : Guid.Empty;
         var data = CoreSaveStore.Current;
         if (data != null && data.Campaign != guid) data = null;
-        var mark = data?.Apocalypse ?? default;
+        var saved = data?.Apocalypse ?? default;
+        // A part counts only on the game's Downfall, a test campaign aside; the save keeps its mark, the campaign plays without it.
+        var mark = saved.Any ? ApocalypseDifficultyRules.Checked(saved, game, CampaignPresence.IsTestCampaign(guid)) : saved;
+        if (game is { } values && (saved.Combat != mark.Combat || saved.Management != mark.Management))
+            DelversHost.Warning(ApocalypseDifficultyRules.IgnoredLine(guid, saved, mark, values));
         state = state.Loaded(mark);
         StartCampaignRules(report: true, game);
         if (mark.Any)

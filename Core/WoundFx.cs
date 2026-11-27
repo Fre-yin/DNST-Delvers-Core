@@ -6,6 +6,7 @@ using SetOwnerVFXRequest = global::Refactor.FX.SetOwnerVFXRequest;
 using SetVFXLocalPositionRequest = global::Refactor.FX.SetVFXLocalPositionRequest;
 using StopVFXRequest = global::Refactor.FX.StopVFXRequest;
 using VFXID = global::Refactor.FX.VFXID;
+using VFXView = global::Refactor.FX.VFXView;
 #else
 using CreateVFXRequest = Il2CppRefactor.FX.CreateVFXRequest;
 using IFXRequest = Il2CppRefactor.FX.IFXRequest;
@@ -13,6 +14,7 @@ using SetOwnerVFXRequest = Il2CppRefactor.FX.SetOwnerVFXRequest;
 using SetVFXLocalPositionRequest = Il2CppRefactor.FX.SetVFXLocalPositionRequest;
 using StopVFXRequest = Il2CppRefactor.FX.StopVFXRequest;
 using VFXID = Il2CppRefactor.FX.VFXID;
+using VFXView = Il2CppRefactor.FX.VFXView;
 #endif
 
 namespace DungeonSettlersDelvers.Core;
@@ -21,10 +23,10 @@ namespace DungeonSettlersDelvers.Core;
 // sparse blood trail only for a lethal wound). Today the trail starts at a heavy wound (WoundRules.LeavesTrail).
 // Wounds.Tick calls OnTick every second for a unit with an open wound and EndTick once after all
 // units. It plays the game's own effects through the game's view dispatcher, the way the game does:
-// - the pop: VFXID.Bleeding, the game's short bleeding pop (a red splash with the bleeding icon,
-//   AffecterFX_Bleeding.OnBleedFX), at most once in PopMinSeconds when the wound drains; the mode
-//   "loop" plays the same;
-// - bound to the unit at the game's height (0, (SpriteHeight - 1) * 0.4; constants from
+// - one source of blood on the body: Core's drawn body blood (WoundBodyArt) alone. Core binds no effect
+//   of its own to the unit any more (the short pop VFXID.Bleeding is gone), and the game's Bleeding and Bleeding_Always bound
+//   to a party member are hidden while Core's body blood shows and show again after it (HideGameBlood, ShowGameBlood);
+// - the probe (Play) still binds the pop at the game's height (0, (SpriteHeight - 1) * 0.4; constants from
 //   GameAssembly .rdata), a unit lying at near-death at the middle of the body: at the game's height
 //   the effect floated above the lying unit (probe);
 // - the trail: the ground stains of WoundRules.GroundStain, not bound. The game's stains stay
@@ -32,8 +34,8 @@ namespace DungeonSettlersDelvers.Core;
 //   unit keeps at most WoundRules.TrailMaxStains, the oldest is stopped;
 // - each request as ViewFXRequestData(UpdateType.FXRequested, map, request), as in
 //   EntityEventHandler.RemoveHUD.
-// Bleeding_Always looks like a pool; bound to the unit at foot
-// height (SetOwnerVFXRequest) it walked along. It is never bound to a unit any more: on the body only the short pop
+// History: Bleeding_Always looks like a pool; bound to the unit at foot
+// height (SetOwnerVFXRequest) it walked along. It is never bound to a unit any more: on the body then only the short pop
 // (mode Pop, the default; "loop" is kept as a name for the Toolkit and plays the same), on the ground small stains at
 // every stage and the pool from a deep wound on, laid at the cell without an owner, each for WoundRules.SpotSeconds
 // (BloodSpot, Spot).
@@ -44,6 +46,8 @@ namespace DungeonSettlersDelvers.Core;
 // The author's sorting of the assets: on the body the pop Bleeding (01) and Bleeding_Always (02, the marks); on the
 // ground HitBloodGround_red_B and _C (04, 05) for the pool and the trail; HitBloodGround_red (03) is not used. Number,
 // lifetime and height of the marks stay as.
+// Since the author's drawn body blood (WoundBodyArt) a standing unit's wound shows as the overlay DelversBodyBlood,
+// which replaced these marks; Bleeding_Always is no longer played. The ground keeps HitBloodGround_red_B and _C.
 // The height is the game's own: AffecterFX_Bleeding.OnBleedFX sets (0, (SpriteHeight - 1) * 0.4).
 // 's pool under the unit was the Bleeding_Always picture, which
 // looks like a pool, not this height.
@@ -78,13 +82,26 @@ internal static class WoundFx
 
     private const float HeightBase = 1f;
     private const float HeightScale = 0.4f;
-    private const double PopMinSeconds = 2.0;
+    private const int GameBloodCap = 256;
+    private const int HiddenLogCap = 100;
 
     internal static Mode Current { get; private set; } = Mode.Pop;
 
     private static int counter;
     private static readonly List<Placed> timed = new();
-    private static readonly Dictionary<Guid, double> sinceShown = new();
+    // The game's bleeding effects just created and not yet bound (HideGameBlood): Guid to effect id.
+    private static readonly Dictionary<string, int> gameBlood = new(StringComparer.Ordinal);
+    private static int hiddenLines;
+
+    // The game's bleeding pictures hidden on a party member (HideGameBlood): their renderers switched off, by the effect's Guid.
+    private sealed class Hidden
+    {
+        internal Guid Unit;
+        internal int Id;
+        internal List<Renderer> Off;
+    }
+
+    private static readonly Dictionary<string, Hidden> hidden = new(StringComparer.Ordinal);
     private static readonly Dictionary<Guid, Vector2Int> lastStain = new();
     private static readonly Dictionary<Guid, (Vector2Int Cell, long Tick)> lastSpot = new();
     private static readonly Dictionary<Guid, (Vector2Int Cell, double Seconds)> still = new();
@@ -101,7 +118,11 @@ internal static class WoundFx
         }
         if (stains > 0) DelversHost.Info("CORE_WOUND_FX_STAINS_GONE count=" + stains + " reason=load");
         timed.Clear();
-        sinceShown.Clear();
+        gameBlood.Clear();
+        // A hidden effect the game stops only after this reset still returns to its pool switched on.
+        foreach (var entry in hidden.Values) SwitchOn(entry);
+        hidden.Clear();
+        hiddenLines = 0;
         lastStain.Clear();
         lastSpot.Clear();
         still.Clear();
@@ -115,8 +136,8 @@ internal static class WoundFx
     // until their lifetime ends.
     internal static void Forget(Guid unit)
     {
+        ShowGameBlood(unit, "closed");
         WoundBodyArt.OnWound(null, unit, WoundRules.Stage.None, false);
-        sinceShown.Remove(unit);
         lastStain.Remove(unit);
         lastSpot.Remove(unit);
         still.Remove(unit);
@@ -137,7 +158,8 @@ internal static class WoundFx
     internal static void SetMode(Mode mode)
     {
         Current = mode;
-        sinceShown.Clear();
+        if (mode == Mode.Off)
+            foreach (var unit in hidden.Values.Select(entry => entry.Unit).Distinct().ToList()) ShowGameBlood(unit, "off");
         announced.Clear();
     }
 
@@ -152,14 +174,6 @@ internal static class WoundFx
         if (Skipped(unit)) return;
         WoundBodyArt.OnWound(unit, guid, stage, lying);
         var anchor = lying ? Kind.Center : Kind.Drop;
-        // Pop and Loop alike; nothing that looks like a pool is bound to the unit.
-        var since = sinceShown.TryGetValue(guid, out var last) ? last + Math.Max(0, seconds) : double.PositiveInfinity;
-        if (drained > 0 && since >= PopMinSeconds)
-        {
-            Show(dispatcher, map, inMap, unit, anchor, VFXID.Bleeding, out _);
-            since = 0;
-        }
-        sinceShown[guid] = since;
         var here = inMap.GetLogicalPosition(unit.Guid);
         var knownStill = still.TryGetValue(guid, out var before);
         var stood = WoundRules.StillSeconds(knownStill, knownStill ? WoundRules.Cells(here.x - before.Cell.x, here.y - before.Cell.y) : 0,
@@ -219,7 +233,7 @@ internal static class WoundFx
     // goes first beyond SpotMaxPerUnit.
     private static string Spot(ViewUpdateDispatcher dispatcher, MapType map, IInMapDataSupplier inMap, UnitEntity unit, Guid owner, long tick)
     {
-        var fx = GuidGenerator.GuidInt(unit.Guid, ++counter).Generate();
+        var fx = GuidGenerator.GuidInt(unit.Guid, WoundRules.FxIndex(++counter)).Generate();
         // The author's sorting: on the ground only HitBloodGround_red_B and _C (04, 05); Bleeding_Always (02) sits
         // on the body, HitBloodGround_red (03) is not used.
         var vfx = (VFXID)WoundRules.GroundStain(counter);
@@ -258,7 +272,7 @@ internal static class WoundFx
         var at = inMap.GetWorldPosition(unit.Guid);
         for (var i = have; i < want; i++)
         {
-            var fx = GuidGenerator.GuidInt(unit.Guid, ++counter).Generate();
+            var fx = GuidGenerator.GuidInt(unit.Guid, WoundRules.FxIndex(++counter)).Generate();
             var vfx = (VFXID)WoundRules.BodyMarkPicture(counter);
             var spread = MarkSpread[i % MarkSpread.Length];
             Send(dispatcher, map, new CreateVFXRequest(fx, vfx, new Vector2(at.x + spread.X, at.y + spread.Y)).Cast<IFXRequest>());
@@ -360,7 +374,7 @@ internal static class WoundFx
     private static string Show(ViewUpdateDispatcher dispatcher, MapType map, IInMapDataSupplier inMap, UnitEntity unit, Kind anchor,
         VFXID vfx, out Il2CppSystem.Guid fx)
     {
-        fx = GuidGenerator.GuidInt(unit.Guid, ++counter).Generate();
+        fx = GuidGenerator.GuidInt(unit.Guid, WoundRules.FxIndex(++counter)).Generate();
         var offset = Offset(unit, anchor, out var height);
         Send(dispatcher, map, new CreateVFXRequest(fx, vfx, inMap.GetWorldPosition(unit.Guid)).Cast<IFXRequest>());
         Send(dispatcher, map, new SetOwnerVFXRequest(fx, unit.Cast<IEntity>()).Cast<IFXRequest>());
@@ -376,7 +390,7 @@ internal static class WoundFx
 
     private static string Ground(ViewUpdateDispatcher dispatcher, MapType map, IInMapDataSupplier inMap, UnitEntity unit, Guid owner, long tick)
     {
-        var guid = GuidGenerator.GuidInt(unit.Guid, ++counter).Generate();
+        var guid = GuidGenerator.GuidInt(unit.Guid, WoundRules.FxIndex(++counter)).Generate();
         var vfx = (VFXID)WoundRules.GroundStain(counter);
         Send(dispatcher, map, new CreateVFXRequest(guid, vfx, inMap.GetWorldPosition(unit.Guid)).Cast<IFXRequest>());
         timed.Add(new Placed(guid, map, owner, Kind.Ground, true, WoundRules.TickAfter(tick, WoundRules.TrailStainSeconds)));
@@ -395,6 +409,86 @@ internal static class WoundFx
             stopped++;
         }
         return FormattableString.Invariant($"vfx={vfx} lifetime={WoundRules.TrailStainSeconds:0} stopped={stopped}");
+    }
+
+    // A new effect (CoreVfxPatches, VFXView.CreateVFX): the game's Bleeding and Bleeding_Always are noted until the game binds
+    // them; whose they are shows only then (HideGameBlood).
+    internal static void NoteGameVfx(Il2CppSystem.Guid fx, int id)
+    {
+        if (id != WoundRules.BleedingVfx && id != WoundRules.BleedingAlwaysVfx) return;
+        if (gameBlood.Count >= GameBloodCap) gameBlood.Clear();
+        gameBlood[fx.ToString()] = id;
+    }
+
+    // The game binds an effect to its owner (WoundGameBloodOwnerPatch, VFXView.SetVFXOwner): a noted bleeding picture on a party
+    // member is hidden while Core's body blood shows for it (WoundRules.HidesGameBleed: combat wounds on, an open Core wound, the
+    // effects on and the unit not left out). It is hidden, not stopped: its renderers are switched off and the game keeps the effect
+    // and its own end. When Core's body blood ends (Forget: the wound closed, the unit died) while the game's bleeding still runs,
+    // the same effect shows again (ShowGameBlood), so nothing bleeds unseen; before the game stops it, its renderers are switched
+    // back on (OnGameStop), so the effect returns to the game's pool as it came.
+    internal static void HideGameBlood(VFXView view, Il2CppSystem.Guid fx, IEntity owner)
+    {
+        if (gameBlood.Count == 0 || view == null || owner == null) return;
+        if (!gameBlood.Remove(fx.ToString(), out var id)) return;
+        if (!ApocalypseRules.Wounds) return;
+        var unit = owner.TryCast<UnitEntity>();
+        var party = unit != null && !unit.IsDead && Wounds.IsPlayer(unit);
+        var bodyBlood = party && Wounds.IsOpen(CoreGame.GuidOf(unit)) && Current != Mode.Off && !Skipped(unit);
+        if (!WoundRules.HidesGameBleed(id, true, party, bodyBlood)) return;
+        var effect = view._vfxContainer?.GetVFX(fx);
+        if (effect == null || !effect) return;
+        var key = fx.ToString();
+        if (hidden.ContainsKey(key)) return;
+        var off = new List<Renderer>();
+        var renderers = effect.GetComponentsInChildren<Renderer>(true);
+        for (var i = 0; renderers != null && i < renderers.Length; i++)
+        {
+            var r = renderers[i];
+            if (r == null || !r || !r.enabled) continue;
+            r.enabled = false;
+            off.Add(r);
+        }
+        hidden[key] = new Hidden { Unit = CoreGame.GuidOf(unit), Id = id, Off = off };
+        if (hiddenLines++ < HiddenLogCap)
+            DelversHost.Info($"CORE_WOUND_FX_GAME_HIDDEN unit={CoreGame.GuidOf(unit):D} vfx={id} renderers={off.Count}");
+    }
+
+    // Core's body blood of the unit ended: the game's bleeding pictures hidden on it show again.
+    internal static void ShowGameBlood(Guid unit, string reason)
+    {
+        if (hidden.Count == 0) return;
+        var shown = 0;
+        foreach (var key in hidden.Keys.ToList())
+        {
+            var entry = hidden[key];
+            if (entry.Unit != unit) continue;
+            hidden.Remove(key);
+            shown += SwitchOn(entry);
+        }
+        if (shown > 0 && hiddenLines++ < HiddenLogCap) DelversHost.Info($"CORE_WOUND_FX_GAME_SHOWN unit={unit:D} renderers={shown} reason={reason}");
+    }
+
+    // The game stops an effect (WoundGameBloodStopPatch, VFXView.StopVFX): at its last stack a hidden one gets its renderers back first.
+    internal static void OnGameStop(VFXView view, Il2CppSystem.Guid fx)
+    {
+        if (hidden.Count == 0) return;
+        var key = fx.ToString();
+        if (!hidden.TryGetValue(key, out var entry)) return;
+        if ((view?._vfxContainer?.GetStack(fx) ?? 0) > 1) return;
+        hidden.Remove(key);
+        SwitchOn(entry);
+    }
+
+    private static int SwitchOn(Hidden entry)
+    {
+        var on = 0;
+        foreach (var r in entry.Off)
+        {
+            if (r == null || !r) continue;
+            r.enabled = true;
+            on++;
+        }
+        return on;
     }
 
     // Through the current dispatcher: a stop can come after a map change or a load.

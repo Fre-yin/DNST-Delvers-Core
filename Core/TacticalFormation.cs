@@ -38,12 +38,128 @@ internal static class TacticalFormation
         return result;
     }
 
-    // The active formation for the members there now: its leader and the places relative to it (TacticalFormationBook.Apply).
-    // False without a campaign, without an active set or without its leader among them.
+    // The active formation for the members there now: its middle and the places relative to it (TacticalFormationBook.Apply, the
+    // set's fixed selection; the top member there now is the middle while the leader is away). The members' living summons on a
+    // place of the set stand there too, under the summon's own GUID (SummonsOf); a summon is no member of the group, so a caller that
+    // only moves members passes over them. False without a campaign, without an active set or without any of its members there.
     internal static bool TryGet(IReadOnlyList<Guid> group, out Guid leader, out List<TacticalFormationRules.Slot> slots)
     {
         var book = Book();
-        return TacticalFormationBook.Apply(book.Sets[book.Active], group, out leader, out slots);
+        var set = book.Sets[book.Active];
+        var summons = new Dictionary<Guid, Guid>();
+        if (set != null && set.Summons.Count > 0)
+            foreach (var (place, unit) in SummonsOf(set.Members())) summons[place.Id] = GuidOf(unit);
+        return TacticalFormationBook.Apply(set, group, out leader, out slots, summons);
+    }
+
+    // A member's role in the active formation (each formation keeps its own); Neutral when it has none.
+    internal static TacticalRole RoleOf(Guid unit)
+    {
+        var book = Book();
+        return book.Sets[book.Active]?.RoleOf(unit) ?? TacticalRole.Neutral;
+    }
+
+    // Every role of the active formation, for the group AI's look (GroupAiFormation.RoleOf); members without one are Neutral.
+    internal static Dictionary<Guid, TacticalRole> ActiveRoles()
+    {
+        var book = Book();
+        var set = book.Sets[book.Active];
+        return set == null ? new Dictionary<Guid, TacticalRole>() : new Dictionary<Guid, TacticalRole>(set.Roles);
+    }
+
+    // A party member wherever it is: on the shown map, on another loaded map (the village while the group is in the dungeon, or
+    // the other way round) or dead; Unit null when no loaded map holds it.
+    internal static (UnitEntity Unit, MapType Map, bool Here, bool Dead) Locate(Guid member)
+    {
+        var maps = CoreGame.Flow?._inMapDatas;
+        if (maps == null) return (null, MapType.Base, false, false);
+        foreach (var entry in maps)
+        {
+            var units = entry.Value?.GetAllPlayerUnits(true);
+            for (var i = 0; units != null && i < units.Count; i++)
+                if (units[i] != null && GuidOf(units[i]) == member)
+                    return (units[i], entry.Key, entry.Key == CoreGame.CurrentMap, units[i].IsDead);
+        }
+        return (null, MapType.Base, false, false);
+    }
+
+    // Down at near-death or downed, still to be rescued: it cannot walk, its place stays reserved.
+    internal static bool IsDown(UnitEntity unit)
+        => unit != null && !unit.IsDead
+           && WoundRules.IsLying(CoreGame.Affecters(unit)?.Has(ReviveSnapshots.DeadlyKey) == true, GroupAiBandits.IsDowned(unit));
+
+    // The living party members on every loaded map who can stand in a formation (not summoned), with their map; the shown map's
+    // first.
+    internal static List<(UnitEntity Unit, MapType Map)> PartyEverywhere()
+    {
+        var result = new List<(UnitEntity, MapType)>();
+        foreach (var unit in MapMembers()) result.Add((unit, CoreGame.CurrentMap));
+        var maps = CoreGame.Flow?._inMapDatas;
+        if (maps == null) return result;
+        foreach (var entry in maps)
+        {
+            if (entry.Key == CoreGame.CurrentMap) continue;
+            var units = entry.Value?.GetAllPlayerUnits(false);
+            for (var i = 0; units != null && i < units.Count; i++)
+                if (units[i] != null && string.IsNullOrEmpty(CoreGame.SummonerGuid(units[i].Cast<IEntity>()))) result.Add((units[i], entry.Key));
+        }
+        return result;
+    }
+
+    // The numbers of the living summons for the session, per summoner and kind (TacticalFormationSummons.Number).
+    private static readonly Dictionary<(Guid Summoner, string Kind), Dictionary<Guid, int>> summonNumbers = new();
+
+    // The living summons of these members on the shown map with their places: summoner, kind (the unit key) and number, the cell
+    // left at 0 (TacticalFormationSummons.Place). The numbers stay while a summon lives; a new one takes the lowest free number of
+    // its summoner and kind, so it stands where one that died stood. In the order they appeared.
+    internal static List<(TacticalFormationSummons.Place Place, UnitEntity Unit)> SummonsOf(IReadOnlyList<Guid> group)
+    {
+        var result = new List<(TacticalFormationSummons.Place, UnitEntity)>();
+        if (group == null || group.Count == 0) return result;
+        var found = new Dictionary<(Guid, string), List<UnitEntity>>();
+        var kinds = new List<(Guid, string)>();
+        // Every side is searched (DelversSummons.SummonsOf): a player's bubbleling is an Ally and stands in no list of the player's
+        // units (the window found no summon of the mage).
+        foreach (var summoner in group)
+            foreach (var entity in DelversSummons.SummonsOf(summoner.ToString("D")))
+            {
+                var unit = entity?.TryCast<UnitEntity>();
+                var kind = unit?.Key;
+                if (unit == null || string.IsNullOrEmpty(kind)) continue;
+                if (!found.TryGetValue((summoner, kind), out var living))
+                {
+                    found[(summoner, kind)] = living = new List<UnitEntity>();
+                    kinds.Add((summoner, kind));
+                }
+                living.Add(unit);
+            }
+        var gone = new List<(Guid, string)>();
+        foreach (var key in summonNumbers.Keys)
+            if (Contains(group, key.Summoner) && !found.ContainsKey(key)) gone.Add(key);
+        foreach (var key in gone) summonNumbers.Remove(key);
+        foreach (var key in kinds)
+        {
+            var living = found[key];
+            var guids = Guids(living);
+            summonNumbers.TryGetValue(key, out var known);
+            var numbers = TacticalFormationSummons.Number(known, guids);
+            summonNumbers[key] = numbers;
+            for (var i = 0; i < living.Count; i++)
+                result.Add((new TacticalFormationSummons.Place(key.Item1, key.Item2, numbers[guids[i]], 0, 0), living[i]));
+        }
+        return result;
+    }
+
+    // The session's summon numbers go with the campaign.
+    internal static void ForgetSummons() => summonNumbers.Clear();
+
+    private static Guid GuidOf(UnitEntity unit) => CoreGame.GuidOf(unit);
+
+    private static bool Contains(IReadOnlyList<Guid> units, Guid unit)
+    {
+        foreach (var known in units)
+            if (known == unit) return true;
+        return false;
     }
 
     // Whether the member keeps its place (the button switches it like the game's options). Off, the member
@@ -69,6 +185,7 @@ internal static class TacticalFormation
         {
             var guid = CoreGame.GuidOf(unit);
             data.SetFormationOff(guid, !on);
+            GroupAiFormation.ForgetHand(guid);
             if (data.IsFormationSleep(guid))
             {
                 data.SetFormationSleep(guid, false);
@@ -120,19 +237,26 @@ internal static class TacticalFormation
         => CoreSaveStore.Current?.PriorityCasts() ?? new Dictionary<Guid, string[]>();
 
     // The window closed: the book as the window left it goes into Core's block with the shown set active, each member's casts
-    // beside it. Members who are gone (dead, dismissed) leave every set, but only while the village map is loaded: then every
-    // living party member stands on a loaded map.
-    internal static void Save(TacticalFormationBook book, TacticalFormationGrid grid)
+    // beside it, those of every set the window showed (seen). Members who are gone (dead, dismissed) leave every set, but only
+    // while the village map is loaded: then every living party member stands on a loaded map.
+    internal static void Save(TacticalFormationBook book, TacticalFormationGrid grid, IReadOnlyDictionary<Guid, string[]> seen = null)
     {
         var data = CoreSaveStore.Current;
-        if (data == null || book == null || grid == null || grid.Leader == Guid.Empty) return;
+        if (data == null || book == null || grid == null) return;
         data.SetFormationBook(book);
-        var casts = grid.AllCasts();
-        data.SetPriorityCasts(grid.Members, casts);
+        var casts = new Dictionary<Guid, string[]>();
+        var members = new List<Guid>(grid.Members);
+        foreach (var pair in seen ?? new Dictionary<Guid, string[]>())
+        {
+            if (!members.Contains(pair.Key)) members.Add(pair.Key);
+            if (Array.Exists(pair.Value, key => !string.IsNullOrEmpty(key))) casts[pair.Key] = pair.Value;
+        }
+        foreach (var pair in grid.AllCasts()) casts[pair.Key] = pair.Value;
+        data.SetPriorityCasts(members, casts);
         var living = LivingPartyMembers();
         var dropped = living == null ? 0 : data.DropFormationUnits(living.Contains);
         var set = book.Sets[book.Active];
-        DelversHost.Info($"CORE_TACTICAL_SAVED set={book.Active + 1} leader={grid.Leader:D} places={set?.Places.Count ?? 0} casts={casts.Count} dropped={dropped}");
+        DelversHost.Info($"CORE_TACTICAL_SAVED set={book.Active + 1} leader={grid.Leader:D} places={set?.Places.Count ?? 0} summons={set?.Summons.Count ?? 0} casts={casts.Count} dropped={dropped}");
     }
 
     // The living party members on every loaded map; null while the village map is not loaded.

@@ -27,6 +27,16 @@ internal static class CampaignPresenceBook
         return true;
     }
 
+    // A test campaign forgotten (ForgetTestCampaign, API 1.6.0: its marks go with the test mark): the marks of the bound block and
+    // those waiting in memory. Returns how many went.
+    internal static int Forget(CoreSaveData current, Guid campaign)
+    {
+        var count = pending.TryGetValue(campaign, out var waiting) ? waiting.Count : 0;
+        pending.Remove(campaign);
+        if (current != null && current.Campaign == campaign) count += current.ClearPresence();
+        return count;
+    }
+
     // The campaign's block is bound: what waited for it joins it.
     internal static void Bound(CoreSaveData current)
     {

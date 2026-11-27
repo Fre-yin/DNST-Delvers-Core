@@ -51,6 +51,11 @@ internal static partial class GroupAiBandits
         if (string.IsNullOrEmpty(basic)) basic = definition != null && definition.Skills.Length != 0 ? definition.Skills[0] : "";
         s.BasicAttack = basic;
         s.GlobalCooldown = skills?.HasGlobalCooldown() ?? false;
+        if (s.GlobalCooldown)
+        {
+            try { s.GlobalCooldownLeft = skills.GetGlobalCooldown(); }
+            catch (Exception) { s.GlobalCooldownLeft = 0f; }
+        }
         var info = CoreGame.Component<CombatInfoComponent>(entity);
         s.CombatTarget = info?.GetCombatTarget();
         s.State = info?.GetCombatState() ?? CombatState.Unawared;
@@ -102,6 +107,8 @@ internal static partial class GroupAiBandits
         s.AttackerByDamage = byDamage != null;
         // One protected target for all bandits, held; the chain pulls only it.
         s.HealerAttacker = s.Healer != null ? ProtectedTarget(s, s.Healer, gameNow) : null;
+        // The trait: on the attacker of its own healer, unless a taunt holds it.
+        if (s.HealerAttacker != null && s.Taunter == null && TraitsOf(s).Focus == BanditFocus.HealerAttacker) s.Focus = s.HealerAttacker.Unit.Cast<IEntity>();
         if (s.Healer != null && s.HealerAttacker != null
             && (!protectTarget.TryGetValue(s.Healer.Guid, out var logged) || logged != s.HealerAttacker.Guid))
         {
@@ -145,8 +152,28 @@ internal static partial class GroupAiBandits
         };
     }
 
-    // The nearest player healer within FocusRadius.
+    // The bandit's focus within FocusRadius by its hidden traits (BanditTraitRules); HealerAttacker turns to it later in Build, once
+    // that attacker is known. Without a figure for its trait, the nearest player healer as before.
     private static IEntity FocusOf(Situation s)
+    {
+        Figure focus = null;
+        var traits = TraitsOf(s);
+        foreach (var hostile in s.Hostiles)
+        {
+            if (!hostile.Player || hostile.Distance > FocusRadius) continue;
+            var better = traits.Focus switch
+            {
+                BanditFocus.Closest or BanditFocus.HealerAttacker => focus == null || hostile.Distance < focus.Distance,
+                BanditFocus.Weakest => focus == null || hostile.Share < focus.Share,
+                BanditFocus.TopDamage => focus == null || DamageBy(hostile.Guid) > DamageBy(focus.Guid),
+                _ => false
+            };
+            if (better) focus = hostile;
+        }
+        return (focus ?? NearestPlayerHealer(s))?.Unit.Cast<IEntity>();
+    }
+
+    private static Figure NearestPlayerHealer(Situation s)
     {
         Figure focus = null;
         foreach (var hostile in s.Hostiles)
@@ -154,7 +181,31 @@ internal static partial class GroupAiBandits
             if (hostile.Player && hostile.Distance <= FocusRadius && IsHealer(hostile) && (focus == null || hostile.Distance < focus.Distance))
                 focus = hostile;
         }
-        return focus?.Unit.Cast<IEntity>();
+        return focus;
+    }
+
+    // The hidden traits of a bandit, rolled once (BanditTraitRules); as before with the switch off.
+    private static readonly Dictionary<string, BanditTraits> traits = new(StringComparer.Ordinal);
+    private static int traitLines;
+
+    private static BanditTraits TraitsOf(Situation s) => TraitsOf(s.Unit, s.Guid);
+
+    // The same for any bandit, a comrade of the deciding one too (guid: unit.Guid.ToString()).
+    private static BanditTraits TraitsOf(UnitEntity unit, string guid)
+    {
+        if (!CoreSettings.BanditsVary || unit == null) return BanditTraitRules.Plain;
+        if (traits.TryGetValue(guid, out var known)) return known;
+        var role = CoreUnitRules.RoleOf(unit.Key);
+        var rolled = BanditTraitRules.Roll(CoreSaveStore.Current?.Campaign ?? Guid.Empty, CoreGame.GuidOf(unit), role);
+        traits[guid] = rolled;
+        if (traitLines++ < BanditTraitRules.LogCap) Log(BanditTraitRules.Line(guid, role, rolled));
+        return rolled;
+    }
+
+    private static void ResetTraits()
+    {
+        traits.Clear();
+        traitLines = 0;
     }
 
     // A healer by its basic attack or a heal skill (GroupAiRules.HealSkills), cached for HealerCacheSeconds.

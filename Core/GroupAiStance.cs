@@ -7,11 +7,10 @@ namespace DungeonSettlersDelvers.Core;
 // seed or Lifebloom when the comrade is out of reach and goes back right after the cast, and into danger only in
 // the author's emergency (GroupAiRules.HealerEmergency) when no heal reaches the comrade from the safe zone. Walls and dead
 // ends come from EscapeRules (an unsafe way out when surrounded).
-// (a player's action interrupts the AI until 3 s without one; a clicked target stays her focus): a
-// player's order is seen where the game takes it (GroupAiDirectOrderPatch on TaskSystem.DirectOrder, a task Core did
-// not send) or as a new forced target without an enemy's taunt (a click on a foe); quiet until StanceQuietSeconds after
-// the last one. The game's own tasks (fleeing, walking for a skill, idle) never count, the stance overrides them. After
-// the quiet time a clicked foe stays her focus (GroupAiFocus.SetClick) and the game's forced target is let go.
+// (a player's action interrupts the AI until 3 s without one): a player's order is seen where the game takes
+// it (GroupAiDirectOrderPatch on TaskSystem.DirectOrder, a task Core did not send), the one source; quiet until
+// StanceQuietSeconds after the last one. A forced target is no order: the game sets one only with an enemy's taunt. The
+// game's own tasks (fleeing, walking for a skill, idle) never count, the stance overrides them.
 // Movement goes through the party's move order (GroupAiZones.OrderMove, followed by GroupAiMoveWatch), at most one per
 // StanceOrderSeconds; the game keeps its own choice of skill for that decision, as with a dodge.
 internal static class GroupAiStance
@@ -25,8 +24,6 @@ internal static class GroupAiStance
         internal float LastOrder = float.MinValue;
         internal float LastPlayerOrder = float.MinValue;
         internal string QuietReason = "-";
-        internal string LastForced;
-        internal string Clicked;
         internal bool WasIn;
         // Since when she is out of combat (game seconds), float.NaN while in combat.
         internal float OutOfCombatSince = float.NaN;
@@ -47,14 +44,6 @@ internal static class GroupAiStance
         if (!states.TryGetValue(guid, out var state)) states[guid] = state = new State();
         state.Unit = unit;
         return state;
-    }
-
-    // No enemy left (GroupAiDecideSkillPatch): the next fight starts without a clicked focus.
-    internal static void EndFight(string guid)
-    {
-        if (!states.TryGetValue(guid, out var state)) return;
-        state.Clicked = null;
-        state.LastForced = null;
     }
 
     // A player's order on a party unit (GroupAiDirectOrderPatch), Core's own tasks excluded there.
@@ -97,12 +86,14 @@ internal static class GroupAiStance
         if (!wantedEmergency && holds) return false;
         var reach = HealReach(s);
         var castPending = wanted != null && reach > 0 && wanted.Distance > reach;
-        var justCast = state.WasIn && IsHealRule(lastRule);
+        // A heal decided after her march in, not the one before it: the march leaves the last rule as it was.
+        var justCast = state.WasIn && IsHealRule(lastRule) && GroupAiPolicy.LastRuleAt(s.Guid) > state.LastOrder;
         // Under an enemy's taunt the target stays forced; out of every reach she closes in, never nearer than 3.
         var taunter = taunted ? s.Enemies.Find(e => e.Guid == forced) : null;
         var maxReach = MaxReach(s);
         var tauntApproach = taunter != null && GroupAiRules.StanceTauntApproach(true, taunter.Distance, maxReach);
-        var mode = GroupAiRules.HealerStance(nearest, distance, castPending, justCast, castPending && wantedEmergency, quiet, tauntApproach);
+        var waitsToCast = state.WasIn && wanted != null && reach > 0 && !castPending && !justCast;
+        var mode = GroupAiRules.HealerStance(nearest, distance, castPending, justCast, castPending && wantedEmergency, quiet, tauntApproach, waitsToCast);
         // Held in formation, the emergency lets her walk to the comrade out of her reach, nothing else: with him already in reach
         // the stance fell to "back" and she fled from her place at full health (three escapes one cell off it).
         if (!GroupAiRules.StanceMovesHeld(holds, mode)) return false;
@@ -148,8 +139,7 @@ internal static class GroupAiStance
         return true;
     }
 
-    // Every game tick (GroupAiBanditTickPatch): the fight's end, a click on a foe, and the forced target let go after the
-    // quiet time.
+    // Every game tick (GroupAiBanditTickPatch): the fight's end.
     internal static void OnGameTick()
     {
         if (states.Count == 0) return;
@@ -168,29 +158,10 @@ internal static class GroupAiStance
             if (over && !state.FightEnded)
             {
                 state.FightEnded = true;
-                state.Clicked = null;
-                state.LastForced = null;
                 GroupAiFocus.EndFight(pair.Key);
             }
             else if (inCombat) state.FightEnded = false;
-            if (down || info == null) continue;
-            var forced = Forced(state.Unit, out var taunted);
-            // A new forced target without a taunt is a click on a foe: a player's action and her focus to come.
-            if (forced != null && !taunted && forced != state.LastForced)
-            {
-                state.LastPlayerOrder = now;
-                state.Clicked = forced;
-                state.QuietReason = "click forced=" + forced;
-                GroupAiPolicy.Log(GroupAiRules.StanceOrderLine(pair.Key, "player", "click", forced, CoreGame.Flow?._campaignData?.TimeData?.Tick ?? 0));
-            }
-            state.LastForced = forced;
-            var quiet = GroupAiRules.StancePlayerQuiet(now, state.LastPlayerOrder);
-            if (GroupAiRules.StanceReleaseClick(quiet, forced, state.Clicked, taunted))
-            {
-                info.SetForceAttackTarget(null);
-                state.LastForced = null;
-                GroupAiFocus.SetClick(pair.Key, state.Clicked);
-            }
+            GroupAiChase.NoteFight(pair.Key, inCombat, over);
         }
     }
 

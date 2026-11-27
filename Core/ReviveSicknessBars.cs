@@ -192,10 +192,15 @@ internal static class ReviveSicknessHudPatch
             if (!original.ContainsKey(key)) original[key] = renderer.color;
             renderer.color = new Color(ReviveSicknessBars.Purple.r, ReviveSicknessBars.Purple.g, ReviveSicknessBars.Purple.b, renderer.color.a);
         }
-        else if (original.TryGetValue(key, out var color))
+        else if (original.Remove(key, out var color))
         {
-            renderer.color = color;
-            original.Remove(key);
+            // Only Core's purple goes back: the game may have set the bar's colour since (Init for another unit from the pool,
+            // SetDeadly), or another renderer stands at the address now.
+            if (IsPurple(renderer.color)) renderer.color = color;
         }
     }
+
+    private static bool IsPurple(Color color)
+        => Mathf.Approximately(color.r, ReviveSicknessBars.Purple.r) && Mathf.Approximately(color.g, ReviveSicknessBars.Purple.g)
+           && Mathf.Approximately(color.b, ReviveSicknessBars.Purple.b);
 }

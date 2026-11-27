@@ -23,6 +23,8 @@ internal static class CoreTextRows
         foreach (var (key, text) in firstHints) rows.Add((key, text));
         // The Delvers topics of the game's guide (GuideTopics).
         foreach (var (key, text) in GuideTopicText.All) rows.Add((key, text));
+        // The combos' calls, placeholders behind their switch (BanditComboCall).
+        rows.AddRange(BanditComboCallText.TextRows());
         rows.AddRange(RowsAfterFirstHints());
         return rows.ToArray();
     }
@@ -64,7 +66,7 @@ internal static class CoreTextRows
         (BandageText.DescKey(BandageText.SalveItemKey), BandageText.SalveDescription),
         (BandageText.FlavorKey(BandageText.SalveItemKey), BandageText.SalveFlavor),
         (BandageText.ResearchNameKey(BandageText.FirstAidResearchKey), BandageText.FirstAidName),
-        // The inventory's option that puts an item on another character (UseOnOther; -I5: without this row the menu
+        // The inventory's option that puts an item on another character (UseOnOther; without this row the menu
         // showed the raw key).
         (BandageText.UseOnOtherKey, BandageText.UseOnOtherName),
         // The author's skill book for Lifebloom (LifebloomBook).
@@ -96,7 +98,9 @@ internal static class CoreTextRows
         (GroupAiText.NoticeKey, GroupAiText.Notice),
         // The question before a dressed party corpse is buried or left at the base portal (CorpseBurialWarning; without this
         // row the dialog showed the raw key).
-        (ReviveText.BurialNoticeKey, ReviveText.BurialNotice)
+        (ReviveText.BurialNoticeKey, ReviveText.BurialNotice),
+        // The notice when Core stays off because the game was started without Steam (SteamGuard).
+        (SteamGuardText.NoticeKey, SteamGuardText.Notice)
     };
 
     private static (string Key, UniqueCandidateTranslations Text)[] RowsAfterFirstHints() => new[]
@@ -125,7 +129,10 @@ internal static class CoreTextRows
         (CorpseText.LeaveWarningKey, CorpseText.LeaveWarning),
         // The formation button's tooltip in the option row (TacticalFormationButton).
         (TacticalFormationText.NameKey, TacticalFormationText.Name),
-        (TacticalFormationText.DescKey, TacticalFormationText.Description)
+        (TacticalFormationText.DescKey, TacticalFormationText.Description),
+        // The tempo button's tooltip in the formation window (TacticalFormationWindowTempo).
+        (TacticalFormationText.TempoNameKey, TacticalFormationText.Tempo),
+        (TacticalFormationText.TempoDescKey, TacticalFormationText.TempoDescription)
     }).ToArray();
 
     // The lists of the text sources: registered rows and the words the menus pick straight from their source.
@@ -133,7 +140,13 @@ internal static class CoreTextRows
         .Concat(QolText.All).Concat(ApocalypseText.All).Concat(ReviveText.All).Concat(WoundText.All).Concat(BandageText.All)
         .Concat(LifebloomBookRules.All).Concat(BanditSerratedRules.All).Concat(GroupAiText.All)
         .Concat(LoadIntegrityNoticeText.All).Concat(EnemyAbilityText.All).Concat(FirstHintText.All)
-        .Concat(FirstHintMenuTexts).Concat(TacticalFormationText.All);
+        .Concat(FirstHintMenuTexts).Concat(TacticalFormationText.All).Concat(BossItemWords).Concat(SteamGuardText.All);
+
+    // The word the boss items' subtitle shows instead of Legendary (BossItemLook.TooltipShown); the item rows come from BossItemText.
+    private static IEnumerable<(string Key, UniqueCandidateTranslations Text)> BossItemWords => new[]
+    {
+        (nameof(BossItemText) + "." + nameof(BossItemText.Special), BossItemText.Special)
+    };
 
     // The switch and the hint of the first hints in Core's menu page; FirstHintText.All holds the hint rows only.
     private static IEnumerable<(string Key, UniqueCandidateTranslations Text)> FirstHintMenuTexts => new[]
@@ -171,6 +184,58 @@ internal static class CoreTextRules
         if (languages.Count != LanguageCount) yield return "Core text without ten languages: " + key;
         if (AnyEmpty(languages)) yield return "Core text with an empty language: " + key;
         if (AnyContainingAny(languages, DashCharacters)) yield return "Core text with a dash: " + key;
+    }
+
+    // A language that still carries the English text: the row was not translated there. Names and words the game itself writes the
+    // same in that language stay (SameAsEnglish); the languages are named by their place in AllLanguages.
+    internal static readonly string[] LanguageNames = { "en", "ko", "fr", "de", "ru", "zh-Hans", "zh-Hant", "ja", "es", "pt-BR" };
+
+    internal static IEnumerable<string> UntranslatedProblems(IEnumerable<(string Key, UniqueCandidateTranslations Text)> rows)
+    {
+        foreach (var (key, text) in rows)
+            foreach (var problem in UntranslatedProblems(key, text.AllLanguages)) yield return problem;
+    }
+
+    internal static IEnumerable<string> UntranslatedProblems(string key, IReadOnlyList<string> languages)
+    {
+        if (languages.Count != LanguageCount) yield break;
+        var english = languages[0];
+        for (var i = 1; i < languages.Count; i++)
+            if (languages[i] == english && !SameAsEnglish(english, LanguageNames[i]))
+                yield return "Core text in English for " + LanguageNames[i] + ": " + key;
+    }
+
+    // Words that are the same in a language as in English: names, numbers and the like. Per language, so "Mods" stays in French but
+    // not in Korean.
+    // The skill name Serrated Blade stays English in every language (BanditSerratedRules.Name).
+    private static readonly Dictionary<string, string[]> SameWords = new(StringComparer.Ordinal)
+    {
+        ["Apocalypse"] = new[] { "fr" },
+        ["Archer"] = new[] { "fr" },
+        ["Formation"] = new[] { "fr", "de" },
+        ["Mods"] = new[] { "fr", "de", "es", "pt-BR" },
+        // The formation's roles: the gaming words stay.
+        ["Neutral"] = new[] { "de", "es" },
+        ["Silence"] = new[] { "fr" },
+        ["Support"] = new[] { "de" },
+        ["Tank"] = new[] { "fr", "de" },
+        ["Serrated Blade"] = new[] { "ko", "fr", "de", "ru", "zh-Hans", "zh-Hant", "ja", "es", "pt-BR" },
+    };
+
+    // The word without the game's colour tags, so the tinted title counts like the plain one.
+    private static readonly System.Text.RegularExpressions.Regex Tags = new("<[^>]+>");
+
+    private static bool SameAsEnglish(string english, string language)
+    {
+        if (string.IsNullOrWhiteSpace(english) || !ContainsLetter(english)) return true;
+        return SameWords.TryGetValue(Tags.Replace(english, ""), out var languages) && Array.IndexOf(languages, language) >= 0;
+    }
+
+    private static bool ContainsLetter(string text)
+    {
+        foreach (var c in text)
+            if (char.IsLetter(c)) return true;
+        return false;
     }
 
     internal static IEnumerable<string> HyphenProblems(IEnumerable<(string Key, UniqueCandidateTranslations Text)> rows)

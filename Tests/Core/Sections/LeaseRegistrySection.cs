@@ -6,7 +6,7 @@ internal static class LeaseRegistrySection
 {
     internal static void Run()
     {
-        // Shared registry base (review, G1). The registry tests above stay unchanged.
+        // Shared registry base. The registry tests above stay unchanged.
         Check(PackIds.IsValid("example-pack-2") && !PackIds.IsValid("Example") && !PackIds.IsValid("a_b")
                 && !PackIds.IsValid("") && !PackIds.IsValid(null),
             "one rule for pack IDs: lowercase letters, digits and hyphens");

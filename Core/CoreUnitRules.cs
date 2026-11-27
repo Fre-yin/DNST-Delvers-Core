@@ -335,6 +335,9 @@ internal static class CoreUnitRules
     // this list; what belongs to the boss party alone (boss items, the boss bar, the chain) keeps reading Units.
     internal static readonly Definition[] All = Concat(Units, WeakBanditRules.Definitions);
 
+    // A unit's role word by its key, "" for a key outside the table.
+    internal static string RoleOf(string key) => Array.Find(All, unit => unit.Key == key)?.Role ?? "";
+
     internal static bool TryGet(string key, out Definition definition)
     {
         definition = null;

@@ -60,7 +60,7 @@ internal static class GroupAiHealerSeedRules
     // The upgrade when the own seed has at most UpgradeSeconds left; an unknown time (0 or less) never upgrades.
     internal static bool UpgradeDue(float secondsLeft) => secondsLeft > 0f && secondsLeft <= UpgradeSeconds;
 
-    // Fix B (left=0.0 always): the seed dies when its aura passive's _timeCounter reaches its Values[2]
+    // The seed's life (left=0.0 always before): the seed dies when its aura passive's _timeCounter reaches its Values[2]
     // (HealRoutine); the aura itself carries no duration. Left is the difference, 0 when unknown.
     internal const int LifeValueIndex = 2;
 
@@ -71,7 +71,7 @@ internal static class GroupAiHealerSeedRules
 
     internal static float Left(float life, float counter) => life > 0f && counter >= 0f ? Math.Max(0f, life - counter) : 0f;
 
-    // Fix C: whether the herbalist's Life Burst is a passive of hers and registered with the game.
+    // The Life Burst: whether the herbalist's Life Burst is a passive of hers and registered with the game.
     internal static string LifeBurstProbeLine(string unit, bool listed, string registered, string passive, string action)
         => string.Format(CultureInfo.InvariantCulture, "CORE_LIFEBURST_PROBE unit={0} listed={1} registered={2} passive={3} action={4}",
             unit, listed ? 1 : 0, registered ?? "-", passive ?? "-", action);

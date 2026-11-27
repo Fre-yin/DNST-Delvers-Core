@@ -188,6 +188,17 @@ internal static class BanditBossBar
         return alive;
     }
 
+    // The bar's bandits alive on the map and still in their fight, or woken by Core and waiting for their delay.
+    private static int FightingInSegments()
+    {
+        var fighting = 0;
+        foreach (var segment in segments)
+            if (segment.Unit != null && !segment.Unit.IsDead && OnMap(segment.Unit)
+                && (CoreGame.Component<CombatInfoComponent>(segment.Unit.Cast<IEntity>())?.GetCombatState() == CombatState.InCombat
+                    || BanditGroupWake.Waking(segment.Unit))) fighting++;
+        return fighting;
+    }
+
     private static bool OnMap(UnitEntity unit)
     {
         var alive = CoreGame.InMap?.GetAliveUnitsOnMap();
@@ -468,18 +479,19 @@ internal static class BanditBossBar
         segment.Second?.RefreshOnFrame(secondList);
     }
 
-    // The game's boss end while a bandit of the bar still lives on the map: skipped (counted on the map now; a
-    // bar left open from a wiped fight ended at the first death of the next one).
+    // The game's boss end while a bandit of the bar still fights on the map: skipped (counted on the map now; a
+    // bar left open from a wiped fight ended at the first death of the next one). Once none of them fights (a wipe, a retreat, the
+    // bandits gone home) the game's end closes the bar and its music.
     internal static bool OnCombatEnd()
     {
         if (!active) return true;
-        var alive = AliveInSegments();
-        if (BanditBossBarRules.KeepsOpen(active, alive) && CoreGame.InMap != null)
+        var fighting = FightingInSegments();
+        if (BanditBossBarRules.KeepsOpen(active, fighting) && CoreGame.InMap != null)
         {
             if (!skipEndLogged)
             {
                 skipEndLogged = true;
-                Log(BanditBossBarRules.Line("skip-end", "alive=" + alive));
+                Log(BanditBossBarRules.Line("skip-end", "alive=" + AliveInSegments() + " fighting=" + fighting));
             }
             return false;
         }

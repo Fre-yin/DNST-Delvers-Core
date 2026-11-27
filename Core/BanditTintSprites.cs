@@ -136,7 +136,7 @@ internal static partial class BanditTint
                 TintKind.Skill => Recolored(source, SkillOrange, "_DelversBanditSkill"),
                 _ => Recolored(source, Orange, "_DelversBandit")
             };
-            // A skill effect's copies count on the skill lines, so they do not use up the buildings' (run 20261101-001155).
+            // A skill effect's copies count on the skill lines, so they do not use up the buildings'.
             if (sprite != null && (kind == TintKind.Skill ? skillLines++ < BanditTintRules.SkillLogCap : lines++ < BanditTintRules.LogCap))
                 DelversHost.Info(BanditTintRules.CopyLine(source.name, (int)sprite.rect.width, (int)sprite.rect.height, copies.Count + summonCopies.Count + skillCopies.Count + 1));
             return sprite;
@@ -189,6 +189,27 @@ internal static partial class BanditTint
         sprite.name = source.name + suffix;
         sprite.hideFlags = HideFlags.DontUnloadUnusedAsset;
         return sprite;
+    }
+
+    // Every copy goes with its texture: Recolored keeps them past the unloading of unused assets, so a cache only cleared would
+    // keep them until the game ends. Reset has given every tracked renderer its game sprite back before this.
+    private static void DropCopies()
+    {
+        foreach (var cache in new[] { copies, summonCopies, skillCopies })
+        {
+            foreach (var sprite in cache.Values) DestroyCopy(sprite);
+            cache.Clear();
+        }
+        made.Clear();
+        failed.Clear();
+    }
+
+    private static void DestroyCopy(Sprite sprite)
+    {
+        if (sprite == null) return;
+        var texture = sprite.texture;
+        UnityEngine.Object.Destroy(sprite);
+        if (texture != null) UnityEngine.Object.Destroy(texture);
     }
 
     private static Texture2D Readable(Texture texture, Rect rect, int width, int height)

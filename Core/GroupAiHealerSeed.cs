@@ -69,9 +69,10 @@ internal static class GroupAiHealerSeed
         burstTries.Clear();
         sprayerLines = burstLines = tryLines = 0;
         BanditTint.Reset();
+        BanditSeedTally.Reset();
     }
 
-    // Fix B: each seed's aura passive, seen at its Regen, for the seed's remaining life (GroupAiHealerSeedRules.Left).
+    // The seed's life: each seed's aura passive, seen at its Regen, for the seed's remaining life (GroupAiHealerSeedRules.Left).
     private const int AuraCap = 64;
     private static readonly Dictionary<string, SeedAura> auras = new(StringComparer.Ordinal);
 
@@ -96,7 +97,13 @@ internal static class GroupAiHealerSeed
         if (known && last == counter) return;
         if (lastCounter.Count >= AuraCap * 4) lastCounter.Clear();
         lastCounter[key] = counter;
-        if (!known) return;
+        if (!known)
+        {
+            // The measurement of the seed's life and healing (BanditSeedTally) starts at its first step.
+            var bornAt = aura._position;
+            BanditSeedTally.Seen(key, summoner, CoreGame.TryMapOfUnit(summoner, out var bornOn) ? bornOn : CoreGame.CurrentMap, bornAt.x, bornAt.y);
+            return;
+        }
         var inMap = CoreGame.InMap;
         // (no-map:dead=1): the game's seed heals on while its summoner can be found, dead or not (Regen only
         // needs GetSummonerUnit and its status); a dead herbalist has no map of her own, so the shown map stands in.
@@ -128,6 +135,7 @@ internal static class GroupAiHealerSeed
         }
         var alive = inMap.GetAliveUnitsOnMap();
         int core = 0, healed = 0;
+        var stood = new List<string>();
         for (var i = 0; alive != null && i < alive.Count; i++)
         {
             var unit = alive[i];
@@ -139,9 +147,11 @@ internal static class GroupAiHealerSeed
             if (!cells.Contains((at.x, at.y))) continue;
             var done = PublishHeal(map, unit, summoner, amount);
             healed++;
+            stood.Add(unit.Guid.ToString());
             if (healLines++ < GroupAiBandits.LogCap)
                 DelversHost.Info(GroupAiHealerSeedRules.SeedHealLine(key, summoner.Guid.ToString(), unit.Guid.ToString(), amount, done, Tick()));
         }
+        BanditSeedTally.Step(key, stood, amount);
         if (healed == 0)
         {
             Skip(key, GroupAiHealerSeedRules.TargetSkip(cells.Count, core, fallback));
@@ -170,7 +180,7 @@ internal static class GroupAiHealerSeed
         DelversHost.Info(GroupAiHealerSeedRules.AreaLine(seed, core, cells, units));
     }
 
-    // The heal value: the aura passive's own Values[1] (its Values[2] is the life Fix B reads), else the affecter data's.
+    // The heal value: the aura passive's own Values[1] (its Values[2] is the seed's life), else the affecter data's.
     private static float HealValue(SeedAura aura)
     {
         var values = aura?.Values;
@@ -272,7 +282,7 @@ internal static class GroupAiHealerSeed
         return GroupAiHealerSeedRules.Left(life, counter);
     }
 
-    // Fix C: once per Core unit carrying the Life Burst, whether the game lists and registered it as her passive. Registering the
+    // The Life Burst: once per Core unit carrying it, whether the game lists and registered it as her passive. Registering the
     // passive is work and runs whatever the group says; the lines about it (CORE_LIFEBURST_PROBE, CORE_LIFEBURST_REGISTER) are probe
     // lines of the group Seeds. The warning that the check itself failed stays.
     private static readonly HashSet<string> burstChecked = new(StringComparer.Ordinal);
@@ -337,7 +347,7 @@ internal static class GroupAiHealerSeed
         return own != null && own.ContainsKey(GroupAiHealerSeedRules.LifeBurstSkill);
     }
 
-    // Fix C: the game asks the Life Burst whether a death starts it (TryActivateLifeBurst); logged for a Core owner.
+    // The Life Burst: the game asks it whether a death starts it (TryActivateLifeBurst); logged for a Core owner.
     // True when the game may go on; false for a dead Core owner: the herbalist of run 1 still trying in
     // runs 2 and 3. Her corpse stays (CorpseKeep), so the game never disposes the unit and never drops her passives
     // (CleanupEntityBeforeDispose); Core unregisters the Life Burst itself, once, and the try ends.

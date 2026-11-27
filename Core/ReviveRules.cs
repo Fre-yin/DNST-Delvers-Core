@@ -51,8 +51,8 @@ internal static class ReviveRules
 
     internal static double SicknessDays(Level combat, int revive) => SicknessWeeks(combat, revive) * DaysPerWeek;
 
-    // The game's effect durations count down 0.017 per tick, 45 ticks per game minute
-    // (toolkit research, artifacts\recherche-nachwirkung-20261005): one game day is 1101.6 units.
+    // The game's effect durations count down 0.017 per tick, 45 ticks per game minute:
+    // one game day is 1101.6 units.
     internal const double DurationUnitsPerDay = 24.0 * 60.0 * 45.0 * 0.017;
 
     // After a down (rescued from near-death) health and energy start at 65 %

@@ -24,12 +24,12 @@ namespace DungeonSettlersDelvers.Core;
 // itself, as the blooms do (BanditTint.IsBanditBuildingSeen), marks the Guid, and BanditTint
 // recolours the effect when the game creates it (VFXView.CreateVFX, BanditTint.OnVfx), the way BanditTintSource does for the
 // seeds. A player's effects are never marked, nor an affecter's look on a unit of the players' side (a bandit's bleeding on a
-// party member keeps the game's colours; run 20261031-231855 had it orange). No list of the map is read here.
+// party member keeps the game's colours; it had once been drawn orange). No list of the map is read here.
 internal static class BanditTintSkill
 {
     private const int Cap = 512;
     private static readonly Dictionary<string, string> effects = new(StringComparer.Ordinal);
-    // One line per caster and effect id (run 20261031-235430: a line per effect used the cap up before the later skills).
+    // One line per caster and effect id (a line per effect used the cap up before the later skills).
     private static readonly HashSet<string> logged = new(StringComparer.Ordinal);
     // How many effects each caster had marked, for the toolkit (SkillTintCountForTest).
     private static readonly Dictionary<string, int> counts = new(StringComparer.OrdinalIgnoreCase);

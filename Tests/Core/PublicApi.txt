@@ -2,7 +2,7 @@
 # A line reads "Type.Member(parameter types) : return type | modifiers"; a property or field has no parentheses.
 # This list records what is public now. It does not say what stays. When a public member is added, removed or changed,
 # this list changes in the same commit (ApiSurfaceSection compares it with the sources of Core).
-# Core API 1.11.0, checksum E5744D82 (SHA256 of the member lines below joined by line feeds, first 8 hex digits). Both change with the list.
+# Core API 1.12.0, checksum 2BF545E2 (SHA256 of the member lines below joined by line feeds, first 8 hex digits). Both change with the list.
 AfterCampaignLoadedHandler(CampaignDataContainer) : void | delegate
 AfterUnitProfileDeserializeHandler(UnitProfileComponent) : void | delegate
 BeforeComponentsDeserializeHandler(ComponentSaveList, IEntity) : void | delegate
@@ -37,19 +37,27 @@ DelversCoreRuntime.EnemyAbilityStatus(string) : string | static
 DelversCoreRuntime.EquipmentMarkerSummaryForTest() : string | static
 DelversCoreRuntime.ExcludeFromGroupAiForTest(string, bool) : bool | static
 DelversCoreRuntime.ForgetTestCampaign(string) : bool | static
+DelversCoreRuntime.FormationAddForTest(string) : bool | static
+DelversCoreRuntime.FormationAddSummonForTest(string, string) : bool | static
+DelversCoreRuntime.FormationCandidatesForTest() : string | static
 DelversCoreRuntime.FormationCloseForTest() : bool | static
 DelversCoreRuntime.FormationIsOnForTest(string) : bool | static
 DelversCoreRuntime.FormationListMoveForTest(string, int) : bool | static
 DelversCoreRuntime.FormationMoveForTest(string, int, int) : bool | static
 DelversCoreRuntime.FormationOpenForTest() : bool | static
 DelversCoreRuntime.FormationPageForTest(int) : bool | static
+DelversCoreRuntime.FormationRemoveForTest(string) : bool | static
 DelversCoreRuntime.FormationResetForTest() : bool | static
+DelversCoreRuntime.FormationRoleStatusForTest(string) : string | static
 DelversCoreRuntime.FormationSetCastForTest(string, int, string) : bool | static
 DelversCoreRuntime.FormationSetCrownForTest(string) : bool | static
+DelversCoreRuntime.FormationSetRoleForTest(string, string) : bool | static
 DelversCoreRuntime.FormationSkillsForTest(string) : string | static
 DelversCoreRuntime.FormationStatusForTest() : string | static
 DelversCoreRuntime.FormationSwapForTest(string, string) : bool | static
 DelversCoreRuntime.FormationSwitchForTest(string, bool) : bool | static
+DelversCoreRuntime.FormationTempoForTest(bool) : bool | static
+DelversCoreRuntime.FormationTempoStatusForTest() : string | static
 DelversCoreRuntime.FormationTestForTest() : bool | static
 DelversCoreRuntime.GetFixedTraits(string) : IReadOnlyList<string> | static
 DelversCoreRuntime.GrantLifebloomForTest(string) : bool | static
@@ -107,6 +115,7 @@ DelversCoreRuntime.SetApocalypseForTest(string, bool, bool) : bool | static
 DelversCoreRuntime.SetBanditProtectForTest(bool) : bool | static
 DelversCoreRuntime.SetBanditsForTest(bool) : bool | static
 DelversCoreRuntime.SetCampProbeForTest(bool) : bool | static
+DelversCoreRuntime.SetCampWakeForTest(bool) : bool | static
 DelversCoreRuntime.SetCoreOptionForTest(string, bool) : bool | static
 DelversCoreRuntime.SetEnemyAbilityChanceForTest(string, float) : bool | static
 DelversCoreRuntime.SetEnemyAbilityRollForTest(string, string) : bool | static

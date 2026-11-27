@@ -67,21 +67,21 @@ internal static class TacticalFormationGridSection
             "tactical grid: an older formation's far places are drawn to the edge, a second one on the same cell takes the nearest free cell");
     }
 
-    // The group list: the top member wears the crown, at most eight, the order comes back from the save.
+    // The group list: the top member wears the crown, the order comes back from the save; no cap of eight.
     static void List()
     {
         var group = new List<Guid>();
         for (var i = 0; i < 10; i++) group.Add(Guid.NewGuid());
         var grid = TacticalFormationGrid.Create(group, Guid.Empty, null);
-        Check(grid.Members.Count == TacticalFormationGrid.MaxMembers && grid.Left == 2 && grid.Leader == group[0],
-            "tactical list: at most eight members, the rest is counted");
+        Check(grid.Members.Count == group.Count && grid.Left == 0 && grid.Leader == group[0],
+            "tactical list: more than eight members, none left out");
         var cell = grid.CellOf(group[3]);
         Check(grid.MoveInList(group[3], 0) && grid.Leader == group[3] && grid.Members[1] == group[0]
                 && grid.CellOf(group[3]) == (TacticalFormationGrid.Center, TacticalFormationGrid.Center) && grid.CellOf(group[0]) == cell,
             "tactical list: a member dragged to the top wears the crown in the middle, the former leader takes the cell");
         Check(grid.MoveInList(group[3], 2) && grid.Leader == group[0] && grid.Members[2] == group[3],
             "tactical list: dragged down again, the next member on top wears the crown");
-        Check(!grid.MoveInList(group[9], 0) && !grid.MoveInList(group[0], 8) && !grid.MoveInList(group[0], 0),
+        Check(!grid.MoveInList(Guid.NewGuid(), 0) && !grid.MoveInList(group[0], group.Count) && !grid.MoveInList(group[0], 0),
             "tactical list: a member outside the list, a row past the end or the same row moves nothing");
 
         var small = group.GetRange(0, 4);
@@ -91,6 +91,8 @@ internal static class TacticalFormationGridSection
             "tactical list: the saved leader on top, then the saved places in their order, then the rest");
         Check(restored.Slots()[0].Unit == small[3] && restored.Slots()[1].Unit == small[1],
             "tactical list: the places are saved in the list's order");
+        Check(TacticalFormationGrid.Dragging(-1, 2) && TacticalFormationGrid.Dragging(5, -1) && !TacticalFormationGrid.Dragging(-1, -1),
+            "tactical list: the drag picture follows a drag from a list row as well as one from a grid cell");
     }
 
     static void Casts()
@@ -127,27 +129,29 @@ internal static class TacticalFormationGridSection
             new TacticalFormationRules.Slot(a, 2, 2), new TacticalFormationRules.Slot(leader, 1, 1) });
         Check(set.Places.Count == 2, "tactical book: a set holds each member once and not its leader");
 
+        // The fixed selection: only the set's rows count.
         Check(TacticalFormationBook.Apply(set, new[] { a, leader, c }, out var crown, out var slots) && crown == leader
-                && slots.Count == 2 && slots[0].Unit == a && slots[0].X == 1 && slots[1].Unit == c && slots[1].X == 0 && slots[1].Y == -1,
-            "tactical book: a member who is missing loses the place, a new member takes the first free default place");
-        var crowded = new TacticalFormationBook.Set(leader, new[] { new TacticalFormationRules.Slot(a, 0, -1) });
-        Check(TacticalFormationBook.Apply(crowded, new[] { leader, a, c }, out _, out var shifted) && shifted[1].Unit == c && shifted[1].X == -1 && shifted[1].Y == -1,
-            "tactical book: a default place already taken is passed over");
-        Check(!TacticalFormationBook.Apply(set, new[] { a, b }, out _, out _) && !TacticalFormationBook.Apply(null, new[] { a }, out _, out _),
-            "tactical book: without its leader or without a set nothing applies");
-
-        var merged = TacticalFormationBook.Merge(set, leader, new[] { new TacticalFormationRules.Slot(a, -1, -1) }, new[] { leader, a });
-        Check(merged.Places.Count == 2 && merged.Places[0].Unit == a && merged.Places[0].X == -1 && merged.Places[1].Unit == b,
-            "tactical book: a window that showed part of the group keeps the others' places");
-        var clash = TacticalFormationBook.Merge(set, leader, new[] { new TacticalFormationRules.Slot(a, 0, 1) }, new[] { leader, a });
-        Check(clash.Places.Count == 1 && clash.Places[0].Unit == a, "tactical book: a kept place whose cell is taken now goes");
+                && slots.Count == 1 && slots[0].Unit == a && slots[0].X == 1 && slots[0].Y == 0,
+            "tactical book: a member away keeps its place empty, one the set does not hold walks without the formation");
+        Check(TacticalFormationBook.Apply(set, new[] { a, b }, out var middle, out var moved) && middle == a
+                && moved.Count == 1 && moved[0].Unit == b && moved[0].X == -1 && moved[0].Y == 1,
+            "tactical book: with the leader away the top member there is the middle, the places shifted onto it");
+        Check(!TacticalFormationBook.Apply(set, new[] { c }, out _, out _) && !TacticalFormationBook.Apply(null, new[] { a }, out _, out _),
+            "tactical book: without any of its members there or without a set nothing applies");
 
         var book = new TacticalFormationBook { Active = 12 };
         Check(book.Active == TacticalFormationBook.Size - 1 && book.IsEmpty, "tactical book: eight sets, the active index stays within them");
         book.Sets[0] = set;
         book.Sets[3] = new TacticalFormationBook.Set(c, new[] { new TacticalFormationRules.Slot(a, 1, 1) });
-        Check(book.Drop(unit => unit != c && unit != b) == 3 && book.Sets[3] == null && book.Sets[0].Places.Count == 1,
-            "tactical book: members who are gone leave the sets, a set without its leader becomes empty");
+        Check(book.Drop(unit => unit != c && unit != b) == 2 && book.Sets[3].Leader == a && book.Sets[3].Places.Count == 0
+                && book.Sets[0].Places.Count == 1,
+            "tactical book: members who are gone leave the sets");
+        book.Sets[2] = new TacticalFormationBook.Set(b, null);
+        Check(book.Drop(unit => unit != b) == 1 && book.Sets[2] == null, "tactical book: a set without anyone left becomes empty");
+        book.Sets[1] = new TacticalFormationBook.Set(c, new[] { new TacticalFormationRules.Slot(a, 1, 1), new TacticalFormationRules.Slot(leader, 2, 0) });
+        Check(book.Drop(unit => unit != c) == 1 && book.Sets[1].Leader == a && book.Sets[1].Places.Count == 1
+                && book.Sets[1].Places[0].Unit == leader && book.Sets[1].Places[0].X == 1 && book.Sets[1].Places[0].Y == -1,
+            "tactical book: a leader who is gone hands the crown to the next member, the places shifted onto it");
     }
 
     // Casts he had set were gone after use. The window's way with the real classes, step by step: open,
@@ -162,14 +166,15 @@ internal static class TacticalFormationGridSection
         TacticalFormationGrid Open(int page)
         {
             var book = data.FormationBook();
-            return TacticalFormationBook.Apply(book.Sets[page], group, out var leader, out var slots)
-                ? TacticalFormationGrid.Create(group, leader, slots, data.PriorityCasts())
+            var set = book.Sets[page];
+            return set != null
+                ? TacticalFormationGrid.Create(set.Members(), set.Leader, set.Places, data.PriorityCasts())
                 : TacticalFormationGrid.Create(group, Guid.Empty, null, data.PriorityCasts());
         }
         void Close(TacticalFormationGrid grid, int page)
         {
             var book = data.FormationBook();
-            book.Sets[page] = TacticalFormationBook.Merge(book.Sets[page], grid.Leader, grid.Slots(), grid.Members);
+            book.Sets[page] = new TacticalFormationBook.Set(grid.Leader, grid.Slots());
             book.Active = page;
             data.SetFormationBook(book);
             data.SetPriorityCasts(grid.Members, grid.AllCasts());
@@ -233,10 +238,10 @@ internal static class TacticalFormationGridSection
                 && json["formations"]?["sets"]?[1]?.AsObject().Count == 0,
             "tactical save: formations hold active and eight sets, an empty set is {}, a place is unit, x and y");
 
-        Check(data.DropFormationUnits(unit => unit != a) == 3 && data.FormationBook().Sets[2] == null
-                && data.FormationBook().Sets[0].Places.Count == 1 && data.FormationBook().Sets[0].Places[0].Unit == b,
-            "tactical save: members and leaders who are gone leave the book");
-        Check(data.DropFormationUnits(unit => false) == 2 && !data.Serialize().Contains("formations"), "tactical save: an empty book leaves the block");
+        Check(data.DropFormationUnits(unit => unit != a) == 2 && data.FormationBook().Sets[2] is { } handed && handed.Leader == leader
+                && handed.Places.Count == 0 && data.FormationBook().Sets[0].Places.Count == 1 && data.FormationBook().Sets[0].Places[0].Unit == b,
+            "tactical save: members who are gone leave the book, a leader who is gone hands the crown to the next member");
+        Check(data.DropFormationUnits(unit => false) == 3 && !data.Serialize().Contains("formations"), "tactical save: an empty book leaves the block");
 
         // The first format: { "<leader>": [ places ] } loads as the first set, active, and is written in the new one.
         var old = "{\"version\":1,\"campaign\":\"" + campaign.ToString("D") + "\",\"formations\":{\"" + leader.ToString("D")

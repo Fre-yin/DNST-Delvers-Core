@@ -1,13 +1,13 @@
 namespace DungeonSettlersDelvers.Core;
 
-// DelversCoreRuntime, the summon probe's test hooks for the Toolkit's block -Only beschwoerung-gegner: does a bandit's
+// DelversCoreRuntime, the summon probe's test hooks for the summon tests: does a bandit's
 // bubbleling fight for the bandits (SummonSide)? Internal, called through CoreLink.Internal, so Core's public surface stays as it is.
 // Only in the loaded test campaign. A bandit casts with the existing UseEnemySkillForTest(bandit, "SKILL_SummonBubbling", "x,y").
 public static partial class DelversCoreRuntime
 {
     // Gives the unit a skill the game's way, e.g. SKILL_SummonBubbling to a bandit: a party figure through AddSkillRequested, an
     // enemy as the spawner gives its skills (SkillComponent.AddSkill; AddSkillRequested registers the skill with the party's
-    // data and throws KeyNotFound for an enemy, run 20261031-175908). Returns queued, notest or nounit.
+    // data and throws KeyNotFound for an enemy). Returns queued, notest or nounit.
     internal static string SummonGiveSkillForTest(string unitGuid, string skillKey)
     {
         if (!LoadedTestCampaign()) return "notest";

@@ -154,13 +154,29 @@ internal static partial class WoundRules
     // Distance in cells, counting diagonal steps as one.
     internal static int Cells(int dx, int dy) => Math.Max(Math.Abs(dx), Math.Abs(dy));
 
-    // (the pool walked along with Frieren): blood on the ground stays where it fell. Every
-    // bleeding stage leaves a small stain, sparingly; from a deep wound on the game's pool (Bleeding_Always) instead, laid
-    // on the ground and never bound to the unit. A new one only after the unit moved SpotMinCells, each lives SpotSeconds
+    // (the pool walked along with Frieren): blood on the ground stays where it fell. And
+    // the author's sorting of the assets only a deep wound on leaves a pool, HitBloodGround_red_B and _C in turn
+    // (GroundStain), laid on the ground and never bound to the unit. A new one only after the unit moved SpotMinCells, each lives SpotSeconds
     // of game time, a unit keeps at most SpotMaxPerUnit. The lethal trail stays as it is.
     internal const int SpotMinCells = 1;
     internal const float SpotSeconds = 6f;
     internal const int SpotMaxPerUnit = 3;
+
+    // The game numbers its own blood effects by unit and effect id (GuidInt(unit, id), ids 0 to GameVfxIdMax), and a Guid that
+    // is still alive only stacks on that effect (VFXView.CreateVFX). Core's effects count from FxGuidBase on, so none of them
+    // shares a Guid with one of the game's: Core's fifth effect on a unit once kept the game's Bleeding_Always there alive.
+    internal const int FxGuidBase = 1_000_000;
+    internal const int GameVfxIdMax = 241;
+    internal static int FxIndex(int counter) => FxGuidBase + counter;
+
+    // On a party member only Core's body blood shows while combat wounds are on. The game's two bleeding
+    // pictures bound to it, Bleeding and Bleeding_Always, are hidden; foes and play without wounds keep the game's own. Only
+    // while Core's body blood shows (bodyBlood: an open Core wound, the effects on and the unit not left out): a unit whose wound
+    // closed while the game's bleeding stacks still run keeps the game's picture, so nothing bleeds unseen.
+    internal const int BleedingVfx = 4;
+    internal const int BleedingAlwaysVfx = 5;
+    internal static bool HidesGameBleed(int vfxId, bool woundsOn, bool partyMember, bool bodyBlood)
+        => woundsOn && partyMember && bodyBlood && (vfxId == BleedingVfx || vfxId == BleedingAlwaysVfx);
 
     // "pool", "spot" or null for none.
     // On the ground only the

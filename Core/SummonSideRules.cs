@@ -16,7 +16,7 @@ internal static class SummonSideRules
     internal static bool Applies(bool ownerIsCore, string key)
         => ownerIsCore && !string.IsNullOrEmpty(key) && key.StartsWith(UnitPrefix, StringComparison.Ordinal);
 
-    // Effect lines a summon writes while the probe runs, and how many summons get lines at all (run 20261031-202955: one cap of 120
+    // Effect lines a summon writes while the probe runs, and how many summons get lines at all (one cap of 120
     // for the whole process was used up before a later summon's first line).
     internal const int EffectCap = 12;
     internal const int EffectSummons = 256;

@@ -2,7 +2,7 @@ using System.Globalization;
 
 namespace DungeonSettlersDelvers.Core;
 
-// Test tool for Toolkit's area block (a UnitOrderRequested skill order does nothing for enemies):
+// Test tool for the area tests (a UnitOrderRequested skill order does nothing for enemies):
 // DelversCoreRuntime.UseEnemySkillForTest sets an enemy's next combat decision to exactly one skill at a unit or a cell. Core
 // hooks only the pattern class of that enemy, on the first call (EnemySkillTest). Rules without the game.
 internal static class EnemySkillTestRules
@@ -69,7 +69,7 @@ internal static class EnemySkillTestRules
     // target, the cell is lost, and a cell skill's routine throws on context.TargetGrid (block flaechen: six
     // NullReferenceException in SKILL_ArrowRain.DamageRoutine, one per volley; the routine reads
     // ExecutionContext.TargetGrid without a check, the archer was taunted by Darius just before). CoreUnitCombat falls back the same way for bandits.
-    // A unit aimed at out of reach (-I3: twenty melee skills stayed "range") is "approach": the skill goes to the game
+    // A unit aimed at out of reach (twenty melee skills stayed "range") is "approach": the skill goes to the game
     // with that unit, and the game's own pattern walks the user into reach as for any of its decisions. A cell stays "range".
     internal static string Outcome(bool hasSkill, bool onCooldown, bool hasTarget, bool inRange, bool forcedOnCell = false, bool unitTarget = false)
         => !hasSkill ? "noskill" : onCooldown ? "cooldown" : !hasTarget ? "notarget" : !inRange ? (unitTarget ? "approach" : "range")

@@ -58,7 +58,7 @@ internal static class DelversNativeLoadErrorSignalPatch
     // Never throws: an exception here would drop the game's own ErrorLog line, and logging it
     // through Unity could re-enter this hook. If an error line during a load cannot be
     // classified, it counts as a load failure. A restart is recoverable, a partly loaded
-    // campaign that gets saved is not (review).
+    // campaign that gets saved is not.
     private static void Prefix(string condition, string stackTrace, LogType type)
     {
         var isError = type is LogType.Error or LogType.Exception or LogType.Assert;

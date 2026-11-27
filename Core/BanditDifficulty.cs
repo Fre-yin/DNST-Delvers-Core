@@ -233,7 +233,7 @@ internal static class BanditDifficultyPatch
         {
             var core = CoreUnitRules.IsCoreUnit(entity.Key);
             if (!core && !DelversSummons.IsCoreOwned(entity.Cast<IEntity>())) return;
-            if (core) WeakBandits.NoteSpawn(entity);
+            if (core) WeakBandits.NoteSpawn(map, entity);
             BanditDifficulty.OnSpawn(entity, map, !core);
         }
         catch (Exception ex)

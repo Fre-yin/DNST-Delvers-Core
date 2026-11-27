@@ -19,8 +19,8 @@ namespace DungeonSettlersDelvers.Core;
 // - A revive with the scroll (ReviveService), a rescue from near-death (CheckRescues) and the game's
 //   first aid kit or black serum (WoundAidPatches) close the wound and take the game's bleeding with
 //   it (ClearAll; a rescue did not before).
-// - The wound shows on the body: the game's looping bleeding at the unit, a sparse blood trail for a
-//   lethal wound (WoundFx).
+// - The wound shows on the body as Core's drawn body blood alone, on the ground as pools and a sparse trail
+//   (WoundFx, WoundBodyArt).
 internal static class Wounds
 {
     internal const string BleedingKey = "AFFECTER_Bleeding";
@@ -40,7 +40,6 @@ internal static class Wounds
     private static readonly Dictionary<Guid, float> lastDrainLog = new();
     private static readonly Dictionary<Guid, long> lastJumpTick = new();
     private static readonly Dictionary<Guid, double> forcedRoll = new();
-    private static readonly System.Random dice = new();
     // The open wounds that drained in this tick, for WoundFx.EndTick.
     private static readonly HashSet<Guid> ticked = new();
     private static long lastTick = -1;
@@ -73,6 +72,7 @@ internal static class Wounds
 
     internal static void ResetCampaign()
     {
+        BandageOtherWatch.ResetLifecycle();
         open.Clear();
         carry.Clear();
         drainedTotal.Clear();
@@ -178,7 +178,7 @@ internal static class Wounds
 
     private static double NextRollValue(Guid unit)
     {
-        if (!forcedRoll.TryGetValue(unit, out var value)) return dice.NextDouble();
+        if (!forcedRoll.TryGetValue(unit, out var value)) return CoreRandom.Next01(CoreRandomRules.Wounds, unit);
         forcedRoll.Remove(unit);
         return value;
     }
@@ -458,6 +458,8 @@ internal static class Wounds
             }
         }
         if (ApocalypseRules.Wounds) CheckRescues();
+        try { BandageOtherWatch.Look(); }
+        catch (Exception ex) { ApocalypseHooks.Report("bandage-other-watch", ex); }
         try { WoundFx.EndTick(ticked, tick); }
         catch (Exception ex) { ApocalypseHooks.Report("wound-fx", ex); }
     }

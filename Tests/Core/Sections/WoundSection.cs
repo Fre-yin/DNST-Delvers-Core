@@ -150,6 +150,11 @@ internal static class WoundSection
             loaded?.SetWoundFatal(unit, false);
             Check(noWound && fatal && closed && reopened && loadedFatal && loaded != null && !loaded.IsWoundFatal(unit) && loaded.WoundBuffer(unit) == 230,
                 "lethal wound: kept in Core's save only with an open wound; closing the wound ends it; a loaded mark ends on the way back, the buffer stays");
+            save.SetWoundBuffer(unit, 0.0004);
+            var restClosed = save.WoundBuffer(unit) == 0 && !save.IsWoundFatal(unit);
+            save.SetWoundBuffer(unit, 25);
+            Check(restClosed && !save.IsWoundFatal(unit),
+                "lethal wound: a rest that is written as 0 closes the wound and ends the mark, so the next wound starts not lethal");
         }
         Check(WoundRules.TraitBleedChance == 0.30 && WoundRules.TraitBleedStacks == 2,
             "wound roll: the enemies' bleeding trait bleeds two stacks in 30 % of hits");

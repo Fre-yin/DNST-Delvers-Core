@@ -22,7 +22,7 @@ internal enum UniqueCandidateLockPolicy
 
 // A native founder may only take the place of an ordinary candidate. A pack unique (or another
 // founder) in that slot would otherwise vanish silently, for example a future human or lizard
-// pack character in the guild or the start group (review, F8).
+// pack character in the guild or the start group.
 internal static class NativeFounderReplacementRule
 {
     internal static bool MayReplace(UniqueCandidateLockPolicy currentCandidatePolicy)

@@ -252,7 +252,7 @@ internal static class CoreUnits
     internal static void DropKit(MapType map, UnitEntity unit)
     {
         if (unit == null || !CoreUnitRules.TryGet(unit.Key, out var definition)) return;
-        var inMap = InMapOf(map);
+        var inMap = CoreGame.InMapOf(map);
         if (inMap == null) return;
         var at = inMap.GetLogicalPosition(unit.Guid);
         var items = CoreUnitRules.DropItems(definition, BossItems.PartGone(definition));
@@ -268,15 +268,6 @@ internal static class CoreUnits
     {
         if (unit != null && CoreUnitRules.IsCoreUnit(unit.Key) && despawnLines++ < DespawnLogCap)
             DelversHost.Info($"CORE_UNIT_DESPAWNED key={unit.Key} unit={CoreGame.GuidOf(unit):D} dead={unit.IsDead} map={map}");
-    }
-
-    private static IInMapDataSupplier InMapOf(MapType map)
-    {
-        var maps = CoreGame.Flow?._inMapDatas;
-        if (maps == null) return null;
-        foreach (var pair in maps)
-            if (pair.Key == map) return pair.Value;
-        return null;
     }
 
     // The game's visual profiles of every form the bandits may take (CoreUnitRules.HumanForms, OtherForms), each form in a

@@ -80,11 +80,7 @@ internal static partial class BanditTint
         lines = 0;
         summonLines = 0;
         // The copies follow the settings; new ones are made from the next frame.
-        copies.Clear();
-        summonCopies.Clear();
-        skillCopies.Clear();
-        made.Clear();
-        failed.Clear();
+        DropCopies();
         BanditBar.Reset();
         BanditTintProbe.Reset();
         BanditBossBarProbe.Reset();
@@ -118,7 +114,7 @@ internal static partial class BanditTint
         {
             var skillTop = seen?._vfxContainer?.GetVFX(fx)?.transform;
             var skillCount = skillTop == null ? 0 : Track(skillTop, caster, key, TintKind.Skill);
-            // A count of their own: skill effects come by the hundred and must not use up the buildings' lines (run 20261031-234608).
+            // A count of their own: skill effects come by the hundred and must not use up the buildings' lines.
             if (skillLines++ < BanditTintRules.SkillLogCap) DelversHost.Info(BanditTintRules.Line("skill", caster, skillCount, tracked.Count, key));
             return;
         }
@@ -353,6 +349,9 @@ internal static partial class BanditTint
 
     // An entity's object, or null (CoreGame.EntityObjectOf: the game throws for one it has not activated yet).
     internal static Transform ObjectOf(Il2CppSystem.Guid guid) => CoreGame.EntityObjectOf(view?._objectContainer, guid)?.Transform;
+
+    // An entity's whole object (its graphic too), or null; the formation window takes a summon's sprite from it.
+    internal static IEntityObject EntityObjectOf(Il2CppSystem.Guid guid) => CoreGame.EntityObjectOf(view?._objectContainer, guid);
 
     // Probe (BanditTintProbe, group Tint): the HUDs of the map's units, each probed once. Scan calls it only while the group is on.
     private static void ProbeHuds(IInMapDataSupplier inMap)

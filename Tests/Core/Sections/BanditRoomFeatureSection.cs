@@ -158,6 +158,32 @@ internal static class BanditRoomFeatureSection
         Check(CoreSaveData.Parse(waking.Serialize(), waking.Campaign).CampWakes() && !CoreSaveData.Parse(quiet.Serialize(), quiet.Campaign).CampWakes()
                 && CoreSaveData.Parse(quiet.Serialize(), quiet.Campaign).CampBox(out _) == (510, 94, 553, 113),
             "bandit camp: whether the camp wakes on entering survives the block; a quiet camp keeps its box");
+        // The test hook's wake (SetCampWakeForTest): only for a built camp with its box, off leaves no entry.
+        var forced = CoreSaveData.Create(Guid.NewGuid());
+        var noCamp = forced.SetCampWake(true);
+        forced.SetCamp(9, Guid.Empty, null, (510, 94, 553, 113), false);
+        var on = forced.SetCampWake(true) && CoreSaveData.Parse(forced.Serialize(), forced.Campaign).CampWakes();
+        var off = forced.SetCampWake(false) && !forced.Serialize().Contains("\"wake\"") && forced.CampBox(out _) == (510, 94, 553, 113);
+        Check(!noCamp && on && off, "bandit camp: the test's wake goes only on a camp with its box, survives the block and goes again without a trace");
+        // The boss party stays in its camp (BanditCampHomeRules).
+        var homed = CoreSaveData.Create(Guid.NewGuid());
+        homed.SetCamp(9, Guid.Empty, null, (510, 94, 553, 113));
+        homed.SetCampHomes(new[] { ("UNIT_A", 512, 100), ("UNIT_B", 520, 101) });
+        var homedBack = CoreSaveData.Parse(homed.Serialize(), homed.Campaign).CampHomes();
+        Check(homedBack.Count == 2 && homedBack["UNIT_B"] == (520, 101) && CoreSaveData.Create(Guid.NewGuid()).CampHomes().Count == 0,
+            "bandit camp: the boss party's cells survive the block by unit key, a block without them has none");
+        var campBox = (510, 94, 553, 113);
+        Check(BanditCampHomeRules.WalksHome(false, true, false, (512, 104), (512, 100), campBox)
+                && !BanditCampHomeRules.WalksHome(true, true, false, (512, 104), (512, 100), campBox)
+                && !BanditCampHomeRules.WalksHome(false, true, true, (512, 104), (512, 100), campBox)
+                && !BanditCampHomeRules.WalksHome(false, true, false, (512, 100), (512, 100), campBox)
+                && !BanditCampHomeRules.WalksHome(false, false, false, (512, 104), (512, 100), campBox)
+                && BanditCampHomeRules.WalksHome(false, false, false, (600, 104), (512, 100), campBox),
+            "bandit camp: out of its fight a boss bandit walks home once, or at once from outside the box; never while it fights or from home");
+        Check(BanditCampHomeRules.IdleCell((520, 100), (512, 100), campBox) == (520, 100) && BanditCampHomeRules.IdleCell((600, 100), (512, 100), campBox) == (512, 100)
+                && BanditCampHomeRules.Line("u", (1, 2), (3, 4), 5) == "CORE_BANDITS_CAMP_HOME unit=u at=1,2 home=3,4 tick=5"
+                && BanditTakeoverRules.Line("u", 100, 103, "IdleTask") == "CORE_BANDIT_TAKEOVER unit=u wake=100 first=103 ticks=3 task=IdleTask",
+            "bandit camp: its idle stays in the box, and the home and takeover lines");
         Check(!BanditCampWakeRules.WakesOnEnter(BanditCampRoomFiles.NormalFile) && !BanditCampWakeRules.WakesOnEnter(BanditCampRoomFiles.MirroredFile)
                 && !BanditCampWakeRules.WakesOnEnter("Other.json") && !BanditCampWakeRules.WakesOnEnter(null),
             "bandit camp: today's camp, normal and mirrored, does not wake on entering; an unknown file neither");

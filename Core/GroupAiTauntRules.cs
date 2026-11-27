@@ -89,7 +89,7 @@ internal static partial class GroupAiRules
         if (string.IsNullOrEmpty(forcedBy))
             return new TauntLook(null, false, false, track != null && !track.Ended && !track.Own ? "expired" : null);
         var started = false;
-        // (134505: the guard's own chain replaced Darius' taunt and no end was logged): a running foreign
+        // (the guard's own chain replaced Darius' taunt and no end was logged): a running foreign
         // track that another forced target replaces ends with cause replaced.
         var replaced = track != null && !track.Ended && !track.Own && track.By != forcedBy ? track.By : null;
         if (track == null || track.By != forcedBy || (track.Ended && now >= track.NativeEnd))
